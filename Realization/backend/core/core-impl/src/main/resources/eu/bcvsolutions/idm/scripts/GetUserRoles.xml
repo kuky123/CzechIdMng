@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Returns a set of user's assigned role names.
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>GetUserRoles</code>
+  <name>GetUserRoles</name>
+  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules
+/**
+ * code: GetUserRoles
+ * name: GetUserRoles
+ * desc: Returns a set of user's assigned role names.
+ * authorities:
+ * - eu.bcvsolutions.idm.core.api.dto.IdmIdentityRoleDto
+ * - eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto
+ * - eu.bcvsolutions.idm.core.api.dto.IdmRoleDto
+ * - java.util.HashSet
+ * - SERVICE idmIdentityRoleService
+ * - SERVICE roleService
+ *
+ * @author Jan Helbich
+ */
+//
+//
+//IdmIdentity -> entity
+//IdmIdentityRoleService -> idmIdentityRoleService
+//IdmRoleService -> roleService
+//
+org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger("GetUserRoles");
+
+def roleNames = []
+def identityRoles = identityRoleService.findValidRole(entity.id, null).getContent();
+identityRoles.each { role -> roleNames.add(roleService.get(role.role).name) }
+//
+List<String> resultRoles = new ArrayList<String>()
+resultRoles.addAll(roleNames.toSet())
+LOG.info("roles: {}", resultRoles)
+return resultRoles
+]]></body>
+  <type>groovy</type>
+  <category>TRANSFORM_TO</category>
+  <description>Returns a set of user's assigned role names.</description>
+    <services>
+        <service>
+            <name>roleService</name>
+            <className>eu.bcvsolutions.idm.core.model.service.impl.DefaultIdmRoleService</className>
+        </service>
+        <service>
+            <name>identityRoleService</name>
+            <className>eu.bcvsolutions.idm.core.model.service.impl.DefaultIdmIdentityRoleService</className>
+        </service>
+    </services>
+    <allowClasses>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.core.api.dto.IdmIdentityRoleDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.core.api.dto.IdmRoleDto</className>
+        </allowClass>
+        <allowClass>
+            <className>org.springframework.data.domain.PageImpl</className>
+        </allowClass>
+        <allowClass>
+            <className>java.util.Collections$UnmodifiableRandomAccessList</className>
+        </allowClass>
+        <allowClass>
+            <className>java.util.HashSet</className>
+        </allowClass>
+    </allowClasses>
+</script>

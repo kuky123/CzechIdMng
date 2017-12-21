@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Skript vypočítá na základě úvazku atribut pwdExpiredTime. Pro internisty je plnění tohoto atributu deaktivováno.
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>getPwdExpiredTime</code>
+  <name>Get password expired time</name>  
+  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules;
+
+import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto;
+import eu.bcvsolutions.idm.core.api.dto.IdmPasswordDto;
+import org.joda.time.LocalDate;
+
+/**
+ * code: getPwdExpiredTime
+ * name: Get password expired time
+ * desc: Skript vypočítá na základě úvazku atribut pwdExpiredTime. Pro internisty je plnění tohoto atributu deaktivováno.
+ * authorities:
+ * - org.joda.time.LocalDate
+ * - eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto
+ * - eu.bcvsolutions.idm.core.api.dto.IdmPasswordDto
+ * - SERVICE identityContractService
+ * - SERVICE passwordService
+ *
+ * @author Jan Helbich
+ */
+//
+//
+//IdmIdentity entity
+//IdmIdentityContractService identityContractService
+//IdmPasswordService passwordService
+//
+// adding FALSE as last parameter returns only internal contracts
+List<IdmIdentityContractDto> internistContracts = identityContractService.findAllValidForDate(entity.id, LocalDate.now(), false)
+if (internistContracts.isEmpty()) {
+    // externist, send password expiration from IdmPassword
+    IdmPasswordDto password = passwordService.findOneByIdentity(entity.id)
+    if (password == null) {
+        return null
+    }
+    return password.getValidTill()
+}
+return null
+]]></body>
+<type>groovy</type>
+  <category>TRANSFORM_TO</category>
+  <description>Skript vypočítá na základě úvazku atribut pwdExpiredTime. Pro internisty je plnění tohoto atributu deaktivováno.</description>
+    <services>
+        <service>
+            <name>identityContractService</name>
+            <className>eu.bcvsolutions.idm.core.model.service.impl.DefaultIdmIdentityContractService</className>
+        </service>
+        <service>
+            <name>passwordService</name>
+            <className>eu.bcvsolutions.idm.core.model.service.impl.DefaultIdmPasswordService</className>
+        </service>
+    </services>
+    <allowClasses>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.core.api.dto.IdmPasswordDto</className>
+        </allowClass>
+        <allowClass>
+            <className>org.joda.time.LocalDate</className>
+        </allowClass>
+    </allowClasses>
+</script>

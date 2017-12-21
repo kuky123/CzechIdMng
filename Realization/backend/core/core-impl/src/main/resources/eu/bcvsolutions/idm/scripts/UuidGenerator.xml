@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Generuje nahodne UUID
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>uuidGenerator</code>
+  <name>Uuid generator</name>
+    <body><![CDATA[
+import java.util.UUID;
+
+return UUID.randomUUID().toString();
+]]></body>
+  <type>groovy</type>
+  <category>TRANSFORM_TO</category>
+  <description>Generuje nahodne UUID</description>
+<allowClasses>
+    <allowClass>
+        <className>java.util.UUID</className>
+    </allowClass>
+    <allowClass>
+        <className>java.lang.System</className>
+    </allowClass>
+</allowClasses>
+</script>

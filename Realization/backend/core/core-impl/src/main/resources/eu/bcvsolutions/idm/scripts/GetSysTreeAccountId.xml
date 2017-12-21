@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Returns SysSystemEntity.uid for provided system and entity owner.
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>GetSysTreeAccountId</code>
+  <name>GetSysTreeAccountId</name>
+  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules;
+
+import eu.bcvsolutions.idm.acc.dto.filter.EntityAccountFilter;
+import eu.bcvsolutions.idm.acc.dto.filter.AccTreeAccountFilter;
+
+/**
+ * code: GetSysTreeAccountId
+ * name: GetSysTreeAccountId
+ * desc:
+ * Returns SysSystemEntity.uid for provided system and entity owner.
+ * Input:
+ *   entity - IdmTreeNode
+ *   system - SysSystem
+ * Output:
+ *   String uid - SysSystemEntity.uid or null if not exists
+ *
+ * authorities:
+ * - eu.bcvsolutions.idm.acc.domain.AccountType
+ * - eu.bcvsolutions.idm.acc.dto.AccTreeAccountDto
+ * - eu.bcvsolutions.idm.acc.dto.EntityAccountDto
+ * - eu.bcvsolutions.idm.acc.dto.filter.EntityAccountFilter
+ * - eu.bcvsolutions.idm.acc.dto.filter.TreeAccountFilter
+ * - eu.bcvsolutions.idm.acc.entity.AccAccount
+ * - eu.bcvsolutions.idm.acc.entity.SysSystem
+ * - eu.bcvsolutions.idm.core.model.entity.IdmTreeNode
+ * - SERVICE accAccountService
+ * - SERVICE accTreeAccountService
+ *
+ * @author Jan Helbich
+ */
+//
+// AccTreeAccountService -> accTreeAccountService
+// AccAccountService -> accAccountService
+//
+EntityAccountFilter entityAccountFilter = new AccTreeAccountFilter();
+entityAccountFilter.setEntityId(entity.id);
+entityAccountFilter.setSystemId(system.id);
+entityAccountFilter.setOwnership(Boolean.TRUE);
+def entityAccounts = accTreeAccountService.find(entityAccountFilter, null).getContent();
+if (entityAccounts.isEmpty()) {
+    return null;
+} else {
+    // We assume that all entity accounts
+    // (mark as ownership) have same account!
+    def entityAccountDto = accTreeAccountService.get(entityAccounts.get(0).account);
+    def account = accAccountService.get(entityAccountDto.account);
+    return account.systemEntity == null ? null : account.systemEntity.uid;
+}
+]]></body>
+  <type>groovy</type>
+  <category>TRANSFORM_TO</category>
+  <description>Returns SysSystemEntity.uid for provided system and entity owner.</description>
+    <services>
+        <service>
+            <name>accAccountService</name>
+            <className>eu.bcvsolutions.idm.acc.service.impl.DefaultAccAccountService</className>
+        </service>
+        <service>
+            <name>accTreeAccountService</name>
+            <className>eu.bcvsolutions.idm.acc.service.impl.DefaultAccTreeAccountService</className>
+        </service>
+    </services>
+    <allowClasses>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.domain.AccountType</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.AccTreeAccountDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.EntityAccountDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.filter.EntityAccountFilter</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.filter.AccTreeAccountFilter</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.AccAccountDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.SysSystemDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.core.api.dto.IdmTreeNodeDto</className>
+        </allowClass>
+    </allowClasses>
+</script>

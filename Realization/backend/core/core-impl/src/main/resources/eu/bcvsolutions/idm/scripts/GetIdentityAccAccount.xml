@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Returns AccAccount for provided identity and system.
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>GetIdentityAccAccount</code>
+  <name>GetIdentityAccAccount</name>
+  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules;
+
+import eu.bcvsolutions.idm.acc.domain.SystemEntityType;
+import eu.bcvsolutions.idm.acc.dto.filter.AccAccountFilter;
+
+/**
+ * code: GetIdentityAccAccount
+ * name: GetIdentityAccAccount
+ * desc:
+ * Returns AccAccount for provided identity and system.
+ * Input:
+ *   entity - IdmIdentity
+ *   system - SysSystem
+ * Output:
+ *   AccAccount account - entity's account
+ *
+ * authorities:
+ * - org.springframework.data.domain.PageImpl
+ * - eu.bcvsolutions.idm.core.model.entity.IdmIdentity
+ * - eu.bcvsolutions.idm.acc.entity.AccAccount
+ * - eu.bcvsolutions.idm.acc.entity.SysSystem
+ * - eu.bcvsolutions.idm.acc.entity.SysSystemEntity
+ * - eu.bcvsolutions.idm.acc.domain.SystemEntityType
+ * - eu.bcvsolutions.idm.acc.dto.filter.AccountFilter
+ * - SERVICE sysSystemEntityService
+ * - SERVICE accAccountService
+ *
+ * @author Jan Helbich
+ */
+//
+//IdmIdentity entity
+//SysSystem system
+//def uid
+//AccAccountService accAccountService
+//SysSystemEntityService sysSystemEntityService
+//
+def systemEntity = sysSystemEntityService.getBySystemAndEntityTypeAndUid(system, SystemEntityType.getByClass(entity.class), uid);
+if (systemEntity == null) {
+    return null;
+}
+AccAccountFilter af = new AccAccountFilter();
+af.setSystemEntityId(systemEntity.id);
+
+for (def account in accAccountService.find(af, null)) {
+    return account;
+}
+return null]]></body>
+<type>groovy</type>
+  <category>TRANSFORM_TO</category>
+  <description>Returns AccAccount for provided identity and system.</description>
+    <services>
+        <service>
+            <name>sysSystemEntityService</name>
+            <className>eu.bcvsolutions.idm.acc.service.impl.DefaultSysSystemEntityService</className>            
+        </service>
+        <service>
+            <name>accAccountService</name>
+            <className>eu.bcvsolutions.idm.acc.service.impl.DefaultAccAccountService</className>            
+        </service>
+    </services>
+    <allowClasses>
+        <allowClass>
+            <className>org.springframework.data.domain.PageImpl</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.AccAccountDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.SysSystemDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.filter.AccAccountFilter</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.SysSystemEntityDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.domain.SystemEntityType</className>
+        </allowClass>
+    </allowClasses>
+</script>

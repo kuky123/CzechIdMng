@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Skript pouze vytiskne hodnotu atributu. Slouzi pro debug
+Input:
+ Object attributeValue
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>printValue</code>
+  <name>Print Value</name>
+    <body><![CDATA[
+System.out.println("Value: [" + attributeValue + "]");
+if (attributeValue != null) System.out.println("Class: " + attributeValue.getClass());
+
+return attributeValue;]]></body>
+  <type>groovy</type>
+  <category>TRANSFORM_TO</category>
+	<description>Skript pouze vytiskne hodnotu atributu. Slouzi pro debug
+Input:
+ Object attributeValue </description>
+<allowClasses>
+    <allowClass>
+        <className>java.lang.System</className>
+    </allowClass>
+    <allowClass>
+        <className>org.apache.tomcat.util.log.SystemLogHandler</className>
+    </allowClass>
+</allowClasses>
+</script>

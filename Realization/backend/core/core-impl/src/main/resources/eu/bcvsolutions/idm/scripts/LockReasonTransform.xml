@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Vypočítá lockReason podle úvazku identity a nastaví tento atribut na hodnotu.
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>lockReasonTransform</code>
+  <name>Transform lockReason for ldap</name>
+  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules
+
+import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto
+import eu.bcvsolutions.idm.core.api.dto.IdmPasswordDto
+import org.joda.time.LocalDate
+
+/**
+ * code: lockReasonTransform
+ * name: Transform lockReason for LDAP
+ * desc: Vypočítá lockReason podle úvazku identity a nastaví tento atribut na hodnotu.
+ *   disabled - 5
+ *   password expired - 4 pouze pro externisty
+ *   ostatni - 1
+ * authorities:
+ * - org.joda.time.LocalDate
+ * - eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto
+ * - eu.bcvsolutions.idm.core.api.dto.IdmPasswordDto
+ * - SERVICE identityContractService
+ * - SERVICE passwordService
+ *
+ * @author Ondrej Kopr
+ */
+//
+
+def inProtection = scriptEvaluator.evaluate(scriptEvaluator.newBuilder()
+        .setScriptCode('IsAccountInProtection')
+        .addParameter('scriptEvaluator', scriptEvaluator)
+        .addParameter('entity', entity)
+        .addParameter('system', system)
+        .addParameter('uid', uid)
+        .build())
+// check disabled in parameter attributeValue
+if (Boolean.TRUE.equals(attributeValue) || inProtection) {
+    // identity is disabled
+    return "5"
+} else {
+    // check password expiration (externist)
+    IdmPasswordDto password = passwordService.findOneByIdentity(entity.getId())
+    if (password != null && !password.isValid()) {
+        // password isn't valid, get constracts and search externist
+        List<IdmIdentityContractDto> internistContracts = identityContractService.findAllValidForDate(entity.id, LocalDate.now(), false)
+        if (internistContracts.isEmpty()) {
+            // externist, return constant for externist password expire
+            return "4"
+        }
+    }
+    // identity is enabled
+    return "1";
+}]]></body>
+  <type>groovy</type>
+  <category>TRANSFORM_TO</category>
+  <description>Vypočítá lockReason podle úvazku identity a nastaví tento atribut na hodnotu.</description>
+    <services>
+        <service>
+            <name>identityContractService</name>
+            <className>eu.bcvsolutions.idm.core.model.service.impl.DefaultIdmIdentityContractService</className>
+        </service>
+        <service>
+            <name>passwordService</name>
+            <className>eu.bcvsolutions.idm.core.model.service.impl.DefaultIdmPasswordService</className>
+        </service>
+    </services>
+    <allowClasses>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto</className>
+        </allowClass>
+        <allowClass>
+            <className>org.joda.time.LocalDate</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.core.api.dto.IdmPasswordDto</className>
+        </allowClass>
+    </allowClasses>
+</script>

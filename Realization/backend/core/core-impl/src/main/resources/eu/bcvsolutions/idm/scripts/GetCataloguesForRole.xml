@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Returns role catalogue names for given role entity.
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>GetCataloguesForRole</code>
+  <name>GetCataloguesForRole</name>
+  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules;
+/**
+ * code: GetCataloguesForRole
+ * name: GetCataloguesForRole
+ * desc: Returns role catalogue names for given role entity.
+ * authorities:
+ * - eu.bcvsolutions.idm.core.model.entity.IdmRole
+ * - eu.bcvsolutions.idm.core.api.dto.IdmRoleCatalogueDto
+ * - SERVICE roleCatalogueService
+ *
+ * @author Jan Helbich
+ */
+//IdmRoleCatalogueService -> roleCatalogueService
+//IdmRole -> entity
+//
+def result = []
+def rCatDtos = roleCatalogueService.findAllByRole(entity.id)
+rCatDtos.each { rCat -> result.add(rCat.name) }
+return result]]></body>
+<type>groovy</type>
+  <category>TRANSFORM_TO</category>
+  <description>Returns role catalogue names for given role entity.</description>
+<services>
+  <service>
+    <name>roleCatalogueService</name>
+    <className>eu.bcvsolutions.idm.core.model.service.impl.DefaultIdmRoleCatalogueService</className>
+  </service>
+</services>
+<allowClasses>
+  <allowClass>
+    <className>eu.bcvsolutions.idm.core.api.dto.IdmRoleDto</className>
+  </allowClass>
+  <allowClass>
+    <className>eu.bcvsolutions.idm.core.api.dto.IdmRoleCatalogueDto</className>
+  </allowClass>
+</allowClasses>
+</script>

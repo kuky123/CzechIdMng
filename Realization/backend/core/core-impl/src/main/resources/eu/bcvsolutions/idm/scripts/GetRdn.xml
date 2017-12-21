@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Vrati leftmost rdn z DN
+Input:
+     String dn - distinguished name
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>getRdn</code>
+  <name>Get Rdn</name>
+  <body><![CDATA[if (dn == null) return null;
+
+import javax.naming.ldap.LdapName;
+
+def ldapName = new LdapName(dn);
+return ldapName.getRdn(ldapName.size() - 1).getValue();]]></body>
+  <type>groovy</type>
+  <category>TRANSFORM_FROM</category>
+  <description>Vrati leftmost rdn z DN
+Input:
+     String dn - distinguished name
+ </description>
+<allowClasses>
+  <allowClass>
+    <className>javax.naming.ldap.LdapName</className>
+  </allowClass>
+  <allowClass>
+    <className>javax.naming.ldap.Rdn</className>
+  </allowClass>
+</allowClasses>
+</script>
