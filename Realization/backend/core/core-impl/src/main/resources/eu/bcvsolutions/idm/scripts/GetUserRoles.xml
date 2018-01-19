@@ -6,7 +6,7 @@ Returns a set of user's assigned role names.
 	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
   <code>GetUserRoles</code>
   <name>GetUserRoles</name>
-  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules
+  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules;
 /**
  * code: GetUserRoles
  * name: GetUserRoles
@@ -29,14 +29,14 @@ Returns a set of user's assigned role names.
 //
 org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger("GetUserRoles");
 
-def roleNames = []
+def roleNames = [];
 def identityRoles = identityRoleService.findValidRole(entity.id, null).getContent();
-identityRoles.each { role -> roleNames.add(roleService.get(role.role).name) }
+identityRoles.each { role -> roleNames.add(roleService.get(role.role).name); }
 //
-List<String> resultRoles = new ArrayList<String>()
-resultRoles.addAll(roleNames.toSet())
-LOG.info("roles: {}", resultRoles)
-return resultRoles
+List<String> resultRoles = new ArrayList<String>();
+resultRoles.addAll(roleNames.toSet());
+LOG.info("roles: {}", resultRoles);
+return resultRoles;
 ]]></body>
   <type>groovy</type>
   <category>TRANSFORM_TO</category>

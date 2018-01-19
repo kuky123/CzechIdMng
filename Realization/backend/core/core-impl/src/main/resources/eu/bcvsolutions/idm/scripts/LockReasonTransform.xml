@@ -6,11 +6,11 @@ Vypočítá lockReason podle úvazku identity a nastaví tento atribut na hodnot
 	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
   <code>lockReasonTransform</code>
   <name>Transform lockReason for ldap</name>
-  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules
+  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules;
 
-import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto
-import eu.bcvsolutions.idm.core.api.dto.IdmPasswordDto
-import org.joda.time.LocalDate
+import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto;
+import eu.bcvsolutions.idm.core.api.dto.IdmPasswordDto;
+import org.joda.time.LocalDate;
 
 /**
  * code: lockReasonTransform
@@ -36,20 +36,20 @@ def inProtection = scriptEvaluator.evaluate(scriptEvaluator.newBuilder()
         .addParameter('entity', entity)
         .addParameter('system', system)
         .addParameter('uid', uid)
-        .build())
+        .build());
 // check disabled in parameter attributeValue
 if (Boolean.TRUE.equals(attributeValue) || inProtection) {
     // identity is disabled
-    return "5"
+    return "5";
 } else {
     // check password expiration (externist)
-    IdmPasswordDto password = passwordService.findOneByIdentity(entity.getId())
+    IdmPasswordDto password = passwordService.findOneByIdentity(entity.getId());
     if (password != null && !password.isValid()) {
         // password isn't valid, get constracts and search externist
-        List<IdmIdentityContractDto> internistContracts = identityContractService.findAllValidForDate(entity.id, LocalDate.now(), false)
+        List<IdmIdentityContractDto> internistContracts = identityContractService.findAllValidForDate(entity.id, LocalDate.now(), false);
         if (internistContracts.isEmpty()) {
             // externist, return constant for externist password expire
-            return "4"
+            return "4";
         }
     }
     // identity is enabled

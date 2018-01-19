@@ -6,8 +6,8 @@ Returns if identity's account is in protection.
 	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
   <code>IsAccountInProtection</code>
   <name>IsAccountInProtection</name>
-  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules
-import eu.bcvsolutions.idm.acc.dto.AccAccountDto
+  <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules;
+import eu.bcvsolutions.idm.acc.dto.AccAccountDto;
 
 /**
  * code: IsAccountInProtection

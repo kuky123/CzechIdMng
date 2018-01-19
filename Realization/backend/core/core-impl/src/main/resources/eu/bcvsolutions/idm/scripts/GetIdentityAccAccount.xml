@@ -52,7 +52,7 @@ af.setSystemEntityId(systemEntity.id);
 for (def account in accAccountService.find(af, null)) {
     return account;
 }
-return null]]></body>
+return null;]]></body>
 <type>groovy</type>
   <category>TRANSFORM_TO</category>
   <description>Returns AccAccount for provided identity and system.</description>

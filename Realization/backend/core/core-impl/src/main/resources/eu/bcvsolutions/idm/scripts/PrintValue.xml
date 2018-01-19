@@ -10,7 +10,9 @@ Input:
   <name>Print Value</name>
     <body><![CDATA[
 System.out.println("Value: [" + attributeValue + "]");
-if (attributeValue != null) System.out.println("Class: " + attributeValue.getClass());
+if (attributeValue != null) {
+	System.out.println("Class: " + attributeValue.getClass());
+}
 
 return attributeValue;]]></body>
   <type>groovy</type>

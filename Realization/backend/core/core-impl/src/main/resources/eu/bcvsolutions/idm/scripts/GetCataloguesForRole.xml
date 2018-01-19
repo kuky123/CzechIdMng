@@ -21,10 +21,10 @@ Returns role catalogue names for given role entity.
 //IdmRoleCatalogueService -> roleCatalogueService
 //IdmRole -> entity
 //
-def result = []
-def rCatDtos = roleCatalogueService.findAllByRole(entity.id)
-rCatDtos.each { rCat -> result.add(rCat.name) }
-return result]]></body>
+def result = [];
+def rCatDtos = roleCatalogueService.findAllByRole(entity.id);
+rCatDtos.each { rCat -> result.add(rCat.name); }
+return result;]]></body>
 <type>groovy</type>
   <category>TRANSFORM_TO</category>
   <description>Returns role catalogue names for given role entity.</description>
