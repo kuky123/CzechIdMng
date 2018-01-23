@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Converts Boolean to String (0/1)
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>getBooleanAsString</code>
+  <name>Boolean->0/1 String conversion</name>
+  <body><![CDATA[
+if (attributeValue) {
+    return "1";
+} else {
+    return "0";
+}
+]]></body>
+<type>groovy</type>
+ <category>TRANSFORM_TO</category>
+ <description>Converts Boolean to String.
+ Input:
+boolean -> attributeValue </description>
+</script>

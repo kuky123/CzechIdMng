@@ -1,48 +1,40 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
-Returns if identity's account is in protection.
+Returns AccAccount for provided identity and system.
 -->
 <script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
-  <code>IsAccountInProtection</code>
-  <name>IsAccountInProtection</name>
+  <code>GetIdentityAccAccount</code>
+  <name>GetIdentityAccAccount</name>
   <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules;
+
 import eu.bcvsolutions.idm.acc.dto.AccAccountDto;
 
-/**
- * code: IsAccountInProtection
- * name: IsAccountInProtection
- * desc:
- * Returns if identity's account is in protection.
- * Input:
- *   entity - IdmIdentity
- *   system - SysSystem
- * Output:
- *   boolean inProtection - account is in protection
- *
- * authorities:
- * - eu.bcvsolutions.idm.acc.entity.AccAccount
- *
- * @author Jan Helbich
- */
-// IdmIdentity entity
-// SysSystem system
-//
-AccAccountDto account = scriptEvaluator.evaluate(scriptEvaluator.newBuilder()
-        .setScriptCode('GetIdentityAccAccount')
-        .addParameter('scriptEvaluator', scriptEvaluator)
-        .addParameter('entity', entity)
-        .addParameter('system', system)
-        .addParameter('uid', uid)
-        .build());
-//
-return account == null ? false : account.inProtection;]]></body>
-  <type>groovy</type>
+// Load account
+def account = accAccountService.getAccount(uid,system.getId());
+if(account){
+    // Account was found. Return protection state.
+    return account.isInProtection();
+}
+return false;]]></body>
+<type>groovy</type>
   <category>TRANSFORM_TO</category>
-  <description>Returns if identity's account is in protection.</description>
-<allowClasses>
-  <allowClass>
-    <className>eu.bcvsolutions.idm.acc.dto.AccAccountDto</className>
-  </allowClass>
-</allowClasses>
+  <description>Returns AccAccount for provided identity and system.
+  Input: 
+  String uid of accAccount-> uid
+  sysSystemDto -> system</description>
+    <services>
+        <service>
+            <name>accAccountService</name>
+            <className>eu.bcvsolutions.idm.acc.service.impl.DefaultAccAccountService</className>            
+        </service>
+    </services>
+    <allowClasses>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.AccAccountDto</className>
+        </allowClass>
+        <allowClass>
+            <className>eu.bcvsolutions.idm.acc.dto.SysSystemDto</className>
+        </allowClass>
+    </allowClasses>
 </script>

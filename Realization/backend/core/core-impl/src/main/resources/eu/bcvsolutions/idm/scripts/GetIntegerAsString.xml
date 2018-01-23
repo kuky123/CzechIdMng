@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Converts Integer to String.
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>GetIntegerAsString</code>
+  <name>Integer -> String conversion</name>
+  <body><![CDATA[
+return attributeValue.toString();
+]]></body>
+<type>groovy</type>
+ <category>TRANSFORM_FROM</category>
+ <description>Converts Integer to String.
+ Input:
+ Integer -> attributeValue</description>
+</script>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+Converts String "0" or "1" to Boolean.
+-->
+<script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
+  <code>getBooleanFromIntegerInString</code>
+  <name>0/1 String -> Boolean conversion</name>
+  <body><![CDATA[
+if ("1".equals(attributeValue)) {
+    return Boolean.TRUE;
+}
+if ("0".equals(attributeValue)) {
+    return Boolean.FALSE;
+}
+return null;
+]]></body>
+<type>groovy</type>
+ <category>TRANSFORM_FROM</category>
+ <description>Converts String "0" or "1" to Boolean.
+ Input:
+String "0" or "1" -> attributeValue</description>
+</script>

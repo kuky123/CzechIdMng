@@ -26,6 +26,9 @@ return new GuardedString(attributeValue);
     <type>groovy</type>
     <category>TRANSFORM_TO</category>
     <parameters>attributeValue</parameters>
+    <description>Returns String as GuardedString.
+ Input:
+ String -> attributeValue</description>
     <services>
         <!-- not needed -->
     </services>

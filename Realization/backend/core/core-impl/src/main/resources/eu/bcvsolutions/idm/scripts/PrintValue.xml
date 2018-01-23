@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
-Skript pouze vytiskne hodnotu atributu. Slouzi pro debug
+Script prints value and class of value. Script is meant for debug.
 Input:
  Object attributeValue
 -->
@@ -9,17 +9,20 @@ Input:
   <code>printValue</code>
   <name>Print Value</name>
     <body><![CDATA[
-System.out.println("Value: [" + attributeValue + "]");
+org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger("Print Value script");
+log.debug("Start 'printValue' script.");
+
+log.debug("Value: [" + attributeValue + "]");
 if (attributeValue != null) {
-	System.out.println("Class: " + attributeValue.getClass());
+	log.debug("Class: " + attributeValue.getClass());
 }
 
 return attributeValue;]]></body>
   <type>groovy</type>
   <category>TRANSFORM_TO</category>
-	<description>Skript pouze vytiskne hodnotu atributu. Slouzi pro debug
+	<description>Script prints value and class of value. Script is meant for debug.
 Input:
- Object attributeValue </description>
+ Object -> attributeValue </description>
 <allowClasses>
     <allowClass>
         <className>java.lang.System</className>

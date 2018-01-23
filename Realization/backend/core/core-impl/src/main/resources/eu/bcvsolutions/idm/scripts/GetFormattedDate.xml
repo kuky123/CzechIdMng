@@ -1,26 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
-Converts Joda's DateTime to 'yyyy-MM-dd HH:mm:ss' string
+/**
+ * Converts Joda's DateTime to 'yyyy-MM-dd HH:mm:ss' string
+ *
+ * @author Jan Helbich
+ */
 -->
 <script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
   <code>GetFormattedDate</code>
   <name>GetFormattedDate</name>
   <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules;
+  import org.joda.time;
 
-/**
- * code: GetFormattedDate
- * name: GetFormattedDate
- * category: TRANSFORM_TO
- * desc: Converts Joda's DateTime to 'yyyy-MM-dd HH:mm:ss' string
- * authorities:
- *
- * @author Jan Helbich
- */
-// org.joda.time DateTime attributeValue
-//
-attributeValue == null ? null : attributeValue.toString("yyyy-MM-dd HH:mm:ss");]]></body>
+attributeValue == null ? null : attributeValue.toString(patern);]]></body>
 <type>groovy</type>
  <category>TRANSFORM_TO</category>
- <description>Converts Joda's DateTime to 'yyyy-MM-dd HH:mm:ss' string</description>
+ <description>Converts Joda's DateTime to String.
+ Input:
+ org.joda.time DateTime -> attributeValue
+ String (like "yyyy-MM-dd HH:mm:ss") -> patern</description>
 </script>

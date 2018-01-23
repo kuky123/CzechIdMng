@@ -1,33 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
-Returns a set of user's assigned role names.
+/**
+* Returns a set of user's assigned role names.
+*
+* @author Jan Helbich
+**/
 -->
 <script xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="IdmScript.xsd">
   <code>GetUserRoles</code>
   <name>GetUserRoles</name>
   <body><![CDATA[package eu.bcvsolutions.idm.scripts.rules;
-/**
- * code: GetUserRoles
- * name: GetUserRoles
- * desc: Returns a set of user's assigned role names.
- * authorities:
- * - eu.bcvsolutions.idm.core.api.dto.IdmIdentityRoleDto
- * - eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto
- * - eu.bcvsolutions.idm.core.api.dto.IdmRoleDto
- * - java.util.HashSet
- * - SERVICE idmIdentityRoleService
- * - SERVICE roleService
- *
- * @author Jan Helbich
- */
-//
-//
-//IdmIdentity -> entity
-//IdmIdentityRoleService -> idmIdentityRoleService
-//IdmRoleService -> roleService
-//
-org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger("GetUserRoles");
 
 def roleNames = [];
 def identityRoles = identityRoleService.findValidRole(entity.id, null).getContent();
@@ -35,12 +18,14 @@ identityRoles.each { role -> roleNames.add(roleService.get(role.role).name); }
 //
 List<String> resultRoles = new ArrayList<String>();
 resultRoles.addAll(roleNames.toSet());
-LOG.info("roles: {}", resultRoles);
+
 return resultRoles;
 ]]></body>
   <type>groovy</type>
   <category>TRANSFORM_TO</category>
-  <description>Returns a set of user's assigned role names.</description>
+  <description>Returns a set of user's assigned role names.
+  Input:
+  IdmIdentity -> entity</description>
     <services>
         <service>
             <name>roleService</name>
