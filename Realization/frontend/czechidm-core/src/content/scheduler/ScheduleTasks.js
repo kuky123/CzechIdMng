@@ -558,6 +558,9 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
                   }
                   hidden={ triggerType !== 'CRON' }
                   required={ triggerType === 'CRON' }/>
+                <Advanced.CronTab
+                  hidden={ triggerType !== 'CRON' }
+                  required={ triggerType === 'CRON' } />
                 <Basic.SelectBox
                   ref="initiatorTaskId"
                   manager={ manager }

@@ -6,3 +6,4 @@
 /bin/
 nb-configuration.xml
 / target/
+/.apt_generated_tests/

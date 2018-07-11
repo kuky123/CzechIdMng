@@ -3,3 +3,4 @@
 /.classpath
 /.project
 /bin/
+/.apt_generated_tests/

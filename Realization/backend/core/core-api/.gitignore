@@ -8,3 +8,4 @@
 /bin/
 /.apt_generated/
 /**target/
+/.apt_generated_tests/

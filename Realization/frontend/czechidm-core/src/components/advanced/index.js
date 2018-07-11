@@ -43,6 +43,7 @@ import TreeTypeInfo from './TreeTypeInfo/TreeTypeInfo';
 import TreeNodeInfo from './TreeNodeInfo/TreeNodeInfo';
 import LongRunningTask from './LongRunningTask/LongRunningTask';
 import CreatableSelectBox from './CreatableSelectBox/CreatableSelectBox';
+import CronTab from './CronTab/CronTab';
 
 const Components = {
   Table,
@@ -91,7 +92,8 @@ const Components = {
   TreeTypeInfo,
   TreeNodeInfo,
   LongRunningTask,
-  CreatableSelectBox
+  CreatableSelectBox,
+  CronTab
 };
 
 Components.version = '0.0.1';
