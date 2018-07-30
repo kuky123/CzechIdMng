@@ -1336,6 +1336,215 @@
             "placeholder": ""
           }
         }
+      },
+      "connid-net-tirasa-connid-bundles-ldap-ldapconnector-net-tirasa-connid-bundles-ldap-1-5-1": {
+        "attributes": {
+          "host": {
+            "label": "Host",
+            "help": "Zadejte název serveru, na kterém běží LDAP.",
+            "placeholder": ""
+          },
+          "port": {
+            "label": "TCP Port",
+            "help": "Zadejte číslo portu TCP, na kterém naslouchá LDAP server. Výchozí hodnota je 389.",
+            "placeholder": ""
+          },
+          "ssl": {
+            "label": "Šifrované spojení - SSL",
+            "help": "Zaškrtněte, pokud se má při spojení k LDAP serveru použít šifrované spojení SSL. Výchozí hodnota je \"false\".",
+            "placeholder": ""
+          },
+          "failover": {
+            "label": "Záložní servery - Failover servers",
+            "help": "Seznam všech serverů, které budou použity v případě selhání hlavního serveru. Pokud dojde k chybě na hlavním serveru, JNDI se připojí na následující dostupný server v seznamu. Seznam všech serverů má být ve formátu: \"ldap://ldap.example.com:389/\", který splňuje standard LDAP v3 URL popsaný v RFC 2255. V tomto nastavení se bere v potaz pouze host a port.",
+            "placeholder": ""
+          },
+          "principal": {
+            "label": "Přihlašovací jméno - Principal",
+            "help": "Distinguished name (DN - jednoznačný identifikátor objektu), který je použit pro autentizaci k LDAP serveru.",
+            "placeholder": ""
+          },
+          "credentials": {
+            "label": "Přihlašovací heslo",
+            "help": "Heslo uživatele, použitého pro autentizaci",
+            "placeholder": ""
+          },
+          "basecontexts": {
+            "label": "Základní kontexty pro vyhledávání - Base Contexts",
+            "help": "Jeden nebo více výchozích bodů ve stromu LDAPu, které budou použity pro vyhledávání ve stromu. Vyhledávání je prováděno při zjišťování, ve kterých skupinách je uživatel zařazen.",
+            "placeholder": ""
+          },
+          "passwordattribute": {
+            "label": "Atribut heslo",
+            "help": "Název atributu v LDAPu ve kterém je uloženo heslo. Při změně uživatelského hesla musí být nové heslo nastaveno v tomto atributu. Výchozí hodnota je \"userPassword\".",
+            "placeholder": ""
+          },
+          "accountobjectclasses": {
+            "label": "Třídy objektů účtů - Account Object Classes",
+            "help": "Třídy objektů, které budou použity při vytváření nových objektů uživatelských účtů ve stromu LDAPu. Při zadání více hodnot musí být každá hodnota na vlastním řádku. Nepoužívejte čárku ani středník pro oddělení hodnot. Některé třídy objektů vyžadují specifikaci všech tříd ve stromové struktuře tříd.",
+            "placeholder": ""
+          },
+          "accountusernameattributes": {
+            "label": "Atributy s uživatelským jménem",
+            "help": "Seznam atributů, ve kterých je uloženo uživatelské jméno. Tyto atributy budou použity při přihlašování pro vyhledávání uživatele přihlašovaného k LDAPu.",
+            "placeholder": ""
+          },
+          "accountsearchfilter": {
+            "label": "Volitelný filtr při vyhledávání uživatelských účtů",
+            "help": "Volitelný LDAP filtr pro vyhledávání uživatelských účtů, které jsou vráceny ze systému LDAP. Pokud není žádný filtr specifikován, jsou vráceny pouze účty, které odpovídají všem specifikovaným třídám objektů.",
+            "placeholder": ""
+          },
+          "groupobjectclasses": {
+            "label": "Třídy objektů skupin - Group Object Classes",
+            "help": "Třídy objektů skupin, které budou použity při vytváření nových objektů skupin ve stromu LDAPu. Při zadání více hodnot musí být každá hodnota na vlastním řádku. Nepoužívejte čárku ani středník pro oddělení hodnot. Některé třídy objektů vyžadují specifikaci všech tříd ve stromové struktuře tříd.",
+            "placeholder": ""
+          },
+          "groupnameattributes": {
+            "label": "Atributy s názvy skupin",
+            "help": "Seznam atributů, ve kterých je uložen název skupiny. Výchozí hodnota je \"cn\".",
+            "placeholder": ""
+          },
+          "groupmemberattribute": {
+            "label": "Atribut člen skupiny",
+            "help": "Název atributu skupiny, který bude aktualizován při změně distinguished jména uživatele, který je zařazen ve skupině. Výchozí hodnota je \"uniqueMember\".",
+            "placeholder": ""
+          },
+          "maintainldapgroupmembership": {
+            "label": "Zachovat členství ve skupinách",
+            "help": "Pokud je zaškrtnuto a uživatel je přejmenován nebo odstraněn, pak jsou aktualizovány všechny LDAP skupiny ve kterých je uživatel zařazen, aby bylo zohledněno nové jméno. V opačném případě je členství ve skupinách ukončeno, protože LDAP musí zachovat referenční integritu. Výchozí hodnota je \"false\".",
+            "placeholder": ""
+          },
+          "maintainposixgroupmembership": {
+            "label": "Zachovat členství v POSIXových skupinách",
+            "help": "Pokud je zaškrtnuto a uživatel je přejmenován nebo odstraněn, pak jsou aktualizovány všechny POSIXové skupiny ve kterých je uživatel zařazen, aby bylo zohledněno nové jméno. V opačném případě je členství ve skupinách ukončeno, protože LDAP musí zachovat referenční integritu. Výchozí hodnota je \"false\".",
+            "placeholder": ""
+          },
+          "passwordhashalgorithm": {
+            "label": "Algoritmus hashování hesla",
+            "help": "Definuje, jaký algoritmus je použit pro vytvoření hashe hesla. Aktuálně podporované hodnoty jsou: SSHA, SHA, SMD5 a MD5. Pokud není hodnota vyplněna, heslo není hashováno a bude uloženo v LDAPu v textové podobě, pokud si LDAP server nezajišťuje vlastní hashování (například Netscape Directory Server a iPlanet Directory Server).",
+            "placeholder": ""
+          },
+          "respectresourcepasswordpolicychangeafterreset": {
+            "label": "Dodržet politiku hesel - Změna hesla po resetu",
+            "help": "Pokud je na systému specifikována politika vynucení změny hesla po resetu hesla, uživatel, jehož heslo bylo administrativně resetováno si musí po úspěšném přihlášení změnit heslo. Výchozí hodnota je \"false\".",
+            "placeholder": ""
+          },
+          "usevlvcontrols": {
+            "label": "Použít nastavení virtuálního listu - VLV",
+            "help": "Slouží pro omezení počtu zobrazených záznamu na straně serveru. Výchozí hodnota je \"false\".",
+            "placeholder": ""
+          },
+          "vlvsortattribute": {
+            "label": "Použít řazení VLV",
+            "help": "Atribut, který je použit pro indexování na systému. Výchozí hodnota je \"uid\".",
+            "placeholder": ""
+          },
+          "uidattribute": {
+            "label": "Atribut Uid",
+            "help": "Název LDAP atributu, který je mapován na atribut Uid. Výchozí hdonota je \"entryUUID\".",
+            "placeholder": ""
+          },
+          "readschema": {
+            "label": "Načíst schema ze serveru",
+            "help": "Pokud je zaškrtnuto, konektor načte schema ze serveru, jinak zobrazí výchozí schéma na základě tříd objektů v konfiguraci. Pro použití rozšířených tříd objektů musí být tato hodnota zaškrtnuta. Výchozí hodnota je \"true\".",
+            "placeholder": ""
+          },
+          "basecontextstosynchronize": {
+            "label": "Základní kontexty pro synchronizaci - Base Contexts to Synchronize",
+            "help": "Jeden nebo více výchozích bodů ve stromu LDAPu, které budou použity, jestli má být změna synchronizována. Pokud není hodnota nastavena, bude použita hodnota atributu Základní kontexty pro vyhledávání - Base Context.",
+            "placeholder": ""
+          },
+          "objectclassestosynchronize": {
+            "label": "Třídy objektů pro synchronizaci - Object Classes to Synchronize",
+            "help": "Třídy objektů pro synchronizaci. Log změn slouží pro všechny objekty. Tento seznam slouží pro filtrování pouze specifikovaných tříd objektů. Do seznamu by se neměly zařazovat nadřazené třídy objektů, pokud není cílem synchronizovat všechny objekty podřazených tříd. Například, pokud mají být synchronizovány objekty \"inetOrgPerson\", ale nadřazené třídy: \"inetOrgPerson\" (\"person\", \"organizationalperson\" a \"top\") ne, pak v tomto seznamu má být pouze záznam \"inetOrgPerson\". Všechny objekty v LDAPu jsou podřazený pod třídou \"top\". Proto by tato třída nikdy neměla být zařazena v listu, jinak by nebyl žádný objekt filtrován. Výchozí hodnota je \"inetOrgPerson\".",
+            "placeholder": ""
+          },
+          "attributestosynchronize": {
+            "label": "Atributy pro synchronizaci",
+            "help": "Názvy atributů, které budou synchronizovány. Toto ignoruje změny z logu změn, pokud není zaznamenána změna některého z vyjmenovaných atributů. Například, pokud je v seznamu pouze atribut \"department\", tak pouze změny, které se týkají atributu \"department\" budou zpracovány, ostatní změny budou ignorovány. Pokud je hodnota prázdná (výchozí stav), tak budou zpracovány všechny změny.",
+            "placeholder": ""
+          },
+          "modifiersnamestofilterout": {
+            "label": "Odfiltrovat změny provedené uživatelem - Filter Out Changes By",
+            "help": "Seznam názvů (DN) adresářových administrátorů, které budou odfiltrovány ze seznamu změn. Změny s atributem \"modifiersName\", které vyhovují záznamům v seznamu budou odfiltrovány. Standardní hodnota je jméno administrátora, použitého tímto konektorem, pro zamezení vzniku smyček. Záznamy mají být ve formátu \"cn=Directory Manager\".",
+            "placeholder": ""
+          },
+          "accountsynchronizationfilter": {
+            "label": "LDAP filtr pro účty k synchronizaci",
+            "help": "Volitelný LDAP filtr pro objekty k synchronizaci. Protože change log slouží pro všechny objekty, tento filtr zobrazí pouze objekty, které vyhovují danému filtru. Pokud specifikujete filtr, objekt bude synchronizován, pouze pokud vyhovuje filtru a je zařazen v třídách objektů pro synchronizaci.",
+            "placeholder": ""
+          },
+          "changelogblocksize": {
+            "label": "Velikost bloku v logu změn -Change Log Block Size",
+            "help": "Číslo určující velikost logu změn načteného jedním dotazem. Výchozí hodnota je \"100\".",
+            "placeholder": ""
+          },
+          "changenumberattribute": {
+            "label": "Atribut číslo změny",
+            "help": "Název atributu s číslem změny v logu změn. Výchozí hodnota je \"changeNumber\".",
+            "placeholder": ""
+          },
+          "filterwithorinsteadofand": {
+            "label": "Použít OR místo AND při filtrování",
+            "help": "Standardně při filtrování záznamů v logu změn je použito logické spojování AND. Pokud je tato hodnota nastavena, filtr použije  OR při zjišťování změn z logu. Výchozí hodnota je \"false\".",
+            "placeholder": ""
+          },
+          "removelogentryobjectclassfromfilter": {
+            "label": "Odstranit třídy objektů Log Entry z filtru - Remove Log Entry Object Class from Filter",
+            "help": "Pokud je tato hodnota nastavena, filtr použitý pro načtení změn z logu, nevrátí záznamy třídy \"changeLogEntry\", předpokládá se, že neexistují žádné další záznamy v logu změn. Výchozí hodnota je \"true\".",
+            "placeholder": ""
+          },
+          "synchronizepasswords": {
+            "label": "Povolit synchronizaci hesel",
+            "help": "Pokud je zaškrtnuto, konektor bude synchronizovat hesla. Plugin Password Capture musí být nainstalován pro správnou funkci synchronizace hesel. Výchozí hodnota je \"false\".",
+            "placeholder": ""
+          },
+          "passwordattributetosynchronize": {
+            "label": "Atribut heslo pro synchronizaci",
+            "help": "Název atributu v LDAPu, který bude použit při synchronizaci hesel.",
+            "placeholder": ""
+          },
+          "passworddecryptionkey": {
+            "label": "Klíč k dešifrování heska",
+            "help": "Klíč, který bude použit pro dešifrování hesel při synchronizaci hesel.",
+            "placeholder": ""
+          },
+          "passworddecryptioninitializationvector": {
+            "label": "Vektor pro inicializaci dešifrování hesla",
+            "help": "Vektor, který bude použit pro inicializaci dešifrování hesla při synchronizaci hesel",
+            "placeholder": ""
+          },
+          "statusmanagementclass": {
+            "label": "Třída pro řízení stavu",
+            "help": "Třída, která bude použita pro řízení stavu zablokovaný/odblokovaný. Pokud nebude žádná třída vyplněna, tak řízení stavu nebude možné.",
+            "placeholder": ""
+          },
+          "retrievepasswordswithsearch": {
+            "label": "Vracet hesla při vyhledávání",
+            "help": "Mají se vracet hesla při vyhledávání. Výchozí hodnota je \"false\".",
+            "placeholder": ""
+          },
+          "dnattribute": {
+            "label": "Atribut distinguished name (DN) záznamu",
+            "help": "Název atributu obsahující distinguished name (DN) záznamu. Výchozí hodnota je \"entryDN\".",
+            "placeholder": ""
+          },
+          "groupsearchfilter": {
+            "label": "LDAP filtr pro vyhledávání skupin",
+            "help": "Volitelný LDAP filtr pro skupiny, které jsou vráceny z LDAPu. Pokud není specifikován žádný filtr, tak jsou vyhledány pouze skupiny, které obsahují všechny specifické třídy objektů.",
+            "placeholder": ""
+          },
+          "readtimeout": {
+            "label": "Časový limit čtení (Milisekundy)",
+            "help": "Čas, který bude konektor čekat na odpověď. Pokud nedostane odpověď, tak pokus o čtení bude zrušen. Hodnota 0 nebo menší znamená žádný limit.",
+            "placeholder": ""
+          },
+          "connecttimeout": {
+            "label": "Časový limit spojení (Milisekundy)",
+            "help": "Čas, který bude konektor čekat při otevírání spojení k serveru. Při zadání hodnoty 0 bude použita hodnota TCP spojení sítě (což může být několik minut). Hodnota menší než 0 znamená žádný limit.",
+            "placeholder": ""
+          }
+        }
       }
     },
     "bulk-action": {
