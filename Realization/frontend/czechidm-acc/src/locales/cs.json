@@ -1545,6 +1545,172 @@
             "placeholder": ""
           }
         }
+      },
+      "connid-net-tirasa-connid-bundles-db-scriptedsql-scriptedsqlconnector-net-tirasa-connid-bundles-db-scriptedsql-2-2-4": {
+        "label": "connid-net-tirasa-connid-bundles-db-scriptedsql-scriptedsqlconnector-net-tirasa-connid-bundles-db-scriptedsql-2-2-4",
+        "help": "",
+        "attributes": {
+          "quoting": {
+            "label": "Oddělovat názvy - Name Quoting",
+            "help": "Určuje, jestli se mají začátky a konce názvů sloupců oddělit oddělovacím znakem. Ve výchozím stavu databázové sloupce nejsou odděleny znakem. Při výběru znaků (apostrof, uvozovky, obrácená čárka), budou názvy sloupců odděleny tímto znakem v SQL vygenerovanám pro přístup do databáze.",
+            "placeholder": ""
+          },
+          "createscriptfilename": {
+            "label": "Název souboru se skriptem pro vytvoření účtu",
+            "help": "Zadejte cestu k souboru se skriptem pro vytvoření účtu.",
+            "placeholder": ""
+          },
+          "reloadscriptonexecution": {
+            "label": "Znovu načíst skript při spuštění příkazu",
+            "help": "Ve výchozím nastavení jsou skripty načteny a zkompilovány při vytváření instance konektoru. Pokud je nastaveno, tak konektor načítá a kompiluje skripty před každým voláním. Používejte pouze pro účely testování/debugování, protože toto může mít velký dopad na rychlost aplikace.",
+            "placeholder": ""
+          },
+          "deletescript": {
+            "label": "Skript pro odstranění účtu",
+            "help": "Zadejte skript (kód) pro odstranění účtu.",
+            "placeholder": ""
+          },
+          "deletescriptfilename": {
+            "label": "Název souboru se skriptem pro odstranění účtu",
+            "help": "Zadejte cestu k souboru se skriptem pro odstranění účtu.",
+            "placeholder": ""
+          },
+          "cleartextpasswordtoscript": {
+            "label": "Předávat hesla v textové podobě do skriptů",
+            "help": "Zaškrněte pokud se mají hesla předávat do skriptů v textové podobě.",
+            "placeholder": ""
+          },
+          "autocommit": {
+            "label": "Automatický commit",
+            "help": "Pokud je zaškrtnuto, každý SQL příkaz je považován za transakci a změny jsou uloženy do databáze ihned po provedení.",
+            "placeholder": ""
+          },
+          "searchscriptfilename": {
+            "label": "Název souboru se skriptem pro hledání",
+            "help": "Zadejte cestu k souboru se skriptem pro vyhledávání na systému.",
+            "placeholder": ""
+          },
+          "updatescriptfilename": {
+            "label": "Název souboru se skriptem pro aktualizaci účtu",
+            "help": "Zadejte cestu k souboru se skriptem pro aktualizaci účtu na systému",
+            "placeholder": ""
+          },
+          "scriptinglanguage": {
+            "label": "Jazyk skriptů",
+            "help": "Zadejte jazyk skriptů. Aktuálně je podporovaná pouze hodnota GROOVY.",
+            "placeholder": ""
+          },
+          "schemascriptfilename": {
+            "label": "Název souboru se skriptem pro schema",
+            "help": "Zadejte cestu k souboru se skriptem pro schema.",
+            "placeholder": ""
+          },
+          "syncscript": {
+            "label": "Skript pro synchronizaci",
+            "help": "Zadejte skript (kód) pro synchronizaci účtů.",
+            "placeholder": ""
+          },
+          "searchscript": {
+            "label": "Skript pro hledání",
+            "help": "Zadejte skript (kód) pro hledání účtů.",
+            "placeholder": ""
+          },
+          "updatescript": {
+            "label": "Skript pro aktualizaci účtu",
+            "help": "Zadejte skript (kód) pro aktualizaci účtu.",
+            "placeholder": ""
+          },
+          "testscript": {
+            "label": "Skript pro otestování spojení",
+            "help": "Zadejte skript (kód) pro otestování spojení.",
+            "placeholder": ""
+          },
+          "testscriptfilename": {
+            "label": "Název souboru se skriptem pro otestování spojení",
+            "help": "Zadejte cestu k souboru se skriptem pro otestování spojení.",
+            "placeholder": ""
+          },
+          "syncscriptfilename": {
+            "label": "Název souboru se skriptem pro synchronizaci",
+            "help": "Zadejte cestu k souboru se skriptem pro synchronizaci",
+            "placeholder": ""
+          },
+          "createscript": {
+            "label": "Skript pro vytvoření účtu",
+            "help": "Zadejte skript (kód) pro vytvoření účtu.",
+            "placeholder": ""
+          },
+          "host": {
+            "label": "Host",
+            "help": "Zadejte název serveru, na kterém je vystavena databáze.",
+            "placeholder": ""
+          },
+          "port": {
+            "label": "Port",
+            "help": "Zadejte číslo portu TCP, na kterém je vystavena databáze.",
+            "placeholder": ""
+          },
+          "user": {
+            "label": "Uživatelské jméno",
+            "help": "Zadejte jméno uživatele pro připojení k databázi. Uživatel musí mít oprávnění na tabulku účtů.",
+            "placeholder": ""
+          },
+          "password": {
+            "label": "Uživatelské heslo",
+            "help": "Zadejte heslo uživatele pro připojení k databázi.",
+            "placeholder": ""
+          },
+          "database": {
+            "label": "Název databáze",
+            "help": "Zadejte název databáze na databázovém serveru, která obsahuje tabulku účtů.",
+            "placeholder": ""
+          },
+          "jdbcdriver": {
+            "label": "JDBC Ovladač - JDBC Driver",
+            "help": "Zadejte název JDBC ovladače. Pro Oracle zadejte oracle.jdbc.driver.OracleDriver. Pro MySQL zadejte org.gjt.mm.mysql.Driver. Může být prázdný, pokud je poskytnut zdroj dat.",
+            "placeholder": ""
+          },
+          "jdbcurltemplate": {
+            "label": "Adresa JDBC připojení - JDBC Connection URL",
+            "help": "Zadejte adresu JDBC připojení. Pro Oracle je vzor jdbc:oracle:thin:@[host]:[port(1521)]:[DB]. Pro MySQL je vzor jdbc:mysql://[host]:[port(3306)]/[db], Další informace lze nalézt v dokumentaci JDBC ovladače. Může být prázdný, pokud je poskytnut zdroj dat.",
+            "placeholder": ""
+          },
+          "enableemptystring": {
+            "label": "Umožnit zápis prázdného řetězce",
+            "help": "Umožní zapsat prázdný řetezec, místo hodnoty NULL do sloupců vyžadujících NOT-NULL hodnoty. Toto nastavení neovlivní způsob zápis řetězců v databázích založených na Oracle databázi. Při výchozím nastavení se prázdný řetezec zapíše jako hodnota NULL.",
+            "placeholder": ""
+          },
+          "rethrowallsqlexceptions": {
+            "label": "Předat všechny výjimky - Rethrow all SQLExceptions",
+            "help": "Pokud není tato možnost zaškrtnuta, pro každý SQL dotaz, který vyhodí SQL výjimku s kódem chyby 0, bude výjimka zachycena, ale nebude předána dále. Zaškrtněte, pokud chcete předávat výjimky s kódem chyby 0.",
+            "placeholder": ""
+          },
+          "nativetimestamps": {
+            "label": "Použít výchozí formát data a času",
+            "help": "Vyberte pro použití výchozího formátu data a času java.sql.Timestamp při zobrazení data a času z databáze.",
+            "placeholder": ""
+          },
+          "allnative": {
+            "label": "Použít všechny výchozí formáty",
+            "help": "Vyberte pro načítání dat ze všech sloupců ve výchozích formátech z databáze.",
+            "placeholder": ""
+          },
+          "validconnectionquery": {
+            "label": "Validovat spojení - Validate Connection Query",
+            "help": "Vyberte pro kontrolu úspěšného spojení. Pokud není vybráno, výchozí implementace testuje spojení s použitím zapnutí/vypnutí automatického commitu do databáze. Použití select 1 from dummy table může být efektivnější.",
+            "placeholder": ""
+          },
+          "datasource": {
+            "label": "Cesta ke zdroji dat - Datasource Path",
+            "help": "Zadejte cestu k JDBC zdroji dat pro připojení k serveru Oracle. Pokud je vyplněno, konektor se pokusí připojit pouze ke zdroji a bude ignorovat další nastavené parametry. Příklad hodnoty je: jdbc/SampleDataSourceName",
+            "placeholder": ""
+          },
+          "jndiproperties": {
+            "label": "Počáteční hodnoty JNDI - Initial JNDI Properties",
+            "help": "Zadejte počáteční hodnoty ve formátu: klíč = hodnota (JDBC JNDI Initial context factory).",
+            "placeholder": ""
+          }
+        }
       }
     },
     "bulk-action": {
