@@ -1703,6 +1703,97 @@
             "placeholder": ""
           }
         }
+      },
+      "connid-net-tirasa-connid-bundles-csvdir-csvdirconnector-net-tirasa-connid-bundles-csvdir-0-8-5": {
+        "label": "connId:net.tirasa.connid.bundles.csvdir.CSVDirConnector:net.tirasa.connid.bundles.csvdir:0.8.5",
+        "help": "",
+        "attributes": {
+          "sourcepath": {
+            "label": "Source path",
+            "help": "Absolute path of a directory where the CSV files to be processed are located",
+            "placeholder": ""
+          },
+          "filemask": {
+            "label": "File mask",
+            "help": "Regular expression describing files to be processed",
+            "placeholder": ""
+          },
+          "encoding": {
+            "label": "File encoding",
+            "help": "Basic encoding of the file",
+            "placeholder": ""
+          },
+          "fielddelimiter": {
+            "label": "Field delimiter",
+            "help": "Delimiter used to separate fields in CSV files. Default is \",\".",
+            "placeholder": ""
+          },
+          "textqualifier": {
+            "label": "Text qualifier",
+            "help": "Delimiter to determine beginning and end of text in value. Default is \".",
+            "placeholder": ""
+          },
+          "keycolumnnames": {
+            "label": "Key column name",
+            "help": "Name of the column used to identify user uniquely",
+            "placeholder": ""
+          },
+          "passwordcolumnname": {
+            "label": "Password column name",
+            "help": "Name of the column used to specify user password",
+            "placeholder": ""
+          },
+          "deletecolumnname": {
+            "label": "Delete column name",
+            "help": "Name of the column used to specify users to be deleted",
+            "placeholder": ""
+          },
+          "quotationrequired": {
+            "label": "Value quotation required",
+            "help": "Specify if value quotation is required. Default is true.",
+            "placeholder": ""
+          },
+          "fields": {
+            "label": "Column names",
+            "help": "Column names",
+            "placeholder": ""
+          },
+          "ignoreheader": {
+            "label": "Ignore header",
+            "help": "Specify if first line of the file must be ignored. Default is true.",
+            "placeholder": ""
+          },
+          "keyseparator": {
+            "label": "Key separator",
+            "help": "Character used to separate keys in a multi-key scenario. Default is \",\".",
+            "placeholder": ""
+          },
+          "multivalueseparator": {
+            "label": "Multi value separator",
+            "help": "Character used to separate values in a multi-value scenario. Multivalue unsupported if not provided.",
+            "placeholder": ""
+          },
+          "defaultstatusvalue": {
+            "label": "Default Status Value",
+            "help": "Enter the value for status in case of status not specified. Default is \"true\".",
+            "placeholder": ""
+          },
+          "disabledstatusvalue": {
+            "label": "Disabled Status Value",
+            "help": "Specify a value for disabled status. Default is \"false\".",
+            "placeholder": ""
+          },
+          "enabledstatusvalue": {
+            "label": "Enable Status Value",
+            "help": "Specify a value for enabled status. Default is \"true\".",
+            "placeholder": ""
+          },
+          "statuscolumn": {
+            "label": "Status Column name",
+            "help": "Specify name of column with status.",
+            "placeholder": ""
+          }
+        }
       }
     },
     "bulk-action": {

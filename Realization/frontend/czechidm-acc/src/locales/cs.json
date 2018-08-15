@@ -1711,6 +1711,97 @@
             "placeholder": ""
           }
         }
+      },
+      "connid-net-tirasa-connid-bundles-csvdir-csvdirconnector-net-tirasa-connid-bundles-csvdir-0-8-5": {
+        "label": "connId:net.tirasa.connid.bundles.csvdir.CSVDirConnector:net.tirasa.connid.bundles.csvdir:0.8.5",
+        "help": "",
+        "attributes": {
+          "sourcepath": {
+            "label": "Zdroj dat",
+            "help": "Zadejte absolutní cestu do adresáře, kde jsou uloženy CSV soubory ke zpracování.",
+            "placeholder": ""
+          },
+          "filemask": {
+            "label": "Maska souborů",
+            "help": "Zadejte regulární výraz popisující soubory ke zpracování",
+            "placeholder": ""
+          },
+          "encoding": {
+            "label": "Kódování souborů",
+            "help": "Zadejte kódování souborů",
+            "placeholder": ""
+          },
+          "fielddelimiter": {
+            "label": "Oddělovač sloupců",
+            "help": "Zadejte oddělovač sloupců v CSV souborech. Výchozí hodnota je \",\".",
+            "placeholder": ""
+          },
+          "textqualifier": {
+            "label": "Oddělovač textu",
+            "help": "Oddělovač určující kde začíná a končí textová hodnota. Výchozí hodnota je \".",
+            "placeholder": ""
+          },
+          "keycolumnnames": {
+            "label": "Název sloupce s identifikátorem",
+            "help": "Zadejte název sloupce, kde je uložen jedinečný identifikátor uživatele.",
+            "placeholder": ""
+          },
+          "passwordcolumnname": {
+            "label": "Název sloupce s heslem",
+            "help": "Zadejte název sloupce, kde je uloženo heslo uživatele.",
+            "placeholder": ""
+          },
+          "deletecolumnname": {
+            "label": "Název sloupce pro označení odstranění",
+            "help": "Zadejte název sloupce ve kterém budou označeni uživatele určení k odstranění.",
+            "placeholder": ""
+          },
+          "quotationrequired": {
+            "label": "Vyžadovat oddělovač textu",
+            "help": "Zathrněte pokud se má vyžadovat oddělovač textu. Výchozí hodnota je true.",
+            "placeholder": ""
+          },
+          "fields": {
+            "label": "Názvy sloupců",
+            "help": "Zadejte názvy sloupců.",
+            "placeholder": ""
+          },
+          "ignoreheader": {
+            "label": "Ignorovat hlavičku",
+            "help": "Zaškrtněte pokud se má první řádek ignorovat. Výchozí hodnota je true.",
+            "placeholder": ""
+          },
+          "keyseparator": {
+            "label": "Oddělovač vícehodnotových klíčů",
+            "help": "Zadejte oddělovač pro oddělení vícehodnotových klíčů. Výchozí hodnota je \",\".",
+            "placeholder": ""
+          },
+          "multivalueseparator": {
+            "label": "Oddělovač pro více hodnot",
+            "help": "Zadejte znak pro odělení hodnot ve více hodnotových prvcích. Pokud není vyplněno, tak není více hodnot podporováno.",
+            "placeholder": ""
+          },
+          "defaultstatusvalue": {
+            "label": "Výchozí hodnota stavu",
+            "help": "Zadejte výchozí hodnotu stavu v případě, že stav není vyplněn. Výchozí hodnota je true.",
+            "placeholder": ""
+          },
+          "disabledstatusvalue": {
+            "label": "Hodnota stavu zablokovaný",
+            "help": "Zadejte hodnotu stavu zablokovaný. Výchozí hodnota je false.",
+            "placeholder": ""
+          },
+          "enabledstatusvalue": {
+            "label": "Hodnota stavu aktivní",
+            "help": "Zadejte hodnotu stavu aktivní. Výchozí hodnota je true.",
+            "placeholder": ""
+          },
+          "statuscolumn": {
+            "label": "Název sloupce stav",
+            "help": "Zadejte název sloupce ve kterém je uložena hodnota stavu.",
+            "placeholder": ""
+          }
+        }
       }
     },
     "bulk-action": {
