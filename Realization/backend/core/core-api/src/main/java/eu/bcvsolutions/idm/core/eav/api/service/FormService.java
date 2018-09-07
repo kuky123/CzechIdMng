@@ -607,7 +607,15 @@ public interface FormService extends ScriptEnabled {
 	 * @throws ForbiddenEntityException if authorization policies doesn't met
 	 */
 	void deleteAttribute(IdmFormAttributeDto attribute, BasePermission... permission);
-	
+
+	/**
+	 *  Deletes form attribute value by value ID
+	 * @param formDefinition
+	 * @param permissions base permissions to evaluate (AND)
+	 * @throws ForbiddenEntityException if authorization policies doesn't met
+	 */
+	void deleteValue(IdmFormDefinitionDto formDefinition, String valueId, BasePermission... permissions);
+
 	/**
 	 * Deletes form values by given owner
 	 * 

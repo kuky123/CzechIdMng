@@ -25,4 +25,21 @@ export default class FormValueManager extends EntityManager {
   getCollectionType() {
     return 'formValues';
   }
+
+  deleteValue(value, uiKey, cb) {
+    return (dispatch) => {
+      dispatch(this.dataManager.requestData(uiKey));
+      this.getService().deleteValue(value)
+          .then(() => {
+            if (cb) {
+              cb();
+            }
+            dispatch(this.dataManager.stopRequest(uiKey));
+          })
+          .catch(error => {
+            // TODO: data uiKey
+            dispatch(this.dataManager.receiveError(null, uiKey, error));
+          });
+    };
+  }
 }

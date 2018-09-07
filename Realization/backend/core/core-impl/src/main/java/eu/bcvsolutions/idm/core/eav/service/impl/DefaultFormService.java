@@ -865,6 +865,16 @@ public class DefaultFormService implements FormService {
 	}
 
 	@Override
+	public void deleteValue(IdmFormDefinitionDto formDefinition, String valueId, BasePermission... permissions) {
+		Assert.notNull(formDefinition, "Form definition is required!");
+		Identifiable owner = getEmptyOwner(formDefinition);
+		FormableEntity ownerEntity = getOwnerEntity(owner);
+		//
+		FormValueService<FormableEntity> formValueService = getFormValueService(ownerEntity);
+		formValueService.deleteById(valueId, permissions);
+	}
+
+	@Override
 	@Transactional
 	public void deleteValues(Identifiable owner, BasePermission... permission) {
 		deleteValues(owner, (IdmFormDefinitionDto) null, permission);

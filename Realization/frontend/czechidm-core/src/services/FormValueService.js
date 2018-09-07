@@ -1,6 +1,7 @@
 import AbstractService from './AbstractService';
 import SearchParameters from '../domain/SearchParameters';
-
+import RestApiService from './RestApiService';
+import * as Utils from '../utils';
 /**
  * Abstract form values
  *
@@ -18,6 +19,20 @@ export default class FormValueService extends AbstractService {
       return '';
     }
     return `${entity.id}`; // TODO: attribute name + value?
+  }
+
+  deleteValue(value) {
+    return RestApiService
+        .post(this.getApiPath() + '/' + value.id + '/delete', value._embedded.formAttribute._embedded.formDefinition)
+        .then(response => {
+          return response.json();
+        })
+        .then(json => {
+          if (Utils.Response.hasError(json)) {
+            throw Utils.Response.getFirstError(json);
+          }
+          return json;
+        });
   }
 
   /**

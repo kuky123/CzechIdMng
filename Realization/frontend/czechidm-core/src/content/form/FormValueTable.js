@@ -4,7 +4,7 @@ import _ from 'lodash';
 //
 import * as Basic from '../../components/basic';
 import * as Advanced from '../../components/advanced';
-import { FormValueManager } from '../../redux';
+import {FormValueManager, SecurityManager} from '../../redux';
 import * as Utils from '../../utils';
 import PersistentTypeEnum from '../../enums/PersistentTypeEnum';
 
@@ -52,94 +52,124 @@ export class FormValueTable extends Advanced.AbstractTableContent {
     this.refs.table.getWrappedInstance().cancelFilter(this.refs.filterForm);
   }
 
+  // onDelete(bulkActionValue, selectedRows) {
+  //   const { uiKey } = this.props;
+  //   const selectedEntities = manager.getEntitiesByIds(this.context.store.getState(), selectedRows);
+  //   //
+  //   this.refs['confirm-' + bulkActionValue].show(
+  //       this.i18n(`action.${bulkActionValue}.message`, { count: selectedEntities.length, record: manager.getNiceLabel(selectedEntities[0]), records: manager.getNiceLabels(selectedEntities).join(', ') }),
+  //       this.i18n(`action.${bulkActionValue}.header`, { count: selectedEntities.length, records: manager.getNiceLabels(selectedEntities).join(', ') })
+  //   ).then(() => {
+  //     this.context.store.dispatch(manager.deleteValue(selectedEntities[0], uiKey, (error) => {
+  //       if (error) {
+  //         this.addErrorMessage({ title: this.i18n(`action.delete.error`) }, error);
+  //       }
+  //       if (!error) {
+  //         this.refs.table.getWrappedInstance().reload();
+  //       }
+  //     }));
+  //   }, () => {
+  //     // nothing
+  //   });
+  // }
+
   render() {
     const { uiKey, forceSearchParameters, showFilter, columns } = this.props;
     const { filterOpened } = this.state;
     //
     return (
-      <Advanced.Table
-        ref="table"
-        uiKey={ uiKey }
-        manager={ manager }
-        _searchParameters={ this.getSearchParameters() }
-        forceSearchParameters={ forceSearchParameters }
-        showFilter={ showFilter }
-        filter={
-          <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
-            <Basic.AbstractForm ref="filterForm">
-              <Basic.Row>
-                <Basic.Col lg={ 6 }>
-                  <Advanced.Filter.TextField
-                    ref="text"
-                    placeholder={this.i18n('filter.text.placeholder')} />
-                </Basic.Col>
-                <Basic.Col lg={ 6 } className="text-right">
-                  <Advanced.Filter.FilterButtons cancelFilter={this.cancelFilter.bind(this)} />
-                </Basic.Col>
-              </Basic.Row>
-              <Basic.Row>
-                <Basic.Col lg={ 6 }>
-                  <Basic.EnumSelectBox
-                    ref="persistentType"
-                    placeholder={this.i18n('filter.type.placeholder')}
-                    multiSelect={false}
-                    enum={PersistentTypeEnum}/>
-                </Basic.Col>
-              </Basic.Row>
-            </Basic.AbstractForm>
-          </Advanced.Filter>
-        }
-        filterOpened={ filterOpened }>
+        <div>
+          <Basic.Confirm ref="confirm-delete" level="danger"/>
+          <Advanced.Table
+              ref="table"
+              uiKey={uiKey}
+              manager={manager}
+              _searchParameters={this.getSearchParameters()}
+              forceSearchParameters={forceSearchParameters}
+              showFilter={showFilter}
+              showRowSelection={ SecurityManager.hasAuthority('FORMVALUE_DELETE') }
+              actions={
+                [
+                  { value: 'delete', niceLabel: this.i18n('action.delete.action'), action: this.onDelete.bind(this), disabled: false }
+                ]
+              }
+              filter={
+                <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
+                  <Basic.AbstractForm ref="filterForm">
+                    <Basic.Row>
+                      <Basic.Col lg={6}>
+                        <Advanced.Filter.TextField
+                            ref="text"
+                            placeholder={this.i18n('filter.text.placeholder')}/>
+                      </Basic.Col>
+                      <Basic.Col lg={6} className="text-right">
+                        <Advanced.Filter.FilterButtons cancelFilter={this.cancelFilter.bind(this)}/>
+                      </Basic.Col>
+                    </Basic.Row>
+                    <Basic.Row>
+                      <Basic.Col lg={6}>
+                        <Basic.EnumSelectBox
+                            ref="persistentType"
+                            placeholder={this.i18n('filter.type.placeholder')}
+                            multiSelect={false}
+                            enum={PersistentTypeEnum}/>
+                      </Basic.Col>
+                    </Basic.Row>
+                  </Basic.AbstractForm>
+                </Advanced.Filter>
+              }
+              filterOpened={filterOpened}>
 
-        <Advanced.Column
-          property="ownerId"
-          cell={
-            ({ rowIndex, data }) => {
-              return (
-                <Advanced.EntityInfo
-                  entityType={ Utils.Ui.getSimpleJavaType((data[rowIndex].ownerType)) }
-                  entityIdentifier={ data[rowIndex].ownerId }
-                  showIcon
-                  face="popover"
-                  showEntityType />
-              );
-            }
-          }
-          rendered={_.includes(columns, 'owner')}/>
-        <Advanced.Column
-          property="_embedded.formAttribute.code"
-          header={ this.i18n('entity.FormAttribute.code.label')}
-          sort
-          sortProperty="formAttribute.code"
-          rendered={_.includes(columns, 'code')}/>
-        <Advanced.Column
-          property="_embedded.formAttribute.name"
-          header={ this.i18n('entity.FormAttribute.name.label') }
-          sort
-          sortProperty="formAttribute.name"
-          rendered={_.includes(columns, 'name')}/>
-        <Advanced.Column
-          property="value"
-          rendered={_.includes(columns, 'value')}/>
-        <Advanced.Column
-          property="persistentType"
-          face="enum"
-          enumClass={ PersistentTypeEnum }
-          sort
-          rendered={_.includes(columns, 'persistentType')}/>
-        <Advanced.Column
-          property="_embedded.formAttribute.defaultValue"
-          header={ this.i18n('entity.FormAttribute.defaultValue')}
-          sort
-          sortProperty="formAttribute.defaultValue"
-          rendered={_.includes(columns, 'defaultValue')}/>
-        <Advanced.Column
-          property="_embedded.formAttribute.faceType"
-          header={ this.i18n('entity.FormAttribute.faceType.label')}
-          sort
-          sortProperty="formAttribute.faceType"
-          rendered={_.includes(columns, 'faceType')}/>
-      </Advanced.Table>
+            <Advanced.Column
+                property="ownerId"
+                cell={
+                  ({rowIndex, data}) => {
+                    return (
+                        <Advanced.EntityInfo
+                            entityType={Utils.Ui.getSimpleJavaType((data[rowIndex].ownerType))}
+                            entityIdentifier={data[rowIndex].ownerId}
+                            showIcon
+                            face="popover"
+                            showEntityType/>
+                    );
+                  }
+                }
+                rendered={_.includes(columns, 'owner')}/>
+            <Advanced.Column
+                property="_embedded.formAttribute.code"
+                header={this.i18n('entity.FormAttribute.code.label')}
+                sort
+                sortProperty="formAttribute.code"
+                rendered={_.includes(columns, 'code')}/>
+            <Advanced.Column
+                property="_embedded.formAttribute.name"
+                header={this.i18n('entity.FormAttribute.name.label')}
+                sort
+                sortProperty="formAttribute.name"
+                rendered={_.includes(columns, 'name')}/>
+            <Advanced.Column
+                property="value"
+                rendered={_.includes(columns, 'value')}/>
+            <Advanced.Column
+                property="persistentType"
+                face="enum"
+                enumClass={PersistentTypeEnum}
+                sort
+                rendered={_.includes(columns, 'persistentType')}/>
+            <Advanced.Column
+                property="_embedded.formAttribute.defaultValue"
+                header={this.i18n('entity.FormAttribute.defaultValue')}
+                sort
+                sortProperty="formAttribute.defaultValue"
+                rendered={_.includes(columns, 'defaultValue')}/>
+            <Advanced.Column
+                property="_embedded.formAttribute.faceType"
+                header={this.i18n('entity.FormAttribute.faceType.label')}
+                sort
+                sortProperty="formAttribute.faceType"
+                rendered={_.includes(columns, 'faceType')}/>
+          </Advanced.Table>
+        </div>
     );
   }
 }
