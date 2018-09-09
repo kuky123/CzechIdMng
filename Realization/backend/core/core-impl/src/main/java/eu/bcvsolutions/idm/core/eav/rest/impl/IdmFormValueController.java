@@ -1,18 +1,18 @@
 package eu.bcvsolutions.idm.core.eav.rest.impl;
 
-import javax.validation.constraints.NotNull;
+import java.util.List;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -20,12 +20,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import eu.bcvsolutions.idm.core.api.bulk.action.dto.IdmBulkActionDto;
 import eu.bcvsolutions.idm.core.api.config.swagger.SwaggerConfig;
+import eu.bcvsolutions.idm.core.api.dto.ResultModels;
 import eu.bcvsolutions.idm.core.api.rest.AbstractReadWriteDtoController;
 import eu.bcvsolutions.idm.core.api.rest.BaseController;
 import eu.bcvsolutions.idm.core.api.rest.BaseDtoController;
 import eu.bcvsolutions.idm.core.eav.api.domain.PersistentType;
-import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormDefinitionDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormValueDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.filter.IdmFormValueFilter;
 import eu.bcvsolutions.idm.core.eav.api.service.FormService;
@@ -36,7 +37,6 @@ import eu.bcvsolutions.idm.core.security.api.domain.IdmBasePermission;
 import eu.bcvsolutions.idm.core.security.api.domain.IdmGroupPermission;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import io.swagger.annotations.AuthorizationScope;
 
@@ -62,9 +62,10 @@ public class IdmFormValueController extends AbstractReadWriteDtoController<IdmFo
 	//
 	@Autowired private FormService formService;
 
-	public IdmFormValueController() {
+	@Autowired
+	public IdmFormValueController(FormValueService formValueService) {
 		// service is not needed
-		super(null);
+		super(formValueService);
 	}
 
 	@Override
@@ -107,49 +108,75 @@ public class IdmFormValueController extends AbstractReadWriteDtoController<IdmFo
 		return find(parameters, pageable);
 	}
 
+	/**
+	 * Get available bulk actions for form values
+	 *
+	 * @return
+	 */
 	@ResponseBody
-	@RequestMapping(value = "/{backendId}/delete", method = RequestMethod.POST)
-	@PreAuthorize("hasAuthority('" + CoreGroupPermission.FORM_VALUE_DELETE + "')")
+	@RequestMapping(value = "/bulk/actions", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('" + CoreGroupPermission.FORM_VALUE_READ + "')")
 	@ApiOperation(
-			value = "Delete form attribute value",
-			nickname = "deleteFormAttributeValue",
+			value = "Get available bulk actions",
+			nickname = "availableBulkAction",
 			tags = { IdmFormValueController.TAG },
 			authorizations = {
 					@Authorization(value = SwaggerConfig.AUTHENTICATION_BASIC, scopes = {
-							@AuthorizationScope(scope = CoreGroupPermission.FORM_VALUE_DELETE, description = "") }),
+							@AuthorizationScope(scope = CoreGroupPermission.FORM_VALUE_READ, description = "") }),
 					@Authorization(value = SwaggerConfig.AUTHENTICATION_CIDMST, scopes = {
-							@AuthorizationScope(scope = CoreGroupPermission.FORM_VALUE_DELETE, description = "") })
+							@AuthorizationScope(scope = CoreGroupPermission.FORM_VALUE_READ, description = "") })
 			})
-	public ResponseEntity<?> deleteValue(
-			@ApiParam(value = "Form attribute's value uuid identifier.", required = true)
-			@RequestBody @NotNull IdmFormDefinitionDto formDefinition,
-			@PathVariable @NotNull String backendId) {
-		//TODO proof of concept - this is work but its not standard bulk action so it not the correct solution
-		formService.deleteValue(formDefinition, backendId);
-		return new ResponseEntity<>(HttpStatus.OK);
+	public List<IdmBulkActionDto> getAvailableBulkActions() {
+		return super.getAvailableBulkActions();
 	}
 
+	/**
+	 * Process bulk action for form values
+	 *
+	 * @param bulkAction
+	 * @return
+	 */
 	@ResponseBody
-	@RequestMapping(value = "/{backendId}", method = RequestMethod.DELETE)
-	@PreAuthorize("hasAuthority('" + CoreGroupPermission.FORM_VALUE_DELETE + "')")
+	@RequestMapping(path = "/bulk/action", method = RequestMethod.POST)
+	@PreAuthorize("hasAuthority('" + CoreGroupPermission.FORM_VALUE_UPDATE + "')")
 	@ApiOperation(
-			value = "Delete form attribute value",
-			nickname = "deleteFormAttributeValue",
+			value = "Process bulk action for form values",
+			nickname = "bulkAction",
+			response = IdmBulkActionDto.class,
 			tags = { IdmFormValueController.TAG },
 			authorizations = {
 					@Authorization(value = SwaggerConfig.AUTHENTICATION_BASIC, scopes = {
-							@AuthorizationScope(scope = CoreGroupPermission.FORM_VALUE_DELETE, description = "") }),
+							@AuthorizationScope(scope = CoreGroupPermission.FORM_VALUE_UPDATE, description = "")}),
 					@Authorization(value = SwaggerConfig.AUTHENTICATION_CIDMST, scopes = {
-							@AuthorizationScope(scope = CoreGroupPermission.FORM_VALUE_DELETE, description = "") })
+							@AuthorizationScope(scope = CoreGroupPermission.FORM_VALUE_UPDATE, description = "")})
 			})
-	public ResponseEntity<?> delete(
-			@ApiParam(value = "Form attribute's value uuid identifier.", required = true)
-			@PathVariable @NotNull String backendId,
-			@RequestParam(required = false) MultiValueMap<String, Object> parameters) {
-		//TODO this will fail because service is null.
-		return super.delete(backendId);
+	public ResponseEntity<IdmBulkActionDto> bulkAction(@Valid @RequestBody IdmBulkActionDto bulkAction) {
+		return super.bulkAction(bulkAction);
 	}
 
+	/**
+	 * Prevalidate bulk action for form values
+	 *
+	 * @param bulkAction
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(path = "/bulk/prevalidate", method = RequestMethod.POST)
+	@PreAuthorize("hasAuthority('" + CoreGroupPermission.FORM_VALUE_READ + "')")
+	@ApiOperation(
+			value = "Prevalidate bulk action for form values",
+			nickname = "prevalidateBulkAction",
+			response = IdmBulkActionDto.class,
+			tags = { IdmFormValueController.TAG },
+			authorizations = {
+					@Authorization(value = SwaggerConfig.AUTHENTICATION_BASIC, scopes = {
+							@AuthorizationScope(scope = CoreGroupPermission.FORM_VALUE_READ, description = "")}),
+					@Authorization(value = SwaggerConfig.AUTHENTICATION_CIDMST, scopes = {
+							@AuthorizationScope(scope = CoreGroupPermission.FORM_VALUE_READ, description = "")})
+			})
+	public ResponseEntity<ResultModels> prevalidateBulkAction(@Valid @RequestBody IdmBulkActionDto bulkAction) {
+		return super.prevalidateBulkAction(bulkAction);
+	}
 	@Override
 	public Page<IdmFormValueDto> find(IdmFormValueFilter<?> filter, Pageable pageable, BasePermission permission) {
 		return formService.findValues(filter, pageable, permission);

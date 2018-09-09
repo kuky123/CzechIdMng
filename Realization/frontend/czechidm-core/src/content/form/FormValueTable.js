@@ -52,27 +52,6 @@ export class FormValueTable extends Advanced.AbstractTableContent {
     this.refs.table.getWrappedInstance().cancelFilter(this.refs.filterForm);
   }
 
-  // onDelete(bulkActionValue, selectedRows) {
-  //   const { uiKey } = this.props;
-  //   const selectedEntities = manager.getEntitiesByIds(this.context.store.getState(), selectedRows);
-  //   //
-  //   this.refs['confirm-' + bulkActionValue].show(
-  //       this.i18n(`action.${bulkActionValue}.message`, { count: selectedEntities.length, record: manager.getNiceLabel(selectedEntities[0]), records: manager.getNiceLabels(selectedEntities).join(', ') }),
-  //       this.i18n(`action.${bulkActionValue}.header`, { count: selectedEntities.length, records: manager.getNiceLabels(selectedEntities).join(', ') })
-  //   ).then(() => {
-  //     this.context.store.dispatch(manager.deleteValue(selectedEntities[0], uiKey, (error) => {
-  //       if (error) {
-  //         this.addErrorMessage({ title: this.i18n(`action.delete.error`) }, error);
-  //       }
-  //       if (!error) {
-  //         this.refs.table.getWrappedInstance().reload();
-  //       }
-  //     }));
-  //   }, () => {
-  //     // nothing
-  //   });
-  // }
-
   render() {
     const { uiKey, forceSearchParameters, showFilter, columns } = this.props;
     const { filterOpened } = this.state;
@@ -88,11 +67,11 @@ export class FormValueTable extends Advanced.AbstractTableContent {
               forceSearchParameters={forceSearchParameters}
               showFilter={showFilter}
               showRowSelection={ SecurityManager.hasAuthority('FORMVALUE_DELETE') }
-              actions={
-                [
-                  { value: 'delete', niceLabel: this.i18n('action.delete.action'), action: this.onDelete.bind(this), disabled: false }
-                ]
-              }
+              // actions={
+              //   [
+              //     { value: 'delete', niceLabel: this.i18n('action.delete.action'), action: this.onDelete.bind(this), disabled: false }
+              //   ]
+              // }
               filter={
                 <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
                   <Basic.AbstractForm ref="filterForm">
