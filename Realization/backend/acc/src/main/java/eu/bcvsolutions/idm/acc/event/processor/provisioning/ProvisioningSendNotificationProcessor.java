@@ -48,7 +48,7 @@ public class ProvisioningSendNotificationProcessor extends AbstractEntityEventPr
 			SysProvisioningOperationService provisioningOperationService,
 			IdmIdentityService identityService,
 			SysSystemService systemService) {
-		super(ProvisioningEventType.CREATE);
+		super(ProvisioningEventType.CREATE, ProvisioningEventType.UPDATE);
 		//
 		Assert.notNull(notificationManager);
 		Assert.notNull(provisioningOperationService);
@@ -71,7 +71,9 @@ public class ProvisioningSendNotificationProcessor extends AbstractEntityEventPr
 		SysProvisioningOperationDto provisioningOperation = event.getContent();
 		String uid = provisioningOperationService.getByProvisioningOperation(provisioningOperation).getUid();
 		IdmIdentityDto identity = null;
-		if (provisioningOperation.getEntityIdentifier() != null && SystemEntityType.IDENTITY == provisioningOperation.getEntityType()) {
+		if (provisioningOperation.getEntityIdentifier() != null 
+				&& provisioningOperation.getOperationType() == ProvisioningEventType.CREATE 
+				&& SystemEntityType.IDENTITY == provisioningOperation.getEntityType()) {
 			identity = identityService.get(provisioningOperation.getEntityIdentifier());
 		}
 		// TODO: identity or email null, send message to actual log user?
