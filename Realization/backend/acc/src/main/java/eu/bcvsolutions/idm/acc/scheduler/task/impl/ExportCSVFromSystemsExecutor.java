@@ -1,14 +1,19 @@
 package eu.bcvsolutions.idm.acc.scheduler.task.impl;
 
+import com.opencsv.CSVWriter;
 import eu.bcvsolutions.idm.acc.dto.SysSchemaObjectClassDto;
 import eu.bcvsolutions.idm.acc.dto.SysSystemDto;
 import eu.bcvsolutions.idm.acc.service.api.SynchronizationService;
 import eu.bcvsolutions.idm.acc.service.api.SysSchemaObjectClassService;
-import eu.bcvsolutions.idm.acc.service.api.SysSyncConfigService;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemService;
-import eu.bcvsolutions.idm.core.api.service.IdmIdentityService;
 import eu.bcvsolutions.idm.core.scheduler.api.service.AbstractSchedulableTaskExecutor;
+import eu.bcvsolutions.idm.ic.api.IcConfigurationProperty;
+import eu.bcvsolutions.idm.ic.api.IcConnectorConfiguration;
 import eu.bcvsolutions.idm.ic.api.IcConnectorInstance;
+import eu.bcvsolutions.idm.ic.api.IcObjectClass;
+import eu.bcvsolutions.idm.ic.connid.domain.ConnIdIcConvertUtil;
+import eu.bcvsolutions.idm.ic.connid.service.impl.ConnIdIcConnectorService;
+import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +21,8 @@ import org.springframework.context.annotation.Description;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,13 +45,9 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
     @Autowired
     private SysSystemService sysSystemService;
     @Autowired
-    private SynchronizationService synchronizationService;
-    @Autowired
-    private SysSyncConfigService service;
-    @Autowired
-    private IdmIdentityService identityService;
-    @Autowired
     private SysSchemaObjectClassService sysSchemaObjectClassService;
+    @Autowired
+    private ConnIdIcConnectorService connIdIcConnectorService;
 
     /**
      * TODO text
@@ -52,7 +55,7 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
      * @return
      */
     @Override
-    public Boolean process() {
+    public Boolean process(){
         LOG.debug("Start process");
         //
         File fl = new File(pathToFile);
@@ -64,7 +67,23 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
         SysSystemDto system = sysSystemService.get(schema.getSystem());
         // instance konektoru
         IcConnectorInstance icConnectorInstance = system.getConnectorInstance();
-        //
+        // konfigurace danneho systemu
+        IcConnectorConfiguration config = sysSystemService.getConnectorConfiguration(system);
+        // property samotneho nastaveni - TODO mozna neuzitecne
+        List<IcConfigurationProperty> props = config.getConfigurationProperties().getProperties();
+        // Vytahneme si a prevedeme __ACCOUNT__
+        IcObjectClass icObjectClass = ConnIdIcConvertUtil.convertConnIdObjectClass(ObjectClass.ACCOUNT);
+        // vytvorime writer - TODO projit zda odpovida popisu
+        try {
+            final CSVWriter writer = new CSVWriter(new FileWriter(pathToFile, true), ';', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, "\n");
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+        // vyhledame objekty systemu s null filterem a kazdy preparsujeme - TODO preparsovat
+        connIdIcConnectorService.search(icConnectorInstance, config, icObjectClass, null, connectorObject -> {
+            // TODO novou metodu
+            return true;
+        });
         return true;
     }
 
