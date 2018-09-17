@@ -3,16 +3,12 @@ package eu.bcvsolutions.idm.acc.scheduler.task.impl;
 import com.opencsv.CSVWriter;
 import eu.bcvsolutions.idm.acc.dto.SysSchemaObjectClassDto;
 import eu.bcvsolutions.idm.acc.dto.SysSystemDto;
-import eu.bcvsolutions.idm.acc.service.api.SynchronizationService;
 import eu.bcvsolutions.idm.acc.service.api.SysSchemaObjectClassService;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemService;
 import eu.bcvsolutions.idm.core.scheduler.api.service.AbstractSchedulableTaskExecutor;
-import eu.bcvsolutions.idm.ic.api.IcConfigurationProperty;
-import eu.bcvsolutions.idm.ic.api.IcConnectorConfiguration;
-import eu.bcvsolutions.idm.ic.api.IcConnectorInstance;
-import eu.bcvsolutions.idm.ic.api.IcObjectClass;
+import eu.bcvsolutions.idm.ic.api.*;
 import eu.bcvsolutions.idm.ic.connid.domain.ConnIdIcConvertUtil;
-import eu.bcvsolutions.idm.ic.connid.service.impl.ConnIdIcConnectorService;
+import eu.bcvsolutions.idm.ic.service.impl.DefaultIcConnectorFacade;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +19,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * This LRT exports all items from Identity synchronization to CSV file
@@ -37,54 +31,169 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
     private static final Logger LOG = LoggerFactory.getLogger(ExportCSVFromSystemsExecutor.class);
     //
     private static final String PARAM_CSV_FILE_PATH = "Path to file";
+    private static final String PARAM_SCHEMA_UUID = "UUID of Schema";
+    //
+    private String DEFAULT_LINE_END = "\n";
+    private Character DEFAULT_LINE_SEPARATOR = ';';
     //
 
     private UUID synchronizationId;
     private String pathToFile;
+    private boolean checkedHeader = false;
+    private int size = 0;
 
     @Autowired
     private SysSystemService sysSystemService;
     @Autowired
     private SysSchemaObjectClassService sysSchemaObjectClassService;
     @Autowired
-    private ConnIdIcConnectorService connIdIcConnectorService;
+    private DefaultIcConnectorFacade defaultIcConnectorFacade;
 
     /**
-     * TODO text
+     * Checks for existing properties and than process system
      *
-     * @return
+     * @return boolean if it was successful
      */
     @Override
-    public Boolean process(){
+    public Boolean process() {
         LOG.debug("Start process");
         //
         File fl = new File(pathToFile);
-        if (!fl.canRead() || !fl.canWrite()) LOG.error("Path {[]} is WRONG!", pathToFile);
-        // vytahneme si schema na zaklade id schematu
+        if (!fl.canRead()) {
+            throw new IllegalArgumentException("Can read the file! Path to file: " + pathToFile);
+        }
+        //
+        if (!fl.canWrite()) {
+            throw new IllegalArgumentException("Can write into the file! Path to file: " + pathToFile);
+        }
+        //
         SysSchemaObjectClassDto schema = sysSchemaObjectClassService.get(synchronizationId);
-        // kontrola
-        if (schema == null) throw new NullPointerException("System is null! Probably wrong ID.");
+        if (schema == null) {
+            throw new IllegalArgumentException("Schema is null! Probably wrong UUID.");
+        }
+        //
         SysSystemDto system = sysSystemService.get(schema.getSystem());
-        // instance konektoru
+        if (system == null) {
+            throw new IllegalArgumentException("System is null! LRT was not able to get system from schema UUID.");
+        }
+        //
         IcConnectorInstance icConnectorInstance = system.getConnectorInstance();
-        // konfigurace danneho systemu
+        if (icConnectorInstance == null) {
+            throw new IllegalArgumentException("icConnectorInstance is null! LRT was not able to get icConnectorInstance from system.");
+        }
+        //
         IcConnectorConfiguration config = sysSystemService.getConnectorConfiguration(system);
-        // property samotneho nastaveni - TODO mozna neuzitecne
-        List<IcConfigurationProperty> props = config.getConfigurationProperties().getProperties();
-        // Vytahneme si a prevedeme __ACCOUNT__
+        if (config == null) {
+            throw new IllegalArgumentException("configuration is null! LRT was not able to get configuration of system.");
+        }
+        //__ACCOUNT__
         IcObjectClass icObjectClass = ConnIdIcConvertUtil.convertConnIdObjectClass(ObjectClass.ACCOUNT);
-        // vytvorime writer - TODO projit zda odpovida popisu
+        if (icObjectClass == null) {
+            throw new IllegalArgumentException("ConnIdIcConvertUtil failed to convert ObjectClass.ACCOUNT.");
+        }
+        return writeIntoFile(icConnectorInstance, config, icObjectClass);
+    }
+
+    /**
+     * Check for framework and use its service. Than it writes all data into file.
+     *
+     * @param icConnectorInstance instance of connector
+     * @param config              configuration of system
+     * @param icObjectClass       object class to be used
+     * @return true if everything went right
+     */
+    private boolean writeIntoFile(IcConnectorInstance icConnectorInstance, IcConnectorConfiguration config, IcObjectClass icObjectClass) {
         try {
-            final CSVWriter writer = new CSVWriter(new FileWriter(pathToFile, true), ';', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, "\n");
+            final CSVWriter writer = new CSVWriter(new FileWriter(pathToFile, true), DEFAULT_LINE_SEPARATOR, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, DEFAULT_LINE_END);
+            //
+            defaultIcConnectorFacade.search(icConnectorInstance, config, icObjectClass, null, connectorObject -> handleConnectorObject(connectorObject, writer));
+            //
+            writer.close();
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
-        // vyhledame objekty systemu s null filterem a kazdy preparsujeme - TODO preparsovat
-        connIdIcConnectorService.search(icConnectorInstance, config, icObjectClass, null, connectorObject -> {
-            // TODO novou metodu
-            return true;
-        });
         return true;
+    }
+
+    /**
+     * Handle function for connector object.
+     *
+     * @param connectorObject object to be parsed
+     * @param writer          buffer to be written
+     * @return returns true while it was handled right
+     */
+    private boolean handleConnectorObject(IcConnectorObject connectorObject, CSVWriter writer) {
+        if (!checkedHeader) {
+            String[] header = createHeader(connectorObject);
+            writer.writeNext(header);
+            checkedHeader = true;
+            size = header.length;
+        }
+        writer.writeNext(getLine(connectorObject, size));
+        return true;
+    }
+
+    /**
+     * Creates line from connector object. Parse all its attributes.
+     *
+     * @param connectorObject object to be parsed
+     * @param size            size of the line
+     * @return new line into csv
+     */
+    private String[] getLine(IcConnectorObject connectorObject, int size) {
+        String[] line = new String[size];
+        int i = 0;
+        for (IcAttribute value : connectorObject.getAttributes()) {
+            if (checkNameAndUid(value.getName())) {
+                int valuesSize = value.getValues().size();
+                StringBuilder toBeWriten = new StringBuilder();
+                for (int j = 0; j < valuesSize; ++j) {
+                    if (j == (valuesSize - 1)) {
+                        toBeWriten.append(value.getValues().get(j).toString());
+                    } else {
+                        toBeWriten.append(value.getValues().get(j).toString());
+                        toBeWriten.append(DEFAULT_LINE_END);
+                    }
+                }
+                line[i] = toBeWriten.toString();
+                ++i;
+            }
+
+        }
+        return line;
+    }
+
+    /**
+     * returns if name of the property is one of following __NAME__ or __UID__
+     *
+     * @param name name of attribute
+     * @return boolean
+     */
+    private boolean checkNameAndUid(String name) {
+        return !name.equals("__NAME__") && !name.equals("__UID__");
+    }
+
+    /**
+     * This is called right when we found first connectorObject. I takes all names of attributes and parse it in header.
+     *
+     * @param connectorObject object to be parsed
+     * @return Header of the file.
+     */
+    private String[] createHeader(IcConnectorObject connectorObject) {
+        LinkedList<String> line = new LinkedList<>();
+        for (IcAttribute value : connectorObject.getAttributes()) {
+            if (checkNameAndUid(value.getName())) {
+                line.add(value.getName());
+            }
+        }
+        int size = line.size();
+        String[] header = new String[size];
+        int i = 0;
+        for (String name : line) {
+            header[i] = name;
+            ++i;
+        }
+        return header;
     }
 
     /**
@@ -97,7 +206,7 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
     public List<String> getPropertyNames() {
         LOG.debug("Start getPropertyName");
         List<String> params = super.getPropertyNames();
-        params.add(SynchronizationService.PARAMETER_SYNCHRONIZATION_ID);
+        params.add(PARAM_SCHEMA_UUID);
         params.add(PARAM_CSV_FILE_PATH);
         return params;
     }
@@ -111,7 +220,7 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
     public void init(Map<String, Object> properties) {
         LOG.debug("Start init");
         super.init(properties);
-        synchronizationId = getParameterConverter().toUuid(properties, SynchronizationService.PARAMETER_SYNCHRONIZATION_ID);
+        synchronizationId = getParameterConverter().toUuid(properties, PARAM_SCHEMA_UUID);
         pathToFile = getParameterConverter().toString(properties, PARAM_CSV_FILE_PATH);
     }
 }
