@@ -52,21 +52,26 @@ public class IdmRequestItem extends AbstractEntity {
 	@org.hibernate.annotations.ForeignKey(name = "none")
 	private IdmRequest request;
 
+	@Audited
 	@NotEmpty
 	@Size(min = 1, max = DefaultFieldLengths.NAME)
 	@Column(name = "owner_type", length = DefaultFieldLengths.NAME, nullable = false)
 	private String ownerType;
 
+	@Audited
 	@Type(type = "org.hibernate.type.StringClobType")
 	@Column(name = "data")
 	private String data; // JSON represented target DTO
-
+	
+	@Audited
 	@Column(name = "owner_id", length = 16)
 	private UUID ownerId;
 
+	@Audited
 	@Column(name = "super_owner_type", length = DefaultFieldLengths.NAME)
 	private String superOwnerType; // Super owner ... using for form value where super owner is FormableEntity
 
+	@Audited
 	@Column(name = "super_owner_id", length = 16)
 	private UUID superOwnerId;
 	

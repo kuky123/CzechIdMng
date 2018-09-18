@@ -98,6 +98,7 @@ class RoleAccounts extends Advanced.AbstractTableContent {
             manager={this.getManager()}
             forceSearchParameters={forceSearchParameters}
             showRowSelection={Managers.SecurityManager.hasAnyAuthority(['ROLEACCOUNT_DELETE'])}
+            className="no-margin"
             rowClass={({rowIndex, data}) => { return (data[rowIndex]._embedded.account.inProtection) ? 'disabled' : ''; }}
             actions={
               Managers.SecurityManager.hasAnyAuthority(['ROLEACCOUNT_DELETE'])

@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import _ from 'lodash';
 //
 import * as Basic from '../../components/basic';
@@ -7,20 +8,22 @@ import SearchParameters from '../../domain/SearchParameters';
 import EntityEventTableComponent, { EntityEventTable } from '../audit/event/EntityEventTable';
 import EntityStateTableComponent, { EntityStateTable } from '../audit/event/EntityStateTable';
 
+const identityManager = new IdentityManager();
+
 /**
  * Identity events
+ * - super owner events are shown
  *
  * @author Radek Tomiška
  */
-export default class IdentityEvents extends Basic.AbstractContent {
+class IdentityEvents extends Basic.AbstractContent {
 
   constructor(props, context) {
     super(props, context);
-    this.identityManager = new IdentityManager();
   }
 
   getManager() {
-    return this.identityManager;
+    return identityManager;
   }
 
   getContentKey() {
@@ -32,6 +35,7 @@ export default class IdentityEvents extends Basic.AbstractContent {
   }
 
   render() {
+    // TODO: use super owner id
     const forceSearchParameters = new SearchParameters()
       .setFilter('ownerId', this.props.params.entityId)
       .setFilter('ownerType', 'eu.bcvsolutions.idm.core.model.entity.IdmIdentity');
@@ -54,9 +58,20 @@ export default class IdentityEvents extends Basic.AbstractContent {
             uiKey="identity-entity-event-table"
             filterOpened={false}
             forceSearchParameters={ forceSearchParameters }
-            columns= { _.difference(EntityEventTable.defaultProps.columns, ['ownerType', 'ownerId']) }/>
+            columns= { _.difference(EntityEventTable.defaultProps.columns, ['ownerType', 'ownerId']) }
+            showDeleteAllButton={ false }
+            className="no-margin"/>
         </Basic.Panel>
       </div>
     );
   }
 }
+
+function select(state, component) {
+  const { entityId } = component.params;
+  return {
+    identity: identityManager.getEntity(state, entityId)
+  };
+}
+
+export default connect(select)(IdentityEvents);

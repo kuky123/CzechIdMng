@@ -1,5 +1,7 @@
 package eu.bcvsolutions.idm.acc.rest.impl;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -7,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.hateoas.Resources;
@@ -38,11 +41,13 @@ import eu.bcvsolutions.idm.acc.service.api.AccAccountService;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemEntityService;
 import eu.bcvsolutions.idm.core.api.config.swagger.SwaggerConfig;
 import eu.bcvsolutions.idm.core.api.domain.CoreResultCode;
+import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
 import eu.bcvsolutions.idm.core.api.rest.AbstractReadWriteDtoController;
 import eu.bcvsolutions.idm.core.api.rest.BaseController;
 import eu.bcvsolutions.idm.core.api.rest.BaseDtoController;
 import eu.bcvsolutions.idm.core.model.entity.IdmIdentity;
+import eu.bcvsolutions.idm.core.security.api.domain.BasePermission;
 import eu.bcvsolutions.idm.core.security.api.domain.Enabled;
 import eu.bcvsolutions.idm.core.security.api.domain.IdmBasePermission;
 import eu.bcvsolutions.idm.ic.api.IcConnectorObject;
@@ -69,6 +74,7 @@ import io.swagger.annotations.AuthorizationScope;;
 		consumes = MediaType.APPLICATION_JSON_VALUE)
 public class AccAccountController extends AbstractReadWriteDtoController<AccAccountDto, AccAccountFilter> {
 	
+	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(AccAccountController.class);
 	protected static final String TAG = "Accounts";
 	//
 	@Autowired private SysSystemEntityService systemEntityService;
@@ -115,6 +121,17 @@ public class AccAccountController extends AbstractReadWriteDtoController<AccAcco
 			@RequestParam(required = false) MultiValueMap<String, Object> parameters, 
 			@PageableDefault Pageable pageable) {
 		return super.find(parameters, pageable);
+	}
+	
+	@Override
+	public Page<AccAccountDto> find(AccAccountFilter filter, Pageable pageable, BasePermission permission) {
+		// TODO Auto-generated method stub
+		Page<AccAccountDto> dtos = super.find(filter, pageable, permission);
+		Map<UUID, BaseDto> loadedDtos = new HashMap<>();
+		dtos.forEach(dto -> {
+			loadEmbeddedEntity(loadedDtos, dto);
+		});
+		return dtos;
 	}
 	
 	@Override
@@ -332,5 +349,22 @@ public class AccAccountController extends AbstractReadWriteDtoController<AccAcco
 		filter.setEntityType(getParameterConverter().toEnum(parameters, "entityType", SystemEntityType.class));
 		//
 		return filter;
+	}
+	
+	/**
+	 * Fills referenced entity to dto - prevent to load entity for each row
+	 * 
+	 * @param dto
+	 */
+	private void loadEmbeddedEntity(Map<UUID, BaseDto> loadedDtos, AccAccountDto dto) {
+		UUID entityId = dto.getTargetEntityId();
+		try {
+			if (!loadedDtos.containsKey(entityId)) {
+				loadedDtos.put(entityId, getLookupService().lookupDto(dto.getTargetEntityType(), entityId));
+			}
+			dto.getEmbedded().put("targetEntityId", loadedDtos.get(entityId));
+		} catch (IllegalArgumentException ex) {
+			LOG.debug("Class [{}] not found on classpath (e.g. module was uninstalled)", dto.getTargetEntityType(), ex);
+		}
 	}
 }

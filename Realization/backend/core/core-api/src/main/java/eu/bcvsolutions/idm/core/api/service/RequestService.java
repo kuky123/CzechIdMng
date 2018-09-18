@@ -5,6 +5,12 @@ import java.util.UUID;
 import eu.bcvsolutions.idm.core.api.dto.AbstractRequestDto;
 import eu.bcvsolutions.idm.core.api.event.EntityEvent;
 
+/**
+ * Universal request service
+ *
+ * @author svandav
+ * @since 9.1.0
+ */
 public interface RequestService<DTO extends AbstractRequestDto> {
 
 	/**

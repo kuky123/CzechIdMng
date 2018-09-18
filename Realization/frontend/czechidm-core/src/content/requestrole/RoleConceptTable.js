@@ -1,5 +1,3 @@
-
-
 import React, { PropTypes } from 'react';
 import _ from 'lodash';
 import moment from 'moment';
@@ -127,7 +125,7 @@ export class RoleConceptTable extends Basic.AbstractContent {
 
     const entity = this.refs.form.getData();
     if (entity._added) {
-      if (!entity._virtualId && entity.role instanceof Array) {
+      if (!entity._virtualId && !entity.id && entity.role instanceof Array) {
         for (const roleId of entity.role) {
           const uuidId = uuid.v1();
           const identityRole = _.merge({}, entity, {_virtualId: uuidId, _added: true});
@@ -141,6 +139,9 @@ export class RoleConceptTable extends Basic.AbstractContent {
         const addedIdentityRole = this._findAddedIdentityRoleById(entity.id);
         entity._embedded = {};
         entity._embedded.identity = identityManager.getEntity(this.context.store.getState(), identityUsername);
+        if (entity.role instanceof Array) {
+          entity.role = entity.role[0];
+        }
         entity._embedded.role = roleManager.getEntity(this.context.store.getState(), entity.role);
         if (addedIdentityRole) {
           updateConceptFunc(entity, 'ADD');
@@ -564,6 +565,10 @@ export class RoleConceptTable extends Basic.AbstractContent {
             cell={
               /* eslint-disable react/no-multi-comp */
               ({ rowIndex, data, property }) => {
+                if (!data[rowIndex][property]) {
+                  return null;
+                }
+                //
                 return (
                   <Advanced.EntityInfo
                     entityType="identityRole"
@@ -613,11 +618,11 @@ export class RoleConceptTable extends Basic.AbstractContent {
               text={ this.i18n('selectRoleCatalogue.header') }
               rendered={ showRoleCatalogue }/>
             <Basic.Modal.Body>
-              <Basic.AbstractForm ref="form" showLoading={showLoading} readOnly={!detail.edit}>
+              <Basic.AbstractForm ref="form" showLoading={showLoading} readOnly={!detail.edit || readOnly}>
 
                 <Advanced.RoleSelect
                   required
-                  readOnly={!detail.entity._added}
+                  readOnly={ !detail.entity._added || readOnly }
                   multiSelect={detail.entity._added && detail.add}
                   showActionButtons
                   onCatalogueShow={this._showRoleCatalogueTable.bind(this)}
@@ -688,7 +693,7 @@ export class RoleConceptTable extends Basic.AbstractContent {
                 level="success"
                 showLoading={showLoading}
                 showLoadingIcon
-                rendered={detail.edit && !showRoleCatalogue}>
+                rendered={detail.edit && !showRoleCatalogue && !readOnly}>
                 {this.i18n('button.set')}
               </Basic.Button>
               <Basic.Button

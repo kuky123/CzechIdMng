@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import eu.bcvsolutions.idm.core.api.domain.DefaultFieldLengths;
 import eu.bcvsolutions.idm.core.api.domain.OperationState;
 import eu.bcvsolutions.idm.core.api.entity.OperationResult;
 import eu.bcvsolutions.idm.core.api.entity.OperationResult_;
@@ -137,6 +138,12 @@ public class DefaultIdmLongRunningTaskService
 	@Override
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public IdmLongRunningTaskDto save(IdmLongRunningTaskDto dto, BasePermission... permission) {
+		Assert.notNull(dto);
+		// description is from some place dynamically generated, we must check the description length and cutoff more characters
+		// this is defensive behavior, descriptions longer than 2000 characters will 
+		if (StringUtils.length(dto.getTaskDescription()) > DefaultFieldLengths.DESCRIPTION) {
+			dto.setTaskDescription(StringUtils.abbreviate(dto.getTaskDescription(), DefaultFieldLengths.DESCRIPTION));
+		}
 		return super.save(dto, permission);
 	}
 	

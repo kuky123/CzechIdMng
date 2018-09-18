@@ -50,10 +50,14 @@ public class IdentityRoleSaveProvisioningProcessor extends AbstractEntityEventPr
 		return PROCESSOR_NAME;
 	}
 	
+	/**
+	 *  Account management should be executed from parent event - request. 
+	 *  Look out, request event is already closed, when asynchronous processing is disabled.
+	 */
 	@Override
 	public boolean conditional(EntityEvent<IdmIdentityRoleDto> event) {
 		return super.conditional(event)
-				&& event.getRootId() == null;
+				&& (event.getRootId() == null || !entityEventManager.isRunnable(event.getRootId())) ;
 	}
  
 	@Override

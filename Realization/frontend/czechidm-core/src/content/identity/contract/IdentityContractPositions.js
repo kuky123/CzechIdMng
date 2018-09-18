@@ -1,16 +1,14 @@
 import React, { PropTypes } from 'react';
-import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
 //
 import * as Basic from '../../../components/basic';
 import * as Advanced from '../../../components/advanced';
 import * as Utils from '../../../utils';
-import { ContractPositionManager, IdentityManager, TreeTypeManager, TreeNodeManager } from '../../../redux';
+import { ContractPositionManager, TreeTypeManager, TreeNodeManager } from '../../../redux';
 import SearchParameters from '../../../domain/SearchParameters';
 
 const uiKey = 'identity-contract-positions-table';
 const manager = new ContractPositionManager();
-const identityManager = new IdentityManager();
 const treeTypeManager = new TreeTypeManager();
 const treeNodeManager = new TreeNodeManager();
 

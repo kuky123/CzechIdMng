@@ -112,8 +112,11 @@ public abstract class AbstractEntityEventProcessor<E extends Serializable> imple
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(java.lang.Object)
+	 * 
+	 * {@link AbstractEntityEvent} without template is used - we want to handle events with superclasses too (solved by {@link #support} method).
 	 */
 	@Override
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void onApplicationEvent(AbstractEntityEvent event) {
 		if (!supports(event)) {
 			// event is not supported with this processor

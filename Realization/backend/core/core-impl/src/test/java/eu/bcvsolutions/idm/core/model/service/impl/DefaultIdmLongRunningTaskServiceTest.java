@@ -1,7 +1,11 @@
 package eu.bcvsolutions.idm.core.model.service.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.Before;
@@ -9,6 +13,9 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 
+import eu.bcvsolutions.idm.core.api.domain.OperationState;
+import eu.bcvsolutions.idm.core.api.entity.OperationResult;
+import eu.bcvsolutions.idm.core.api.utils.PasswordGenerator;
 import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmLongRunningTaskDto;
 import eu.bcvsolutions.idm.core.scheduler.api.dto.filter.IdmLongRunningTaskFilter;
 import eu.bcvsolutions.idm.core.scheduler.api.service.AbstractLongRunningTaskExecutor;
@@ -186,6 +193,47 @@ public class DefaultIdmLongRunningTaskServiceTest extends AbstractIntegrationTes
 		assertEquals("Wrong operationState id",true, result.getContent().contains(task1));
 	}
 
+	@Test
+	public void descriptionLengthTest2000() {
+		IdmLongRunningTaskDto task = new IdmLongRunningTaskDto();
+		task.setTaskType("testType-" + System.currentTimeMillis());
+		task.setInstanceId("testInstance-" + System.currentTimeMillis());
+		task.setResult(new OperationResult.Builder(OperationState.EXECUTED).build());
+		
+		// this must past
+		PasswordGenerator generator = new PasswordGenerator();
+		String random = generator.generateRandom(2000, 2000, null, null, null, null);
+		assertEquals(2000, random.length());
+		task.setTaskDescription(random);
+
+		IdmLongRunningTaskDto newSaved = idmLongRunningTaskService.save(task);
+		assertNotNull(newSaved);
+		assertEquals(random, newSaved.getTaskDescription());
+		assertEquals(2000, newSaved.getTaskDescription().length());
+	}
+
+	@Test
+	public void descriptionLengthTest2050() {
+		IdmLongRunningTaskDto task = new IdmLongRunningTaskDto();
+		task.setTaskType("testType-" + System.currentTimeMillis());
+		task.setInstanceId("testInstance-" + System.currentTimeMillis());
+		task.setResult(new OperationResult.Builder(OperationState.EXECUTED).build());
+		
+		// this must also past, but description will be cutoff
+		PasswordGenerator generator = new PasswordGenerator();
+		String random = generator.generateRandom(2001, 2050, null, null, null, null);
+		if (random.length() <= 2000) {
+			fail();
+		}
+		task.setTaskDescription(random);
+
+		IdmLongRunningTaskDto newSaved = idmLongRunningTaskService.save(task);
+		assertNotNull(newSaved);
+		assertNotEquals(random, newSaved.getTaskDescription());
+		assertEquals(2000, newSaved.getTaskDescription().length());
+		assertTrue(newSaved.getTaskDescription().endsWith("..."));
+	}
+	
 	private class TestSimpleLongRunningTaskExecutor extends AbstractLongRunningTaskExecutor<String> {
 
 		private final String result;

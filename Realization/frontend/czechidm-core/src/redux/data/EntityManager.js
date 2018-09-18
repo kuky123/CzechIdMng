@@ -343,12 +343,50 @@ export default class EntityManager {
       dispatch(this.requestEntity(id, uiKey));
       this.getService().getById(id)
       .then(json => {
-        dispatch(this.fetchPermissions(id, uiKey, () => {
+        dispatch(this.queueFetchPermissions(id, uiKey, () => {
           dispatch(this.receiveEntity(id, json, uiKey, cb));
         }));
       })
       .catch(error => {
         dispatch(this.receiveError({ id }, uiKey, error, cb));
+      });
+    };
+  }
+
+  /**
+   * Non blocking loading permission for selected entity by given id from BE.
+   *
+   * @param  {id}  entity id
+   * @param  {string|number} id - entity identifier
+   * @param  {string} uiKey - ui key for loading indicator etc.
+   */
+  queueFetchPermissions(id, uiKey = null, cb = null) {
+    return (dispatchOuter) => {
+      dispatchOuter({
+        id,
+        queue: 'FETCH_PERMISSION',
+        callback: (next, dispatch, getState) => {
+          uiKey = this.resolveUiKey(uiKey, id);
+          const permissions = this.getPermissions(getState(), uiKey, id);
+          if (permissions === null || permissions === undefined) { // false = loaded, but empty
+            const uiError = Utils.Ui.getError(getState(), uiKey);
+            if (!uiError || uiError.statusCode === 401) {
+              dispatch(this.fetchPermissions(id, uiKey, (entity, error) => {
+                if (cb) {
+                  cb(entity, error);
+                }
+                next();
+              }));
+            } else {
+              next();
+            }
+          } else {
+            if (cb) {
+              cb(permissions, null);
+            }
+            next();
+          }
+        }
       });
     };
   }
@@ -387,7 +425,7 @@ export default class EntityManager {
           uiKey: this.resolveUiKey(null, id)
         });
         if (cb) {
-          cb();
+          cb(permissions);
         }
       });
     };
@@ -970,6 +1008,38 @@ export default class EntityManager {
       } else if (cb) {
         cb(this.getEntity(getState(), id), null);
       }
+    };
+  }
+
+  /**
+   * Non blocking autocomplete requested entity by given id from BE, if entity is not in application state and entity loading does not processing
+   *
+   * @param  {store}  store - application store
+   * @param  {string|number} id - entity identifier
+   * @param  {string} uiKey - ui key for loading indicator etc.
+   */
+  queueAutocompleteEntityIfNeeded(id, uiKey = null, cb = null) {
+    return (dispatchOuter) => {
+      dispatchOuter(this.requestEntity(id, uiKey));
+      dispatchOuter({
+        id,
+        queue: 'AUTOCOMPLETE_ENTITY',
+        callback: (next, dispatch, getState) => {
+          uiKey = this.resolveUiKey(uiKey, id);
+          const uiError = Utils.Ui.getError(getState(), uiKey);
+          //
+          if (!uiError || uiError.statusCode === 401) {
+            dispatch(this.autocompleteEntityIfNeeded(id, uiKey, (entity, error) => {
+              if (cb) {
+                cb(entity, error);
+              }
+              next();
+            }));
+          } else {
+            next();
+          }
+        }
+      });
     };
   }
 

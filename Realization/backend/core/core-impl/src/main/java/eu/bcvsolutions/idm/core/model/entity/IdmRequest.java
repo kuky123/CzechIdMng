@@ -45,11 +45,13 @@ public class IdmRequest extends AbstractEntity {
 	@Column(name = "request_type", nullable = false)
 	private String requestType;
 
+	@Audited
 	@NotEmpty
 	@Size(min = 1, max = DefaultFieldLengths.NAME)
 	@Column(name = "owner_type", length = DefaultFieldLengths.NAME, nullable = false)
 	private String ownerType;
 
+	@Audited
 	@Column(name = "owner_id", length = 16)
 	private UUID ownerId;
 

@@ -5,9 +5,6 @@ import * as Utils from '../../utils';
 import _ from 'lodash';
 import moment from 'moment';
 import { LocalizationService } from '../../services';
-import { LongRunningTaskManager } from '../../redux';
-
-const longRunningTaskManager = new LongRunningTaskManager();
 
 /**
  * Table with long running task items and detail of LRT

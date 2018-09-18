@@ -43,7 +43,7 @@ public class DefaultSysRoleSystemService extends AbstractReadWriteDtoService<Sys
 	private final AccIdentityAccountRepository identityAccountRepository;
 	private final IdmRoleService roleService;
 	@Autowired
-	private RequestManager<SysRoleSystemDto> requestManager;
+	private RequestManager requestManager;
 	
 	@Autowired
 	public DefaultSysRoleSystemService(

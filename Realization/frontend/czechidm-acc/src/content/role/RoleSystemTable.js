@@ -125,7 +125,8 @@ export class RoleSystemTable extends Advanced.AbstractTableContent {
       rendered,
       filterOpened,
       showFilter,
-      filterColumns
+      filterColumns,
+      className
     } = this.props;
     //
     if (!rendered) {
@@ -149,6 +150,7 @@ export class RoleSystemTable extends Advanced.AbstractTableContent {
           filterOpened={ filterOpened }
           showFilter={ showFilter }
           filterColumns={ filterColumns }
+          className={ className }
           actions={
             roleManager.canSave()
             ?
@@ -217,7 +219,7 @@ export class RoleSystemTable extends Advanced.AbstractTableContent {
                   );
                 }
               }/>
-            <Advanced.ColumnLink
+            <Advanced.Column
               header={this.i18n('acc:entity.RoleSystem.system')}
               rendered={_.includes(columns, 'system')}
               sort

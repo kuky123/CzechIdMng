@@ -223,9 +223,15 @@ public class DefaultAccTestHelper extends eu.bcvsolutions.idm.test.api.DefaultTe
 		// create test system
 		SysSystemDto system = createSystem(TestResource.TABLE_NAME, systemName);
 		//
-		if (!withMapping) {
-			return system;
-		}		
+		if (withMapping) {
+			createMapping(system);
+		}
+		//
+		return system;
+	}
+	
+	@Override
+	public SysSystemMappingDto createMapping(SysSystemDto system) {
 		//
 		// generate schema for system
 		List<SysSchemaObjectClassDto> objectClasses = systemService.generateSchema(system);
@@ -291,8 +297,8 @@ public class DefaultAccTestHelper extends eu.bcvsolutions.idm.test.api.DefaultTe
 				attributeMapping.setSystemMapping(systemMapping.getId());
 				systemAttributeMappingService.save(attributeMapping);
 			}
-		}		
-		return system;
+		}
+		return systemMapping;
 	}
 	
 	@Override
@@ -319,8 +325,9 @@ public class DefaultAccTestHelper extends eu.bcvsolutions.idm.test.api.DefaultTe
 		roleSystem.setSystem(system.getId());
 		// default mapping
 		List<SysSystemMappingDto> mappings = systemMappingService.findBySystem(system, SystemOperationType.PROVISIONING, SystemEntityType.IDENTITY);
-		//
+		// required ...
 		roleSystem.setSystemMapping(mappings.get(0).getId());
+		//
 		return roleSystemService.save(roleSystem);
 	}
 	

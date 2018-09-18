@@ -625,6 +625,16 @@ public interface TestHelper {
  	 * @return
  	 */
  	IdmRoleRequestDto executeRequest(IdmRoleRequestDto roleRequest, boolean startInNewTransaction);
+ 	
+ 	/**
+ 	 * Execute created role request
+ 	 * 
+ 	 * @param roleRequest
+ 	 * @param startInNewTransaction
+ 	 * @param immediate - synchronously
+ 	 * @return
+ 	 */
+ 	IdmRoleRequestDto executeRequest(IdmRoleRequestDto roleRequest, boolean startInNewTransaction, boolean immediate);
 
 	/**
 	 * Prepare processed item instance by given LRT

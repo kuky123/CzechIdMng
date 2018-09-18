@@ -16,6 +16,7 @@ import eu.bcvsolutions.idm.core.api.event.DefaultEventResult;
 import eu.bcvsolutions.idm.core.api.event.EntityEvent;
 import eu.bcvsolutions.idm.core.api.event.EventResult;
 import eu.bcvsolutions.idm.core.api.service.EntityEventManager;
+import eu.bcvsolutions.idm.core.api.service.LookupService;
 import eu.bcvsolutions.idm.core.api.utils.DtoUtils;
 import eu.bcvsolutions.idm.core.model.entity.IdmRoleRequest_;
 import eu.bcvsolutions.idm.core.model.event.RoleRequestEvent.RoleRequestEventType;
@@ -37,6 +38,7 @@ public class RoleRequestNotifyProvisioningProcessor extends AbstractEntityEventP
 	//
 	@Autowired private ProvisioningService provisioningService;
 	@Autowired private EntityEventManager entityEventManager;
+	@Autowired private LookupService lookupService;
 
 	public RoleRequestNotifyProvisioningProcessor() {
 		super(RoleRequestEventType.NOTIFY);
@@ -50,13 +52,16 @@ public class RoleRequestNotifyProvisioningProcessor extends AbstractEntityEventP
 	@Override
 	public boolean conditional(EntityEvent<IdmRoleRequestDto> event) {
 		return super.conditional(event)
-				&& (event.getRootId() == null || event.getRootId().equals(event.getParentId()));
+				&& (event.getRootId() == null || event.getRootId().equals(event.getParentId())); 
 	}
  
 	@Override
 	public EventResult<IdmRoleRequestDto> process(EntityEvent<IdmRoleRequestDto> event) {
 		IdmRoleRequestDto request = event.getContent();		
-		IdmIdentityDto identity = DtoUtils.getEmbedded(request, IdmRoleRequest_.applicant);
+		IdmIdentityDto identity = DtoUtils.getEmbedded(request, IdmRoleRequest_.applicant, (IdmIdentityDto) null);
+		if (identity == null) {
+			identity = (IdmIdentityDto) lookupService.lookupDto(IdmIdentityDto.class, request.getApplicant());
+		}
 		//
 		LOG.debug("Call account management for identity [{}]", identity.getUsername());
 		provisioningService.accountManagement(identity);

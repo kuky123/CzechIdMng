@@ -377,7 +377,7 @@ public class DefaultIdmAutomaticRoleRequestService extends
 			if (dto.getRequestType() == null) {
 				dto.setRequestType(AutomaticRoleRequestType.ATTRIBUTE);
 			}
-		} else if (dto.getResult() == null) {
+		} else if (dto != null && dto.getResult() == null) {
 			IdmAutomaticRoleRequestDto persistedDto = this.get(dto.getId());
 			dto.setResult(persistedDto.getResult());
 		}

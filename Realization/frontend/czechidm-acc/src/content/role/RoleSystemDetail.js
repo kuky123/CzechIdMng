@@ -51,7 +51,7 @@ class RoleSystemDetail extends Advanced.AbstractTableContent {
     if (this._isSystemMenu()) {
       return 'system-roles';
     }
-    this.getRequestNavigationKey('role-systems', this.props.params);
+    return this.getRequestNavigationKey('role-systems', this.props.params);
   }
 
   _isMenu(menu = 'role') {
@@ -66,7 +66,7 @@ class RoleSystemDetail extends Advanced.AbstractTableContent {
   showDetail(entity, add) {
     let entityId = null;
     if (!add) {
-      entityId = this._isSystemMenu() ? entity.role : entity.system;
+      entityId = this._isSystemMenu() ? entity._embedded.roleSystem.system : entity._embedded.roleSystem.role;
     } else {
       entityId = this.props.params.entityId;
     }
@@ -112,9 +112,13 @@ class RoleSystemDetail extends Advanced.AbstractTableContent {
       this.context.store.dispatch(roleSystemManager.fetchEntity(roleSystemId));
     } else {
       if (this._isSystemMenu()) {
-        this.refs.role.focus();
+        if (this.refs.role.focus()) {
+          this.refs.role.focus();
+        }
       } else {
-        this.refs.system.focus();
+        if (this.refs.system) {
+          this.refs.system.focus();
+        }
       }
     }
   }
@@ -199,7 +203,8 @@ class RoleSystemDetail extends Advanced.AbstractTableContent {
     const forceSearchMappings = new Domain.SearchParameters()
       .setFilter('operationType', SystemOperationTypeEnum.findKeyBySymbol(SystemOperationTypeEnum.PROVISIONING))
       .setFilter('systemId', systemId || Domain.SearchParameters.BLANK_UUID);
-    const linkMenu = this._isSystemMenu() ? `/system/${roleSystem.system}/roles/${roleSystem}/attributes` : `/role/${roleSystem.role}/systems/${roleSystem}/attributes`;
+    let linkMenu = this._isSystemMenu() ? `/system/${roleSystem.system}/roles/${roleSystem ? roleSystem.id : ''}/attributes` : `/role/${roleSystem.role}/systems/${roleSystem ? roleSystem.id : ''}/attributes`;
+    linkMenu = this.addRequestPrefix(linkMenu, this.props.params);
     //
     return (
       <div>
@@ -271,6 +276,7 @@ class RoleSystemDetail extends Advanced.AbstractTableContent {
             manager={ roleSystemAttributeManager }
             forceSearchParameters={ forceSearchParameters }
             showRowSelection={ roleManager.canSave() }
+            className="no-margin"
             actions={
               roleManager.canSave()
               ?
@@ -332,7 +338,7 @@ RoleSystemDetail.defaultProps = {
 
 function select(state, component) {
   if (!roleSystemManager) {
-    return null;
+    return {};
   }
   const entity = Utils.Entity.getEntity(state, roleSystemManager.getEntityType(), component.params.roleSystemId);
   return {

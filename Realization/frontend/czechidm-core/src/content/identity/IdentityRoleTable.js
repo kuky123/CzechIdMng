@@ -157,6 +157,9 @@ export class IdentityRoleTable extends Advanced.AbstractTableContent {
             cell={
               /* eslint-disable react/no-multi-comp */
               ({ rowIndex, data, property }) => {
+                if (!data[rowIndex][property]) {
+                  return null;
+                }
                 return (
                   <Advanced.EntityInfo
                     entityType="contractPosition"
@@ -185,6 +188,9 @@ export class IdentityRoleTable extends Advanced.AbstractTableContent {
             cell={
               /* eslint-disable react/no-multi-comp */
               ({ rowIndex, data, property }) => {
+                if (!data[rowIndex][property]) {
+                  return null;
+                }
                 return (
                   <Advanced.EntityInfo
                     entityType="identityRole"

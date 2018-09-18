@@ -163,12 +163,63 @@ function dispatchTrace({ getState }) {
   };
 }
 //
+// redux queue middle ware, inpired by https://github.com/zackargyle/redux-async-queue
+// TODO: move to utils
+function reduxQueue({ dispatch, getState }) {
+  const THREAD_COUNT = 3;
+  const queues = {}; // queued actions
+  const running = {}; // running queue ids
+
+  function dequeue(key) {
+    const action = queues[key].find(a => {
+      return !running[key].has(a.id);
+    });
+    if (!action) {
+      return;
+    }
+    running[key] = running[key].add(action.id);
+    //
+    // execute action
+    action.callback(function next() {
+      queues[key].shift();
+      running[key] = running[key].delete(action.id);
+      if (queues[key].length > 0 && running[key].size < THREAD_COUNT) {
+        dequeue(key);
+      }
+    }, dispatch, getState);
+  }
+  //
+  return next => action => {
+    const { queue: key, callback, id } = action || {};
+    if (key) {
+      if (typeof callback !== 'function') {
+        throw new Error('Queued actions must have a <callback> property');
+      }
+      if (!id) {
+        throw new Error('Queued actions must have a <id> property');
+      }
+      // Verify array at <key>
+      queues[key] = queues[key] || [];
+      running[key] = running[key] || new Immutable.Set();
+      // Add new queued callback
+      queues[key].push(action);
+      //
+      // If it's the only one, sync call it.
+      if (queues[key].length === 1 || running[key].size < THREAD_COUNT) {
+        dequeue(key);
+      }
+    } else {
+      return next(action);
+    }
+  };
+}
+//
 // apply middleware
 let midlewares = [];
 if (logger.isTraceEnabled()) {
   midlewares.push(dispatchTrace);
 }
-midlewares = [...midlewares, thunkMiddleware, promiseMiddleware, reduxRouterMiddleware];
+midlewares = [...midlewares, thunkMiddleware, promiseMiddleware, reduxRouterMiddleware, reduxQueue];
 const createStoreWithMiddleware = applyMiddleware(...midlewares)(createPersistentStore);
 // redux store
 const store = createStoreWithMiddleware(reducer);

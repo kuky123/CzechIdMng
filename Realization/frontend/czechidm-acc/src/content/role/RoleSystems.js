@@ -42,7 +42,8 @@ export default class RoleSystems extends Basic.AbstractContent {
             uiKey={ `${this.getUiKey()}-${entityId}` }
             columns={ _.difference(RoleSystemTable.defaultProps.columns, ['role']) }
             forceSearchParameters={ forceSearchParameters }
-            params={ this.props.params }/>
+            params={ this.props.params }
+            className="no-margin"/>
         </Basic.Panel>
       </div>
     );

@@ -55,6 +55,7 @@ import eu.bcvsolutions.idm.core.api.dto.IdmRoleDto;
 import eu.bcvsolutions.idm.core.api.dto.OperationResultDto;
 import eu.bcvsolutions.idm.core.api.dto.filter.IdmEntityStateFilter;
 import eu.bcvsolutions.idm.core.api.event.EntityEvent;
+import eu.bcvsolutions.idm.core.api.service.EntityEventManager;
 import eu.bcvsolutions.idm.core.api.service.EntityStateManager;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityRoleService;
 import eu.bcvsolutions.idm.core.api.utils.DtoUtils;
@@ -82,6 +83,8 @@ public class DefaultAccAccountManagementService implements AccAccountManagementS
 	private IdmIdentityRoleService identityRoleService;
 	@Autowired
 	private EntityStateManager entityStateManager;
+	@Autowired
+	private EntityEventManager entityEventManager;
 
 	@Autowired
 	public DefaultAccAccountManagementService(SysRoleSystemService roleSystemService, AccAccountService accountService,
@@ -369,8 +372,8 @@ public class DefaultAccAccountManagementService implements AccAccountManagementS
 		Assert.notNull(identityRole);
 		Assert.notNull(identityRole.getId());
 		//
-		if (event.getRootId() == null) {
-			// role is deleted without request or without any parant ... we need to remove account synchronously
+		if (event.getRootId() == null || !entityEventManager.isRunnable(event.getRootId())) {
+			// role is deleted without request or without any parent ... we need to remove account synchronously
 			deleteIdentityAccount(identityRole);
 			return;
 		}

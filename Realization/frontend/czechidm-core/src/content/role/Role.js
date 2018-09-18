@@ -24,7 +24,7 @@ class Role extends Basic.AbstractContent {
     // universal request manager (depends on existing of 'requestId' param)
     manager = this.getRequestManager(this.props.params, new RoleManager());
 
-    this.context.store.dispatch(manager.fetchEntityIfNeeded(entityId, null, (entity, error) => {
+    this.context.store.dispatch(manager.fetchEntity(entityId, null, (entity, error) => {
       this.handleError(error);
     }));
   }
@@ -58,8 +58,8 @@ class Role extends Basic.AbstractContent {
     return (
       <div>
         <Basic.PageHeader showLoading={!entity && showLoading}>
-        <Basic.Icon value="fa:universal-access"/>
-        {' '}
+          <Basic.Icon value="fa:universal-access"/>
+          {' '}
           { manager.getNiceLabel(entity)} <small> {this.i18n('content.roles.edit.header') }</small>
         </Basic.PageHeader>
         <Basic.Row rendered={_requestsEnabled

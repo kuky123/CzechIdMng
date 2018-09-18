@@ -16,6 +16,7 @@ import eu.bcvsolutions.idm.core.api.event.AbstractEntityEventProcessor;
 import eu.bcvsolutions.idm.core.api.event.DefaultEventResult;
 import eu.bcvsolutions.idm.core.api.event.EntityEvent;
 import eu.bcvsolutions.idm.core.api.event.EventResult;
+import eu.bcvsolutions.idm.core.api.service.EntityEventManager;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityContractService;
 import eu.bcvsolutions.idm.core.api.utils.DtoUtils;
 import eu.bcvsolutions.idm.core.model.entity.IdmIdentityContract_;
@@ -38,15 +39,20 @@ public class IdentityRoleDeleteProvisioningProcessor extends AbstractEntityEvent
 	//
 	@Autowired private ProvisioningService provisioningService;
 	@Autowired private IdmIdentityContractService identityContractService;
+	@Autowired private EntityEventManager entityEventManager;
 
 	public IdentityRoleDeleteProvisioningProcessor() {
 		super(IdentityRoleEventType.DELETE);
 	}
 	
+	/**
+	 *  Account management should be executed from parent event - request. 
+	 *  Look out, request event is already closed, when asynchronous processing is disabled.
+	 */
 	@Override
 	public boolean conditional(EntityEvent<IdmIdentityRoleDto> event) {
 		return super.conditional(event)
-				&& event.getRootId() == null; // account management should be executed from parent event
+				&& (event.getRootId() == null || !entityEventManager.isRunnable(event.getRootId())) ;
 	}
 
 	@Override

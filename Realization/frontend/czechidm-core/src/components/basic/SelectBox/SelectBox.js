@@ -147,7 +147,7 @@ class SelectBox extends AbstractFormComponent {
             };
             if (!data.complete) {
               data.options.push({
-                [NICE_LABEL]: <Waypoint onEnter={this._loadMoreContent.bind(this)}>{this.i18n('results', { escape: false, count: data.options.length, total: result.page.totalElements})}</Waypoint>,
+                [NICE_LABEL]: <Waypoint onEnter={this._loadMoreContent.bind(this, input)}>{this.i18n('results', { escape: false, count: data.options.length, total: result.page.totalElements})}</Waypoint>,
                 [ITEM_FULL_KEY]: input,
                 disabled: true // info only
               });
@@ -176,7 +176,7 @@ class SelectBox extends AbstractFormComponent {
   /**
    * Method load more content to options state and increment actualPage
    */
-  _loadMoreContent() {
+  _loadMoreContent(input = '') {
     const { actualPage } = this.state;
     const { pageSize, manager, useFirst, loadMoreContent, forceSearchParameters } = this.props;
     if (!loadMoreContent) {
@@ -191,7 +191,7 @@ class SelectBox extends AbstractFormComponent {
       finalSearchParameters = manager.mergeSearchParameters(forceSearchParameters, finalSearchParameters);
     }
     //
-    this.getOptions('', finalSearchParameters, useFirst, true);
+    this.getOptions(input, finalSearchParameters, useFirst, true);
     this.setState({
       actualPage: newActualPage
     });

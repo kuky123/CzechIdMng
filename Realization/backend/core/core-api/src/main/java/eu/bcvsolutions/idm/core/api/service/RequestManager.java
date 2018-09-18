@@ -28,9 +28,9 @@ import eu.bcvsolutions.idm.core.security.api.domain.IdmBasePermission;
  * Manager for automatic role request
  * 
  * @author svandav
- * 
+ * @since 9.1.0
  */
-public interface RequestManager<R extends Requestable> extends RequestService<IdmRequestDto> {
+public interface RequestManager extends RequestService<IdmRequestDto> {
 
 	/**
 	 * Create or update given DTO for given request.
@@ -40,7 +40,7 @@ public interface RequestManager<R extends Requestable> extends RequestService<Id
 	 * @param permission
 	 * @return
 	 */
-	R post(Serializable requestId, R dto, BasePermission... permission);
+	<R extends Requestable> R post(Serializable requestId, R dto, BasePermission... permission);
 
 	/**
 	 * Delete given DTO for given request. Returns that DTO, but marked as DELETED.
@@ -50,7 +50,7 @@ public interface RequestManager<R extends Requestable> extends RequestService<Id
 	 * @param permission
 	 * @return
 	 */
-	R delete(Serializable requestId, R dto, BasePermission... permission);
+	<R extends Requestable> R delete(Serializable requestId, R dto, BasePermission... permission);
 
 	/**
 	 * Returns given DTO for given request. First try to find that DTO as item in
@@ -62,7 +62,7 @@ public interface RequestManager<R extends Requestable> extends RequestService<Id
 	 * @param permission
 	 * @return
 	 */
-	R get(UUID requestId, UUID dtoId, Class<R> dtoClass, BasePermission... permission);
+	<R extends Requestable> R get(UUID requestId, UUID dtoId, Class<R> dtoClass, BasePermission... permission);
 
 	/**
 	 * Executes filter and on result applies DTOs from this request's items.
@@ -74,8 +74,8 @@ public interface RequestManager<R extends Requestable> extends RequestService<Id
 	 * @param permission
 	 * @return
 	 */
-	Page<R> find(Class<? extends R> dtoClass, Serializable requestId, BaseFilter filter, Pageable pageable,
-			IdmBasePermission permission);
+	<R extends Requestable> Page<R> find(Class<? extends R> dtoClass, Serializable requestId, BaseFilter filter, Pageable pageable,
+			IdmBasePermission... permission);
 
 	/**
 	 * Create new request for given DTO.
@@ -84,7 +84,7 @@ public interface RequestManager<R extends Requestable> extends RequestService<Id
 	 * @param permission
 	 * @return
 	 */
-	IdmRequestDto createRequest(R dto, BasePermission... permission);
+	<R extends Requestable> IdmRequestDto createRequest(R dto, BasePermission... permission);
 
 	/**
 	 * Save form values for given owner to this request
@@ -96,19 +96,19 @@ public interface RequestManager<R extends Requestable> extends RequestService<Id
 	 * @param permission
 	 * @return
 	 */
-	IdmFormInstanceDto saveFormInstance(UUID requestId, R owner, IdmFormDefinitionDto formDefinition,
+	<R extends Requestable> IdmFormInstanceDto saveFormInstance(UUID requestId, R owner, IdmFormDefinitionDto formDefinition,
 			List<IdmFormValueDto> newValues, BasePermission... permission);
 
 	/**
 	 * Read form values and applies data from request on the result.
 	 * 
-	 * @param fromString
+	 * @param requestId
 	 * @param owner
 	 * @param formDefinition
 	 * @param permission
 	 * @return
 	 */
-	IdmFormInstanceDto getFormInstance(UUID fromString, R owner, IdmFormDefinitionDto formDefinition,
+	<R extends Requestable> IdmFormInstanceDto getFormInstance(UUID requestId, R owner, IdmFormDefinitionDto formDefinition,
 			BasePermission... permission);
 
 	/**
@@ -137,7 +137,7 @@ public interface RequestManager<R extends Requestable> extends RequestService<Id
 	 * 
 	 * @param requestable
 	 */
-	void onDeleteRequestable(R requestable);
+	<R extends Requestable> void onDeleteRequestable(R requestable);
 
 	/**
 	 * Delete given requestable DTO. Creates and executes request.
@@ -145,7 +145,7 @@ public interface RequestManager<R extends Requestable> extends RequestService<Id
 	 * @param dto
 	 * @param executeImmediately
 	 */
-	IdmRequestDto deleteRequestable(R dto, boolean executeImmediately);
+	<R extends Requestable> IdmRequestDto deleteRequestable(R dto, boolean executeImmediately);
 
 	/**
 	 * Get DTO from the request item. Place for additional conversion (EAV attribute
@@ -159,7 +159,7 @@ public interface RequestManager<R extends Requestable> extends RequestService<Id
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	R convertItemToDto(IdmRequestItemDto item, Class<? extends R> type)
+	<R extends Requestable> R convertItemToDto(IdmRequestItemDto item, Class<? extends R> type)
 			throws JsonParseException, JsonMappingException, IOException, ClassNotFoundException;
 
 	/**
@@ -171,7 +171,7 @@ public interface RequestManager<R extends Requestable> extends RequestService<Id
 	 * @param predicates
 	 * @return
 	 */
-	List<R> filterDtosByPredicates(List<R> requestables, Class<? extends R> dtoClass,
+	<R extends Requestable> List<R> filterDtosByPredicates(List<R> requestables, Class<? extends R> dtoClass,
 			List<RequestPredicate> predicates);
 
 	/**

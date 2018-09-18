@@ -1,7 +1,13 @@
 package eu.bcvsolutions.idm.core.rest.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import eu.bcvsolutions.idm.core.api.domain.CoreResultCode;
 import eu.bcvsolutions.idm.core.api.domain.OperationState;
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
+import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmEntityEventDto;
 import eu.bcvsolutions.idm.core.api.dto.filter.IdmEntityEventFilter;
 import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
@@ -24,6 +31,7 @@ import eu.bcvsolutions.idm.core.api.rest.BaseController;
 import eu.bcvsolutions.idm.core.api.rest.BaseDtoController;
 import eu.bcvsolutions.idm.core.api.service.EntityEventManager;
 import eu.bcvsolutions.idm.core.api.service.IdmEntityEventService;
+import eu.bcvsolutions.idm.core.security.api.domain.BasePermission;
 import eu.bcvsolutions.idm.core.security.api.domain.IdmGroupPermission;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -46,6 +54,7 @@ import io.swagger.annotations.ApiOperation;
 public class IdmEntityEventController extends DefaultReadWriteDtoController<IdmEntityEventDto, IdmEntityEventFilter> {
 	
 	protected static final String TAG = "Entity events";
+	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(IdmEntityEventController.class);
 	//
 	private final IdmEntityEventService service;
 	//
@@ -69,6 +78,25 @@ public class IdmEntityEventController extends DefaultReadWriteDtoController<IdmE
 		service.deleteAll();
 		//
 		return new ResponseEntity<Object>(HttpStatus.NO_CONTENT);
+	}
+	
+	@Override
+	public Page<IdmEntityEventDto> find(IdmEntityEventFilter filter, Pageable pageable, BasePermission permission) {
+		Page<IdmEntityEventDto> results = super.find(filter, pageable, permission);
+		// fill entity embedded for FE
+		Map<UUID, BaseDto> loadedDtos = new HashMap<>();
+		results.getContent().forEach(dto -> {
+			UUID ownerId = dto.getOwnerId();
+			if (!loadedDtos.containsKey(ownerId)) {
+				try {
+					loadedDtos.put(ownerId, getLookupService().lookupDto(dto.getOwnerType(), ownerId));
+				} catch (IllegalArgumentException ex) {
+					LOG.debug("Class [{}] not found on classpath (e.g. module was uninstalled)", dto.getOwnerType(), ex);
+				}
+			}
+			dto.getEmbedded().put("ownerId", loadedDtos.get(ownerId));
+		});
+		return results;
 	}
 	
 	@Override

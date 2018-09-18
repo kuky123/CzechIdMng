@@ -178,10 +178,18 @@ export class EntityStateTable extends Advanced.AbstractTableContent {
             rendered={_.includes(columns, 'ownerId')}
             cell={
               ({ rowIndex, data, property }) => {
+                //
+                if (!data[rowIndex]._embedded || !data[rowIndex]._embedded[property]) {
+                  return (
+                    <Advanced.UuidInfo value={ data[rowIndex][property] } />
+                  );
+                }
+                //
                 return (
                   <Advanced.EntityInfo
                     entityType={ Utils.Ui.getSimpleJavaType(data[rowIndex].ownerType) }
                     entityIdentifier={ data[rowIndex][property] }
+                    entity={ data[rowIndex]._embedded[property] }
                     face="popover"
                     showEntityType={ false }/>
                 );

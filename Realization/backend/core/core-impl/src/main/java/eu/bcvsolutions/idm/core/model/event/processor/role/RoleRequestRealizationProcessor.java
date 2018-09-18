@@ -43,9 +43,8 @@ public class RoleRequestRealizationProcessor extends CoreEventProcessor<IdmRoleR
 
 	@Override
 	public EventResult<IdmRoleRequestDto> process(EntityEvent<IdmRoleRequestDto> event) {
-		IdmRoleRequestDto dto = event.getContent();
-		event.setContent(service.executeRequest(dto.getId()));
-
+		event.setContent(service.executeRequest(event));
+		//
 		return new DefaultEventResult<>(event, this);
 	}
 }

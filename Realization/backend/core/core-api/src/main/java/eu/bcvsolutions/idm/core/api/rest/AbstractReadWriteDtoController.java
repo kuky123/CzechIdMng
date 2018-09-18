@@ -309,7 +309,7 @@ public abstract class AbstractReadWriteDtoController<DTO extends BaseDto, F exte
 	protected DTO checkAccess(DTO dto, BasePermission... permission) {
 		// If controller supports request, then only READ operation is allowed
 		if (this.isRequestModeEnabled()) {
-			if(permission != null && permission.length == 1 && IdmBasePermission.READ.equals(permission[0])) {
+			if(permission != null && permission.length == 1 && IdmBasePermission.READ == permission[0]) {
 				return super.checkAccess(dto, permission);
 			}
 			throw new ResultCodeException(CoreResultCode.REQUEST_CUD_OPERATIONS_NOT_ALLOWED,

@@ -185,7 +185,7 @@
           },
           "startAutoRoleRec": {
             "label": "Po dokončení spustit přepočet automatických rolí",
-            "helpBlock": "Po úspešném dokončení synchronizace bude spuštěn přepočet všech automatických rolí podle atributu."
+            "helpBlock": "Po úspěšném dokončení synchronizace bude spuštěn přepočet všech automatických rolí podle atributu."
           }
         },
         "identityConfigDetail":{
@@ -195,7 +195,7 @@
           },
           "startAutoRoleRec": {
             "label": "Po dokončení spustit přepočet automatických rolí",
-            "helpBlock": "Po úspešném dokončení synchronizace bude spuštěn přepočet všech automatických rolí podle atributu."
+            "helpBlock": "Po úspěšném dokončení synchronizace bude spuštěn přepočet všech automatických rolí podle atributu."
           },
           "createDefaultContract": {
             "label": "Vytvářet výchozí úvazky pro nové identity",
@@ -392,7 +392,7 @@
         "title": "Napojený systém",
         "roleSystemAttributesHeader": "Atributy mapované v rámci této role",
         "systemMapping": {
-          "systemPlaceholder": "Nejprve vyberte system ..."
+          "systemPlaceholder": "Nejprve vyberte systém ..."
         },
         "create": {
           "success": "Napojení systému bylo úspěšně vytvořeno"
@@ -634,7 +634,7 @@
       "new": "Vytvořit nového příjemce",
       "edit": "Editace příjemce",
       "save": {
-        "success": "Příjemce byl úspešně uložen"
+        "success": "Příjemce byl úspěšně uložen"
       },
       "create": {
         "success": "Příjemce byl úspěšně vytvořen"
@@ -716,7 +716,7 @@
       "systemMapping": "Název mapování",
       "forwardAccountManagemen": {
         "label": "Dopředná správa účtů",
-        "help": "Pokud je zaškrtnuto, pak bude účet na tomto systému vytvořen i v případě, že přířazní této role uživateli bude platné až v budoucnu."
+        "help": "Pokud je zaškrtnuto, pak bude účet na tomto systému vytvořen i v případě, že přiřazení této role uživateli bude platné až v budoucnu."
       }
     },
     "SystemEntity": {
@@ -1205,7 +1205,7 @@
         "attributes": {
           "quoting": {
             "label": "Doplnit uvozovky",
-            "help": "Zvolte, zda mají být uvedeny názvy sloupců databáze pro tento zdroj v uvozovkách. Ve výchozím nastavení nejsou názvy sloupců databáze v uvozovkách. U jiných výběrů (jednoduhé, dvojité, zpětné uvozovky, nebo závorky) se názvy sloupců objeví s uvozovkami nebo závorkami v SQL vygenerovaném pro přístup k databázi.",
+            "help": "Zvolte, zda mají být uvedeny názvy sloupců databáze pro tento zdroj v uvozovkách. Ve výchozím nastavení nejsou názvy sloupců databáze v uvozovkách. U jiných výběrů (jednoduché, dvojité, zpětné uvozovky, nebo závorky) se názvy sloupců objeví s uvozovkami nebo závorkami v SQL vygenerovaném pro přístup k databázi.",
             "placeholder": ""
           },
           "host": {
@@ -1345,7 +1345,7 @@
           },
           "passwordcharset": {
             "label": "Znaková sada hesla",
-            "help": "Nastavit znakovou sadu pouzitou pro textové heslo (ve variantě bez šifrování - CLEARTEXT). Výchozí hodnota je \"UTF-8\".",
+            "help": "Nastavit znakovou sadu použitou pro textové heslo (ve variantě bez šifrování - CLEARTEXT). Výchozí hodnota je \"UTF-8\".",
             "placeholder": ""
           }
         }
@@ -1355,7 +1355,7 @@
       "role-acm-bulk-action": {
         "icon": "link",
         "label": "Provést přepočet účtů",
-        "help": "Tato operace vyvolá pro každou vybranou roli <strong>přepočet účtů</strong>. Přepočet bude proveden pro všechny uživatele s danou rolí. Samotný přepočet i následný provisioning je prováděn <strong>asynchroně</strong>. Postup můžete sledovat v agendě spravující <strong>Události</strong>."
+        "help": "Tato operace vyvolá pro každou vybranou roli <strong>přepočet účtů</strong>. Přepočet bude proveden pro všechny uživatele s danou rolí. Samotný přepočet i následný provisioning je prováděn <strong>asynchronně</strong>. Postup můžete sledovat v agendě spravující <strong>Události</strong>."
       }
     }
   },
@@ -1666,11 +1666,11 @@
     },
     "SYNCHRONIZATION_TREE_PARENT_TREE_ACCOUNT_NOT_FOUND": {
       "title": "Nebyl nalezen účet",
-      "message": "Pro nadřezené UID: [{{parentUid}}] na systému [{{systemId}}] a účtu  [{{parentAccount}}] nebyl nalezen účet stromové struktury."
+      "message": "Pro nadřazené UID: [{{parentUid}}] na systému [{{systemId}}] a účtu [{{parentAccount}}] nebyl nalezen účet stromové struktury."
     },
     "SYNCHRONIZATION_TREE_PARENT_ACCOUNT_NOT_FOUND": {
       "title": "Nebyl nalezen účet",
-      "message": "Pro nadřezené UID: [{{parentUid}}] na systému [{{systemId}}] nebyl nalezen rodičovský účet."
+      "message": "Pro nadřazené UID: [{{parentUid}}] na systému [{{systemId}}] nebyl nalezen rodičovský účet."
     },
     "PROVISIONING_BREAK_RECIPIENT_CONFLICT": {
       "title": "Více atributů pro příjemce",
@@ -1705,7 +1705,7 @@
       "title": ""
     },
     "ROLE_ACM_BULK_ACTION_NONE_IDENTITIES": {
-      "message": "Žádná z vybranných rolí <strong>neobsahuje</strong> vazbu na uživatele.",
+      "message": "Žádná z vybraných rolí <strong>neobsahuje</strong> vazbu na uživatele.",
       "title": ""
     }
   },

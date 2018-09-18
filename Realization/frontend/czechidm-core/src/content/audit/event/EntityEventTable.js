@@ -120,7 +120,9 @@ export class EntityEventTable extends Advanced.AbstractTableContent {
     const {
       columns,
       forceSearchParameters,
-      rendered
+      rendered,
+      className,
+      showDeleteAllButton
     } = this.props;
     const { filterOpened, detail } = this.state;
     //
@@ -207,13 +209,14 @@ export class EntityEventTable extends Advanced.AbstractTableContent {
           forceSearchParameters={_forceSearchParameters}
           _searchParameters={ this.getSearchParameters() }
           showRowSelection
+          className={ className }
           buttons={[
             <Basic.Button
               level="danger"
               key="delete-all-button"
               className="btn-xs"
               onClick={ this._deleteAll.bind(this) }
-              rendered={ SecurityManager.hasAnyAuthority('APP_ADMIN') }
+              rendered={ showDeleteAllButton && SecurityManager.hasAnyAuthority('APP_ADMIN') }
               title={ this.i18n('action.deleteAll.button.title') }
               titlePlacement="bottom"
               icon="fa:trash">
@@ -247,6 +250,18 @@ export class EntityEventTable extends Advanced.AbstractTableContent {
             rendered={_.includes(columns, 'result')}/>
           <Advanced.Column property="created" sort face="datetime" rendered={ _.includes(columns, 'created') } width={ 175 }/>
           <Advanced.Column
+            property="superOwnerId"
+            header={ this.i18n('entity.EntityEvent.superOwnerId.label') }
+            rendered={_.includes(columns, 'superOwnerId')}
+            cell={
+              ({ rowIndex, data, property }) => {
+                // TODO: add owner type int persistent entity
+                return (
+                  <Advanced.UuidInfo value={ data[rowIndex][property] } />
+                );
+              }
+            }/>
+          <Advanced.Column
             property="ownerType"
             rendered={_.includes(columns, 'ownerType')}
             width={ 200 }
@@ -265,10 +280,18 @@ export class EntityEventTable extends Advanced.AbstractTableContent {
             rendered={_.includes(columns, 'ownerId')}
             cell={
               ({ rowIndex, data, property }) => {
+                //
+                if (!data[rowIndex]._embedded || !data[rowIndex]._embedded[property]) {
+                  return (
+                    <Advanced.UuidInfo value={ data[rowIndex][property] } />
+                  );
+                }
+                //
                 return (
                   <Advanced.EntityInfo
                     entityType={ Utils.Ui.getSimpleJavaType(data[rowIndex].ownerType) }
                     entityIdentifier={ data[rowIndex][property] }
+                    entity={ data[rowIndex]._embedded[property] }
                     face="popover"
                     showEntityType={ false }/>
                 );
@@ -422,7 +445,8 @@ EntityEventTable.defaultProps = {
   columns: ['result', 'created', 'ownerType', 'ownerId', 'eventType', 'priority', 'instanceId', 'root', 'parent'],
   filterOpened: false,
   forceSearchParameters: null,
-  rendered: true
+  rendered: true,
+  showDeleteAllButton: true
 };
 
 function select(state, component) {

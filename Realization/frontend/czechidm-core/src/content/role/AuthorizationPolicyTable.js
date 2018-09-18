@@ -282,7 +282,8 @@ export class AuthorizationPolicyTable extends Advanced.AbstractTableContent {
       authorizableTypes,
       allAuthorities,
       availableAuthorities,
-      _permissions } = this.props;
+      _permissions,
+      className } = this.props;
     const { detail, evaluatorType, authorizableType } = this.state;
     //
     if (!manager || !roleManager) {
@@ -329,6 +330,7 @@ export class AuthorizationPolicyTable extends Advanced.AbstractTableContent {
           manager={ manager }
           forceSearchParameters={ forceSearchParameters }
           showRowSelection={ manager.canDelete() }
+          className={ className }
           rowClass={
             ({rowIndex, data}) => {
               // installed vs. available authorities - authority from disabled module

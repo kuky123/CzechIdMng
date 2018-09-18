@@ -774,7 +774,9 @@
       "NOTIFICATIONCONFIGURATION": "Notifications - configuration",
       "NOTIFICATIONTEMPLATE": "Notifications - templates",
       "PASSWORDPOLICY": "Password policy",
-      "ROLEREQUEST": "Role requests",
+      "ROLEREQUEST": "Requests for assigned roles",
+      "REQUEST": "Requests (universal)",
+      "REQUESTITEM": "Requests - items (universal)",
       "SCHEDULER": "Scheduler",
       "WORKFLOWDEFINITION": "Workflow - definitions",
       "CONFIDENTIALSTORAGEVALUE": "Confidential storage",
@@ -3716,6 +3718,9 @@
       "created": {
         "label": "Event date"
       },
+      "superOwnerId": {
+        "label": "Super owner"
+      },
       "owner": {
         "label": "Entity"
       },
@@ -4880,7 +4885,8 @@
     },
     "any": {
       "allowOnly": "Required field!",
-      "empty" : "$t(validationError.string.base)"
+      "empty" : "$t(validationError.string.base)",
+      "required": "$t(validationError.any.allowOnly)"
     },
     "object" : {
       "base" : "$t(validationError.string.base)"

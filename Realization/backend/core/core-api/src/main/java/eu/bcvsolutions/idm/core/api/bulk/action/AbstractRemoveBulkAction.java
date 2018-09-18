@@ -31,7 +31,7 @@ public abstract class AbstractRemoveBulkAction<DTO extends AbstractDto, F extend
 	@Autowired
 	private RequestConfiguration requestConfiguration;
 	@Autowired
-	private RequestManager<Requestable> requestManager;
+	private RequestManager requestManager;
 
 	@Override
 	protected OperationResult processDto(DTO dto) {

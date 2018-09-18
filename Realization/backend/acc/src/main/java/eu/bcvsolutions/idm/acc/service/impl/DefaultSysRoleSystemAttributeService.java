@@ -79,7 +79,7 @@ public class DefaultSysRoleSystemAttributeService extends
 	@Autowired
 	private SysSchemaAttributeService schemaAttributeService;
 	@Autowired
-	private RequestManager<SysRoleSystemAttributeDto> requestManager;
+	private RequestManager requestManager;
 
 	@Autowired
 	public DefaultSysRoleSystemAttributeService(SysRoleSystemAttributeRepository repository) {

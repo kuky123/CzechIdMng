@@ -44,7 +44,7 @@ public class IdmLongRunningTask extends AbstractEntity {
 	@Column(name = "task_type", length = DefaultFieldLengths.NAME, nullable = false)
 	private String taskType;
 
-	@Column(name = "task_description", length = DefaultFieldLengths.NAME)
+	@Column(name = "task_description", length = DefaultFieldLengths.DESCRIPTION)
 	private String taskDescription;
 
 	@Column(name = "task_properties", length = Integer.MAX_VALUE)

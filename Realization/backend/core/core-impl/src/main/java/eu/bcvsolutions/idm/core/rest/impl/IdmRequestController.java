@@ -29,7 +29,6 @@ import eu.bcvsolutions.idm.core.api.config.swagger.SwaggerConfig;
 import eu.bcvsolutions.idm.core.api.domain.CoreResultCode;
 import eu.bcvsolutions.idm.core.api.domain.OperationState;
 import eu.bcvsolutions.idm.core.api.domain.RequestState;
-import eu.bcvsolutions.idm.core.api.domain.Requestable;
 import eu.bcvsolutions.idm.core.api.dto.IdmRequestDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmRequestItemChangesDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmRequestItemDto;
@@ -70,7 +69,7 @@ public class IdmRequestController extends AbstractReadWriteDtoController<IdmRequ
 	protected static final String TAG = "Universal requests";
 	
 	@Autowired
-	private RequestManager<Requestable> requestManager;
+	private RequestManager requestManager;
 	@Autowired
 	private IdmRequestItemService requestItemService;
 	

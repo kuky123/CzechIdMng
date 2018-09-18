@@ -593,10 +593,15 @@ public class DefaultTestHelper implements TestHelper {
 	
 	@Override
 	public IdmRoleRequestDto executeRequest(IdmRoleRequestDto roleRequest, boolean startInNewTransaction) {
+		return executeRequest(roleRequest, startInNewTransaction, false);
+	}
+	
+	@Override
+	public IdmRoleRequestDto executeRequest(IdmRoleRequestDto roleRequest, boolean startInNewTransaction, boolean immediate) {
 		if (startInNewTransaction) {
 			return roleRequestService.startRequest(roleRequest.getId(), false);
 		}
-		return roleRequestService.startRequestInternal(roleRequest.getId(), false);
+		return roleRequestService.startRequestInternal(roleRequest.getId(), false, immediate);
 	}
 
 	@Override

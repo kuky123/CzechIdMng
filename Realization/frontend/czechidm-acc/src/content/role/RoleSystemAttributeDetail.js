@@ -41,7 +41,7 @@ class RoleSystemAttributeDetail extends Advanced.AbstractTableContent {
     if (this._isSystemMenu()) {
       return 'system-roles';
     }
-    this.getRequestNavigationKey('role-systems', this.props.params);
+    return this.getRequestNavigationKey('role-systems', this.props.params);
   }
 
   _isMenu(menu = 'role') {
@@ -338,7 +338,7 @@ RoleSystemAttributeDetail.defaultProps = {
 
 function select(state, component) {
   if (!roleSystemAttributeManager) {
-    return null;
+    return {};
   }
   const entity = Utils.Entity.getEntity(state, roleSystemAttributeManager.getEntityType(), component.params.attributeId);
   let systemMappingId = null;

@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Description;
 import org.springframework.stereotype.Component;
 
 import eu.bcvsolutions.idm.core.api.domain.Identifiable;
-import eu.bcvsolutions.idm.core.model.entity.IdmAutomaticRoleRequest;
 import eu.bcvsolutions.idm.core.model.entity.IdmRequest;
 import eu.bcvsolutions.idm.core.model.entity.IdmRequestItem;
 import eu.bcvsolutions.idm.core.model.entity.IdmRequestItem_;
@@ -42,7 +41,7 @@ public class RequestItemByRequestEvaluator extends AbstractTransitiveEvaluator<I
 
 	@Override
 	protected Class<? extends Identifiable> getOwnerType() {
-		return IdmAutomaticRoleRequest.class;
+		return IdmRequest.class;
 	}
 
 	@Override

@@ -86,6 +86,16 @@ public class DefaultLookupService implements LookupService {
 	}
 	
 	@Override
+	@SuppressWarnings("unchecked")
+	public BaseDto lookupDto(String identifiableType, Serializable entityId) {
+		try {
+			return lookupDto((Class<? extends Identifiable>) Class.forName(identifiableType), entityId);
+		} catch (ClassNotFoundException ex) {
+			throw new IllegalArgumentException(String.format("Dto lookup for identifiable type [%s] is not supported", identifiableType), ex);
+		}
+	}
+	
+	@Override
 	public ReadDtoService<?, ?> getDtoService(Class<? extends Identifiable> identifiableType) {
 		Object service = getService(identifiableType);
 		if (service == null) {

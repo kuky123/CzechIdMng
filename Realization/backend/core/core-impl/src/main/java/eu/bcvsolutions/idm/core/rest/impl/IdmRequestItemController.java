@@ -30,7 +30,6 @@ import eu.bcvsolutions.idm.core.api.config.swagger.SwaggerConfig;
 import eu.bcvsolutions.idm.core.api.domain.CoreResultCode;
 import eu.bcvsolutions.idm.core.api.domain.OperationState;
 import eu.bcvsolutions.idm.core.api.domain.RequestState;
-import eu.bcvsolutions.idm.core.api.domain.Requestable;
 import eu.bcvsolutions.idm.core.api.dto.AbstractRequestDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmRequestDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmRequestItemChangesDto;
@@ -73,7 +72,7 @@ public class IdmRequestItemController extends AbstractReadWriteDtoController<Idm
 
 	protected static final String TAG = "Request's items";
 	@Autowired
-	private RequestManager<Requestable> requestManager;
+	private RequestManager requestManager;
 	@Autowired
 	private IdmRequestService requestService;
 		

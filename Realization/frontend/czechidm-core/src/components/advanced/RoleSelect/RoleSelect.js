@@ -295,7 +295,9 @@ class RoleSelect extends Basic.AbstractFormComponent {
     const selectedRows = [];
     for (const index in value) {
       if (value.hasOwnProperty(index)) {
-        selectedRows.push(value[index].id);
+        if (value[index] && value[index].id) {
+          selectedRows.push(value[index].id);
+        }
       }
     }
     this.setState({

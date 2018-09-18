@@ -195,10 +195,11 @@ class RoleDetail extends Basic.AbstractContent {
           <Basic.Tab eventKey={ 1 } title={ this.i18n('header') } className="bordered">
             <form onSubmit={ this.save.bind(this, 'CONTINUE') }>
               <Basic.Panel
-                className={ Utils.Entity.isNew(entity) ? '' : 'no-border last' }
-                style={{ marginBottom: 0, paddingRight: 15, paddingLeft: 15, paddingTop: 15 }}>
-                <Basic.PanelHeader text={ Utils.Entity.isNew(entity) ? this.i18n('create.header') : this.i18n('tabs.basic') } />
-                <Basic.PanelBody style={ Utils.Entity.isNew(entity) ? { paddingTop: 0, paddingBottom: 0 } : { padding: 0 } }>
+                className="no-border last">
+                <Basic.PanelHeader
+                  text={ Utils.Entity.isNew(entity) ? this.i18n('create.header') : this.i18n('tabs.basic') }
+                  style={{ paddingLeft: 15, paddingRight: 15 }}/>
+                <Basic.PanelBody style={{ paddingTop: 0, paddingBottom: 0 }}>
                   <Basic.AbstractForm
                     ref="form"
                     showLoading={ _showLoading || showLoading }
@@ -256,7 +257,7 @@ class RoleDetail extends Basic.AbstractContent {
                   </Basic.AbstractForm>
                 </Basic.PanelBody>
 
-                <Basic.PanelFooter>
+                <Basic.PanelFooter style={{ paddingLeft: 15, paddingRight: 15 }}>
                   <Basic.Button
                     type="button"
                     level="link"

@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 - Authentication is not needed for using Spring Data queries in repositories (fixed mainly for test purposes).
 - Role code is used in role select boxes (code is shown, only if name is different than code).
 - [#1145](https://redmine.czechidm.com/issues/1145) - Other contract positions can be configured. Other positions are used for assign automatic roles by tree nodes.
+- ``Index.js`` in frontend ``czechidm-app`` module was updated - don't forget to **update this module**, if project specific app module is used. 
 
 ## [9.0.0]
 - [#1200](https://redmine.czechidm.com/issues/1200) - Business roles:
@@ -32,6 +33,9 @@ All notable changes to this project will be documented in this file.
   - Event types and processors to start and cancel sync has been removed.
 - [#636](https://redmine.czechidm.com/issues/636) - JWT token are persisted now. **JWT token doesn't contain authorities now - use ''LoginDto.authorities'' instead**. JWT contains only authentication data. Logout feature is supported now. ``AuthenticationTestUtils`` was removed - this utility used SecurityContext directly and this was dangerous (identity id was not filled and authorization policies was skipped). ``IdmAuthorityChange`` entity and repository was removed at all - ``IdmTokenDto`` and ``DefaultTokenManager`` can be used now.
 - [#1163](https://redmine.czechidm.com/issues/1163) - ``ConfidentialStorage`` service supports ``AbstractDto`` as value owner now. Check your module, where ``AbstractDto`` as owner for ``ConfidentialStorage`` was used before this update and provide appropriate change script if needed (see ``V8_02_006__confidential-storage-support-identifiable-owner.sql``).
+
+## [8.1.7]
+- ``Index.js`` in frontend ``czechidm-app`` module was updated - don't forget to **update this module**, if project specific app module is used.
 
 ## [8.1.3]
 

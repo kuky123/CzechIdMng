@@ -13,6 +13,7 @@ import eu.bcvsolutions.idm.core.api.domain.RequestState;
  * DTO for request
  *
  * @author svandav
+ * @since 9.1.0
  */
 @Relation(collectionRelation = "requests")
 public class IdmRequestDto extends AbstractRequestDto {

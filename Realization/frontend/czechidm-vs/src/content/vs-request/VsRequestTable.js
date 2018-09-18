@@ -91,7 +91,8 @@ export class VsRequestTable extends Advanced.AbstractTableContent {
     return (
       <Advanced.EntityInfo
         entityType="system"
-        entityIdentifier={ data[rowIndex]._embedded.system.id }
+        entityIdentifier={ data[rowIndex].system }
+        entity={ data[rowIndex]._embedded.system}
         face="popover" />
     );
   }
@@ -101,6 +102,7 @@ export class VsRequestTable extends Advanced.AbstractTableContent {
       <Advanced.EntityInfo
         entityType="vs-request"
         entityIdentifier={ data[rowIndex].id }
+        entity={ data[rowIndex] }
         face="link" />
     );
   }

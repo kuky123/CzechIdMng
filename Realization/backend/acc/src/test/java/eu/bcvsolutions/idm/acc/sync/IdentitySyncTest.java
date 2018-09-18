@@ -17,7 +17,6 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -34,6 +33,7 @@ import eu.bcvsolutions.idm.acc.domain.SynchronizationUnlinkedActionType;
 import eu.bcvsolutions.idm.acc.domain.SystemEntityType;
 import eu.bcvsolutions.idm.acc.domain.SystemOperationType;
 import eu.bcvsolutions.idm.acc.dto.AbstractSysSyncConfigDto;
+import eu.bcvsolutions.idm.acc.dto.AccIdentityAccountDto;
 import eu.bcvsolutions.idm.acc.dto.SysSchemaAttributeDto;
 import eu.bcvsolutions.idm.acc.dto.SysSchemaObjectClassDto;
 import eu.bcvsolutions.idm.acc.dto.SysSyncActionLogDto;
@@ -65,6 +65,7 @@ import eu.bcvsolutions.idm.acc.service.api.SysSystemAttributeMappingService;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemMappingService;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemService;
 import eu.bcvsolutions.idm.acc.service.impl.DefaultSynchronizationServiceTest;
+import eu.bcvsolutions.idm.core.api.config.domain.EventConfiguration;
 import eu.bcvsolutions.idm.core.api.config.domain.IdentityConfiguration;
 import eu.bcvsolutions.idm.core.api.domain.AutomaticRoleAttributeRuleComparison;
 import eu.bcvsolutions.idm.core.api.domain.AutomaticRoleAttributeRuleType;
@@ -162,17 +163,11 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 	@Autowired
 	private IdentityConfiguration identityConfiguration;
 
-	@Before
-	public void init() {
-		loginAsAdmin();
-	}
-
 	@After
 	public void logout() {
 		if (identityService.getByUsername(IDENTITY_ONE) != null) {
 			identityService.delete(identityService.getByUsername(IDENTITY_ONE));
 		}
-		super.logout();
 	}
 
 	@Test
@@ -209,6 +204,110 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 
 		// Delete log
 		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+	
+	@Test
+	public void testCreateIdentityWithDefaultContractAndRoleSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+		//
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		config.setCreateDefaultContract(true);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+		//
+		// create default mapping for provisioning
+		helper.createMapping(system);
+		helper.createRoleSystem(defaultRole, system);
+
+		IdmIdentityFilter identityFilter = new IdmIdentityFilter();
+		identityFilter.setUsername(IDENTITY_ONE);
+		List<IdmIdentityDto> identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(0, identities.size());
+
+		helper.startSynchronization(config);
+
+		// Have to be in the success state, because default role will be assigned to the default contract.
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.CREATE_ENTITY, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(1, identities.size());
+		IdmIdentityDto identity = identities.get(0);
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identities.get(0).getId());
+		Assert.assertEquals(1, roles.size());
+		IdmIdentityRoleDto assignedRole = roles.get(0);
+		Assert.assertEquals(defaultRole.getId(), assignedRole.getRole());
+		
+		// check only one identity account is created
+		AccIdentityAccountFilter accountFilter = new AccIdentityAccountFilter();
+		accountFilter.setIdentityId(identity.getId());
+		List<AccIdentityAccountDto> identityAccounts = identityAccountService.find(accountFilter, null).getContent();
+		Assert.assertEquals(1, identityAccounts.size());
+		Assert.assertEquals(assignedRole.getId(), identityAccounts.get(0).getIdentityRole());
+		
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+	
+	@Test
+	public void testCreateIdentityWithDefaultContractAndRoleAsync() {
+		try {
+			getHelper().setConfigurationValue(EventConfiguration.PROPERTY_EVENT_ASYNCHRONOUS_ENABLED, true);
+			SysSystemDto system = initData();
+			Assert.assertNotNull(system);
+			IdmRoleDto defaultRole = helper.createRole();
+			
+			SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+			// Set default role to sync configuration
+			config.setDefaultRole(defaultRole.getId());
+			config.setCreateDefaultContract(true);
+			config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+			
+			// create default mapping for provisioning
+			helper.createMapping(system);
+			helper.createRoleSystem(defaultRole, system);
+	
+			IdmIdentityFilter identityFilter = new IdmIdentityFilter();
+			identityFilter.setUsername(IDENTITY_ONE);
+			List<IdmIdentityDto> identities = identityService.find(identityFilter, null).getContent();
+			Assert.assertEquals(0, identities.size());
+	
+			helper.startSynchronization(config);
+	
+			// Have to be in the success state, because default role will be assigned to the default contract.
+			SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.CREATE_ENTITY, 1, OperationResultType.SUCCESS);
+	
+			Assert.assertFalse(log.isRunning());
+			Assert.assertFalse(log.isContainsError());
+	
+			identities = identityService.find(identityFilter, null).getContent();
+			Assert.assertEquals(1, identities.size());
+			IdmIdentityDto identity = identities.get(0);
+			List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identities.get(0).getId());
+			Assert.assertEquals(1, roles.size());
+			IdmIdentityRoleDto assignedRole = roles.get(0);
+			Assert.assertEquals(defaultRole.getId(), assignedRole.getRole());
+			
+			// check only one identity account is created
+			AccIdentityAccountFilter accountFilter = new AccIdentityAccountFilter();
+			accountFilter.setIdentityId(identity.getId());
+			List<AccIdentityAccountDto> identityAccounts = identityAccountService.find(accountFilter, null).getContent();
+			Assert.assertEquals(1, identityAccounts.size());
+			Assert.assertEquals(assignedRole.getId(), identityAccounts.get(0).getIdentityRole());
+			
+			// Delete log
+			syncLogService.delete(log);
+			syncConfigService.delete(config);
+		} finally {
+			getHelper().setConfigurationValue(EventConfiguration.PROPERTY_EVENT_ASYNCHRONOUS_ENABLED, false);
+		}
 	}
 
 	@Test

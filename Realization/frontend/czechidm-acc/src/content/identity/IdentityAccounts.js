@@ -163,6 +163,7 @@ class IdentityAccountsContent extends Advanced.AbstractTableContent {
                       <Advanced.EntityInfo
                         entityType="system"
                         entityIdentifier={ data[rowIndex]._embedded.account.system }
+                        entity={ data[rowIndex]._embedded.account._embedded ? data[rowIndex]._embedded.account._embedded.system : null }
                         face="popover" />
                     );
                   }

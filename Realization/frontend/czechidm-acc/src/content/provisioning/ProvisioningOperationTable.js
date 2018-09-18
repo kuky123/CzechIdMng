@@ -301,6 +301,13 @@ export class ProvisioningOperationTable extends Advanced.AbstractTableContent {
               /* eslint-disable react/no-multi-comp */
               ({ rowIndex, data }) => {
                 const entity = data[rowIndex];
+                //
+                if (!data[rowIndex]._embedded || !data[rowIndex]._embedded.entity) {
+                  return (
+                    <Advanced.UuidInfo value={ entity.entityIdentifier } />
+                  );
+                }
+                //
                 return (
                   <Advanced.EntityInfo
                     entityType={ entity.entityType }

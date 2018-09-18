@@ -21,7 +21,7 @@ public abstract class AbstractRequestableDeleteProcessor<E extends Requestable>
 		extends AbstractEntityEventProcessor<E> {
 
 	@Autowired
-	private RequestManager<E> requestManager;
+	private RequestManager requestManager;
 
 	public AbstractRequestableDeleteProcessor() {
 		super(RequestEventType.DELETE);

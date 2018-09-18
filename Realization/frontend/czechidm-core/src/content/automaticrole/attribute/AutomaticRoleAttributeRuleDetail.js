@@ -5,8 +5,8 @@ import * as Basic from '../../../components/basic';
 import { AutomaticRoleAttributeRuleManager, FormAttributeManager } from '../../../redux';
 import AutomaticRoleAttributeRuleTypeEnum from '../../../enums/AutomaticRoleAttributeRuleTypeEnum';
 import AutomaticRoleAttributeRuleComparisonEnum from '../../../enums/AutomaticRoleAttributeRuleComparisonEnum';
-import ContractAttributeEnum from '../../../enums/ContractAttributeEnum';
 import IdentityAttributeEnum from '../../../enums/IdentityAttributeEnum';
+import AbstractEnum from '../../../enums/AbstractEnum';
 /**
  * Constant for get eav attribute for identity contract
  * @type {String}
@@ -19,6 +19,134 @@ const CONTRACT_EAV_TYPE = 'eu.bcvsolutions.idm.core.model.entity.IdmIdentityCont
 const IDENTITY_EAV_TYPE = 'eu.bcvsolutions.idm.core.model.entity.IdmIdentity';
 
 const DEFINITION_TYPE_FILTER = 'definitionType';
+
+/**
+ * Modified ContractAttributeEnum - singular properties
+ *
+ * TODO: DRY, but how to generalize enum + static methods ...
+ */
+class ContractAttributeEnum extends AbstractEnum {
+
+  static getNiceLabel(key) {
+    return super.getNiceLabel(`core:enums.ContractAttributeEnum.${key}`);
+  }
+
+  static findKeyBySymbol(sym) {
+    return super.findKeyBySymbol(this, sym);
+  }
+
+  static findSymbolByKey(key) {
+    return super.findSymbolByKey(this, key);
+  }
+
+  static getField(key) {
+    if (!key) {
+      return null;
+    }
+
+    const sym = super.findSymbolByKey(this, key);
+
+    switch (sym) {
+      case this.IDENTITY: {
+        return 'identity';
+      }
+      case this.VALID_FROM: {
+        return 'validFrom';
+      }
+      case this.VALID_TILL: {
+        return 'validTill';
+      }
+      case this.WORK_POSITION: {
+        return 'workPosition';
+      }
+      case this.POSITION: {
+        return 'position';
+      }
+      case this.EXTERNE: {
+        return 'externe';
+      }
+      case this.MAIN: {
+        return 'main';
+      }
+      case this.DESCRIPTION: {
+        return 'description';
+      }
+      case this.STATE: {
+        return 'state';
+      }
+      default: {
+        return null;
+      }
+    }
+  }
+
+  static getEnum(field) {
+    if (!field) {
+      return null;
+    }
+
+    switch (field) {
+      case 'identity': {
+        return this.IDENTITY;
+      }
+      case 'validFrom': {
+        return this.VALID_FROM;
+      }
+      case 'validTill': {
+        return this.VALID_TILL;
+      }
+      case 'workPosition': {
+        return this.WORK_POSITION;
+      }
+      case 'position': {
+        return this.POSITION;
+      }
+      case 'externe': {
+        return this.EXTERNE;
+      }
+      case 'main': {
+        return this.MAIN;
+      }
+      case 'description': {
+        return this.DESCRIPTION;
+      }
+      case 'disabled': {
+        return this.DISABLED;
+      }
+      case 'state': {
+        return this.STATE;
+      }
+      default: {
+        return null;
+      }
+    }
+  }
+
+  static getLevel(key) {
+    if (!key) {
+      return null;
+    }
+
+    const sym = super.findSymbolByKey(this, key);
+
+    switch (sym) {
+      default: {
+        return 'default';
+      }
+    }
+  }
+}
+
+ContractAttributeEnum.IDENTITY = Symbol('IDENTITY');
+ContractAttributeEnum.MAIN = Symbol('MAIN');
+ContractAttributeEnum.STATE = Symbol('STATE');
+ContractAttributeEnum.POSITION = Symbol('POSITION');
+ContractAttributeEnum.WORK_POSITION = Symbol('WORK_POSITION');
+ContractAttributeEnum.VALID_FROM = Symbol('VALID_FROM');
+ContractAttributeEnum.VALID_TILL = Symbol('VALID_TILL');
+ContractAttributeEnum.EXTERNE = Symbol('EXTERNE');
+ContractAttributeEnum.DESCRIPTION = Symbol('DESCRIPTION');
+
 /**
  * Detail rules of automatic role attribute
  *
@@ -381,7 +509,13 @@ export default class AutomaticRoleAttributeRuleDetail extends Basic.AbstractCont
               ref="attributeName"
               clearable={false}
               label={this.i18n('entity.AutomaticRole.attribute.attributeName')}
-              enum={type === AutomaticRoleAttributeRuleTypeEnum.findKeyBySymbol(AutomaticRoleAttributeRuleTypeEnum.IDENTITY) ? IdentityAttributeEnum : ContractAttributeEnum}
+              enum={
+                type === AutomaticRoleAttributeRuleTypeEnum.findKeyBySymbol(AutomaticRoleAttributeRuleTypeEnum.IDENTITY)
+                ?
+                IdentityAttributeEnum
+                :
+                ContractAttributeEnum
+              }
               hidden={typeForceSearchParameters !== null}
               onChange={this._attributeNameChange.bind(this)}
               required={!(typeForceSearchParameters !== null)}/>

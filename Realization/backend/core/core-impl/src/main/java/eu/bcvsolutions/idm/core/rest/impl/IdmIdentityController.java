@@ -815,7 +815,7 @@ public class IdmIdentityController extends AbstractEventableDtoController<IdmIde
 			@PathVariable String backendId) {
 		IdmProfileDto profile = profileService.findOneByIdentity(backendId, IdmBasePermission.AUTOCOMPLETE);
 		if (profile == null) {
-			throw new ResultCodeException(CoreResultCode.NOT_FOUND, ImmutableMap.of("entity", backendId));
+			return new ResponseEntity<InputStreamResource>(HttpStatus.NOT_FOUND);
 		}
 		if (profile.getImage() == null) {
 			return new ResponseEntity<InputStreamResource>(HttpStatus.NOT_FOUND);

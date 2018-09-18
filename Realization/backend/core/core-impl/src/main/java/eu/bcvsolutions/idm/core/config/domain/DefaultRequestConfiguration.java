@@ -56,7 +56,7 @@ public class DefaultRequestConfiguration extends AbstractConfiguration implement
 		
 		String entityNameCamel = entityType.getSimpleName();
 		StringBuilder entityNameBuilder = new StringBuilder();
-
+		// TODO: Use @SpinalCase utility + replace last -dto
 		for (String word : entityNameCamel.split(CAMEL_SPLIT_REGEX)) {
 			if(word.equalsIgnoreCase("dto")) {
 				continue;

@@ -22,7 +22,7 @@ import eu.bcvsolutions.idm.core.api.domain.RequestState;
 public abstract class AbstractRequestDto extends AbstractDto {
 
 	private static final long serialVersionUID = 1L;
-	 public static final String WF_PROCESS_FIELD = "wfProcessId";
+	public static final String WF_PROCESS_FIELD = "wfProcessId";
 	
 	@Size(max = DefaultFieldLengths.NAME)
 	protected String wfProcessId;

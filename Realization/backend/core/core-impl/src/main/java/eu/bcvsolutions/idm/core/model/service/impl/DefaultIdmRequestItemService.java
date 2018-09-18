@@ -68,7 +68,7 @@ public class DefaultIdmRequestItemService
 	private WorkflowHistoricProcessInstanceService workflowHistoricProcessInstanceService;
 	@Autowired
 	@Lazy
-	private RequestManager<Requestable> requestManager;
+	private RequestManager requestManager;
 
 	@Autowired
 	public DefaultIdmRequestItemService(IdmRequestItemRepository repository) {

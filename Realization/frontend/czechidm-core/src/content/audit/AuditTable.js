@@ -210,10 +210,18 @@ export class AuditTable extends Advanced.AbstractTableContent {
             cell={
               /* eslint-disable react/no-multi-comp */
               ({ rowIndex, data, property }) => {
+                const value = data[rowIndex][property];
+                //
+                if (!data[rowIndex]._embedded || !data[rowIndex]._embedded[property]) {
+                  return (
+                    <Advanced.UuidInfo value={ value } />
+                  );
+                }
                 return (
                   <Advanced.EntityInfo
                     entityType={ this._getType(data[rowIndex].type) }
-                    entityIdentifier={ data[rowIndex][property] }
+                    entityIdentifier={ value }
+                    entity={ data[rowIndex]._embedded[property] }
                     face="popover"
                     showEntityType={ false }/>
                 );

@@ -35,9 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -109,7 +107,7 @@ import eu.bcvsolutions.idm.core.workflow.service.WorkflowProcessInstanceService;
  * @author svandav
  */
 @Service("requestManager")
-public class DefaultRequestManager<R extends Requestable> implements RequestManager<R> {
+public class DefaultRequestManager implements RequestManager {
 
 	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DefaultRequestManager.class);
 
@@ -136,9 +134,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	@Autowired
 	@Qualifier("objectMapper")
 	private ObjectMapper mapper;
-	private RequestManager<R> requestManager;
-
-	private ConfigurationMap configurationMap;
+	private RequestManager requestManager;
 
 	@Override
 	@Transactional
@@ -148,11 +144,11 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 		Assert.notNull(request, "Request is required!");
 
 		try {
-			RequestManager<R> service = this.getRequestManager();
+			RequestManager service = this.getRequestManager();
 			if (!(service instanceof DefaultRequestManager)) {
 				throw new CoreException("We expects instace of DefaultRequestManager!");
 			}
-			return ((DefaultRequestManager<R>) service).startRequestNewTransactional(requestId, checkRight);
+			return ((DefaultRequestManager) service).startRequestNewTransactional(requestId, checkRight);
 		} catch (Exception ex) {
 			LOG.error(ex.getLocalizedMessage(), ex);
 			request = requestService.get(requestId);
@@ -268,7 +264,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 
 	@Override
 	@Transactional
-	public R post(Serializable requestId, R dto, BasePermission... permission) {
+	public <R extends Requestable> R post(Serializable requestId, R dto, BasePermission... permission) {
 		ReadDtoService<R, ?> dtoReadService = getDtoService(dto);
 		boolean isNew = dtoReadService.isNew(dto);
 		// Check permissions
@@ -279,26 +275,27 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	@SuppressWarnings("unchecked")
 	@Override
 	@Transactional
-	public R delete(Serializable requestId, R dto, BasePermission... permission) {
+	public <R extends Requestable> R delete(Serializable requestId, R dto, BasePermission... permission) {
 		Assert.notNull(dto, "DTO is required!");
 		Assert.notNull(requestId, "Request ID is required!");
 
 		IdmRequestDto request = requestService.get(requestId);
-		
+		Assert.notNull(request, "Request is required!");
+
 		// Only request in CONCEPT or IN_PROGRESS state could creates new item or
 		// update existing item
 		if (request != null && !(RequestState.CONCEPT == request.getState()
-				|| RequestState.IN_PROGRESS == request.getState()
-				|| RequestState.EXCEPTION == request.getState())) {
-		throw new ResultCodeException(CoreResultCode.REQUEST_ITEM_CANNOT_BE_CREATED,
-				ImmutableMap.of("dto", dto.toString(), "state", request.getState().name())); 
-		}	
+				|| RequestState.IN_PROGRESS == request.getState() || RequestState.EXCEPTION == request.getState())) {
+			throw new ResultCodeException(CoreResultCode.REQUEST_ITEM_CANNOT_BE_CREATED,
+					ImmutableMap.of("dto", dto.toString(), "state", request.getState().name()));
+		}
 		// Exists item for same original owner?
 		IdmRequestItemDto item = this.findRequestItem(request.getId(), dto);
-		// If this item already exists for ADD/UPDATE/REMOVE, then we want to delete him.
+		// If this item already exists for ADD/UPDATE/REMOVE, then we want to delete
+		// him.
 		if (item != null) {
 			requestItemService.delete(item);
-			return this.get(request.getId(), (UUID)dto.getId(), (Class<R>) dto.getClass(), permission);
+			return this.get(request.getId(), (UUID) dto.getId(), (Class<R>) dto.getClass(), permission);
 		}
 
 		// Check permissions on the target service
@@ -320,7 +317,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	}
 
 	@Override
-	public R get(UUID requestId, UUID dtoId, Class<R> dtoClass, BasePermission... permission) {
+	public <R extends Requestable> R get(UUID requestId, UUID dtoId, Class<R> dtoClass, BasePermission... permission) {
 		Assert.notNull(dtoId, "DTO ID is required!");
 		Assert.notNull(dtoClass, "DTO class is required!");
 		Assert.notNull(requestId, "Request ID is required!");
@@ -341,8 +338,8 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	}
 
 	@Override
-	public Page<R> find(Class<? extends R> dtoClass, Serializable requestId, BaseFilter filter, Pageable pageable,
-			IdmBasePermission permission) {
+	public <R extends Requestable> Page<R> find(Class<? extends R> dtoClass, Serializable requestId, BaseFilter filter,
+			Pageable pageable, IdmBasePermission... permission) {
 		ReadDtoService<R, BaseFilter> dtoReadService = getDtoService(dtoClass);
 		Page<R> originalPage = dtoReadService.find(filter, pageable, permission);
 		List<R> originals = originalPage.getContent();
@@ -401,7 +398,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 
 	@Override
 	@Transactional
-	public IdmRequestDto createRequest(R dto, BasePermission... permission) {
+	public <R extends Requestable> IdmRequestDto createRequest(R dto, BasePermission... permission) {
 		Assert.notNull(dto, "DTO is required!");
 
 		boolean createNew = false;
@@ -412,7 +409,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 		IdmRequestDto request = new IdmRequestDto();
 		// I need set creator id here, because is checked in the SelfRequestEvaluator
 		request.setCreatorId(securityService.getCurrentId());
-		
+
 		initRequest(request, dto);
 		// Create request
 		request = requestService.save(request, permission);
@@ -426,8 +423,8 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 
 	@Override
 	@Transactional
-	public IdmFormInstanceDto saveFormInstance(UUID requestId, R owner, IdmFormDefinitionDto formDefinition,
-			List<IdmFormValueDto> newValues, BasePermission... permission) {
+	public <R extends Requestable> IdmFormInstanceDto saveFormInstance(UUID requestId, R owner,
+			IdmFormDefinitionDto formDefinition, List<IdmFormValueDto> newValues, BasePermission... permission) {
 
 		IdmFormInstanceDto formInstance = new IdmFormInstanceDto(owner, formDefinition, newValues);
 
@@ -459,8 +456,8 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public IdmFormInstanceDto getFormInstance(UUID requestId, R owner, IdmFormDefinitionDto formDefinition,
-			BasePermission... permission) {
+	public <R extends Requestable> IdmFormInstanceDto getFormInstance(UUID requestId, R owner,
+			IdmFormDefinitionDto formDefinition, BasePermission... permission) {
 
 		Assert.notNull(requestId, "ID of request is required!");
 		Assert.notNull(owner, "Owner is required!");
@@ -486,8 +483,8 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 				RequestOperationType.ADD);
 		// Find added items for that owner ID
 		List<R> relatedAddedItems = this.findRelatedAddedItems(request,
-				ImmutableList.of(new RequestPredicate((UUID) owner.getId(), "ownerId")),
-				addedItems, (Class<? extends R>) IdmFormValueDto.class);
+				ImmutableList.of(new RequestPredicate((UUID) owner.getId(), "ownerId")), addedItems,
+				(Class<? extends R>) IdmFormValueDto.class);
 
 		requestValues.addAll((Collection<? extends IdmFormValueDto>) relatedAddedItems);
 
@@ -496,7 +493,8 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public IdmRequestItemChangesDto getChanges(IdmRequestItemDto item, BasePermission... permission) {
+	public IdmRequestItemChangesDto getChanges(IdmRequestItemDto item,
+			BasePermission... permission) {
 		LOG.debug(MessageFormat.format("Start read request item with changes [{0}].", item));
 		Assert.notNull(item, "Idm request item cannot be null!");
 		if (Strings.isNullOrEmpty(item.getOwnerType()) || item.getOwnerId() == null) {
@@ -504,24 +502,24 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 		}
 
 		List<IdmRequestItemAttributeDto> resultAttributes = new ArrayList<>();
-		Class<? extends R> dtoClass;
+		Class<? extends Requestable> dtoClass;
 		try {
-			dtoClass = (Class<? extends R>) Class.forName(item.getOwnerType());
+			dtoClass = (Class<? extends Requestable>) Class.forName(item.getOwnerType());
 		} catch (ClassNotFoundException e) {
 			throw new CoreException(e);
 		}
 		ReadDtoService<?, ?> readService = getServiceByItem(item, dtoClass);
 
-		R currentDto = (R) readService.get(item.getOwnerId(), permission);
+		Requestable currentDto = (Requestable) readService.get(item.getOwnerId(), permission);
 		if (currentDto == null) {
 			try {
-				currentDto = (R) dtoClass.newInstance();
+				currentDto = (Requestable) dtoClass.newInstance();
 				currentDto.setId(item.getOwnerId());
 			} catch (InstantiationException | IllegalAccessException e) {
 				throw new CoreException(e);
 			}
 		}
-		R changedDto = this.get(item.getRequest(), currentDto);
+		Requestable changedDto = this.get(item.getRequest(), currentDto);
 		Map<String, Object> currentFieldsValues = this.dtoToMap((AbstractDto) currentDto);
 		Map<String, Object> changedFieldsValues = this.dtoToMap((AbstractDto) changedDto);
 
@@ -532,7 +530,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 				IdmRequestItemAttributeDto attribute = new IdmRequestItemAttributeDto(changedAttribute,
 						value instanceof List, true);
 				if (attribute.isMultivalue()) {
-					if (value != null && value instanceof List) {
+					if (value instanceof List) {
 						((List<?>) value).forEach(v -> {
 							attribute.getValues()
 									.add(new IdmRequestAttributeValueDto(v, null, RequestOperationType.ADD));
@@ -553,10 +551,9 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 			attribute = new IdmRequestItemAttributeDto(currentAttribute, changedValue instanceof List, false);
 
 			if (attribute.isMultivalue()) {
-				if (changedValue != null && changedValue instanceof List) {
+				if (changedValue instanceof List) {
 					((List<?>) changedValue).forEach(value -> {
-						if (currentValue != null && currentValue instanceof List
-								&& ((List<?>) currentValue).contains(value)) {
+						if (currentValue instanceof List && ((List<?>) currentValue).contains(value)) {
 							attribute.getValues().add(new IdmRequestAttributeValueDto(value, value, null));
 						} else {
 							attribute.setChanged(true);
@@ -565,7 +562,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 						}
 					});
 				}
-				if (currentValue != null && currentValue instanceof List) {
+				if (currentValue instanceof List) {
 					((List<?>) currentValue).forEach(value -> {
 						if (changedValue == null || !((List<?>) changedValue).contains(value)) {
 							attribute.setChanged(true);
@@ -612,7 +609,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 
 	@Override
 	@Transactional
-	public void onDeleteRequestable(R requestable) {
+	public <R extends Requestable> void onDeleteRequestable(R requestable) {
 		Assert.notNull(requestable, "Requestable DTO cannot be null!");
 
 		// Search requests with that deleting owner
@@ -621,16 +618,18 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 		requestFilter.setOwnerId((UUID) requestable.getId());
 		List<IdmRequestDto> requests = requestService.find(requestFilter, null).getContent();
 		requests.stream() //
-			.filter(request -> RequestState.APPROVED != request.getState()) // We need filtered request which invoked that delete.
-																			// Because we cannot cancel his workflow (throw exception).
-			.forEach(request -> { //
-			request = changeRequestState(requestable, request, //
-					new ResultCodeException( //
-							CoreResultCode.REQUEST_OWNER_WAS_DELETED, //
-							ImmutableMap.of("owner", requestable.toString()) //
-			));
-			requestService.save(request);
-		});
+				.filter(request -> RequestState.APPROVED != request.getState()) // We need filtered request which
+																				// invoked that delete.
+																				// Because we cannot cancel his workflow
+																				// (throw exception).
+				.forEach(request -> { //
+					request = changeRequestState(requestable, request, //
+							new ResultCodeException( //
+									CoreResultCode.REQUEST_OWNER_WAS_DELETED, //
+									ImmutableMap.of("owner", requestable.toString()) //
+					));
+					requestService.save(request);
+				});
 
 		// Search request items with that deleting owner
 		IdmRequestItemFilter requestItemFilter = new IdmRequestItemFilter();
@@ -638,48 +637,55 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 		requestItemFilter.setOwnerId((UUID) requestable.getId());
 		List<IdmRequestItemDto> requestItems = requestItemService.find(requestItemFilter, null).getContent();
 		requestItems.stream() //
-			.filter(item -> RequestState.APPROVED != item.getState())   // We need filtered request which invoked that delete.
-																		// Because we cannot cancel his workflow (throw exception).
-			.forEach(item -> { //
-			item = changeItemState(requestable, item, //
-					new ResultCodeException( //
-							CoreResultCode.REQUEST_OWNER_WAS_DELETED, //
-							ImmutableMap.of("owner", requestable.toString()) //
-			));
-			requestItemService.save(item);
+				.filter(item -> RequestState.APPROVED != item.getState()) // We need filtered request which invoked that
+																			// delete.
+																			// Because we cannot cancel his workflow
+																			// (throw exception).
+				.forEach(item -> { //
+					item = changeItemState(requestable, item, //
+							new ResultCodeException( //
+									CoreResultCode.REQUEST_OWNER_WAS_DELETED, //
+									ImmutableMap.of("owner", requestable.toString()) //
+					));
+					requestItemService.save(item);
 
-			IdmRequestItemFilter subItemFilter = new IdmRequestItemFilter();
-			subItemFilter.setRequestId(item.getRequest());
-			// Search all items for that request
-			List<IdmRequestItemDto> subItems = requestItemService.find(subItemFilter, null).getContent();
-			// TODO: This can be (maybe) removed ... because that 'cancel' is implemented during realization of item 
-			
-			// Check if items in same request does not contains same ID of deleting owner in
-			// the DATA Json.
-			// If yes, then state will be changed to cancel.
-			subItems.stream() //
-					.filter(subItem -> RequestState.APPROVED != subItem.getState())   // We need filtered request which invoked that delete.
-																				      // Because we cannot cancel his workflow (throw exception).
-					.filter(subItem -> !requestable.getId().equals(subItem.getOwnerId())) //
-					.filter(subItem -> subItem.getData() != null) //
-					.filter(subItem -> subItem.getData() //
-							.indexOf(requestable.getId().toString()) != -1) //
-					.forEach(subItem -> { //
-						subItem = changeItemState(requestable, subItem, //
-								new ResultCodeException( //
-										CoreResultCode.REQUEST_OWNER_FROM_OTHER_REQUEST_WAS_DELETED, //
-										ImmutableMap.of("owner", requestable.toString(), "otherRequest",
-												subItem.toString()) //
-						));
-						requestItemService.save(subItem);
-					});
+					IdmRequestItemFilter subItemFilter = new IdmRequestItemFilter();
+					subItemFilter.setRequestId(item.getRequest());
+					// Search all items for that request
+					List<IdmRequestItemDto> subItems = requestItemService.find(subItemFilter, null).getContent();
+					// TODO: This can be (maybe) removed ... because that 'cancel' is implemented
+					// during realization of item
 
-		}); //
+					// Check if items in same request does not contains same ID of deleting owner in
+					// the DATA Json.
+					// If yes, then state will be changed to cancel.
+					subItems.stream() //
+							.filter(subItem -> RequestState.APPROVED != subItem.getState()) // We need filtered request
+																							// which invoked that
+																							// delete.
+																							// Because we cannot cancel
+																							// his workflow (throw
+																							// exception).
+							.filter(subItem -> !requestable.getId().equals(subItem.getOwnerId())) //
+							.filter(subItem -> subItem.getData() != null) //
+							.filter(subItem -> subItem.getData() //
+									.indexOf(requestable.getId().toString()) != -1) //
+							.forEach(subItem -> { //
+								subItem = changeItemState(requestable, subItem, //
+										new ResultCodeException( //
+												CoreResultCode.REQUEST_OWNER_FROM_OTHER_REQUEST_WAS_DELETED, //
+												ImmutableMap.of("owner", requestable.toString(), "otherRequest",
+														subItem.toString()) //
+								));
+								requestItemService.save(subItem);
+							});
+
+				}); //
 	}
-	
+
 	@Override
 	@Transactional(noRollbackFor = { AcceptedException.class })
-	public IdmRequestDto deleteRequestable(R dto, boolean executeImmediately) {
+	public <R extends Requestable> IdmRequestDto deleteRequestable(R dto, boolean executeImmediately) {
 		Assert.notNull(dto);
 		Assert.notNull(dto.getId(), "Requestable DTO cannot be null!");
 
@@ -696,14 +702,14 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	}
 
 	@Override
-	public List<R> filterDtosByPredicates(List<R> requestables, Class<? extends R> dtoClass,
+	public <R extends Requestable> List<R> filterDtosByPredicates(List<R> requestables, Class<? extends R> dtoClass,
 			List<RequestPredicate> predicates) {
-		
+
 		List<MethodDescriptor> descriptors;
 		try {
 			descriptors = Lists.newArrayList(Introspector.getBeanInfo(dtoClass).getMethodDescriptors()) //
 					.stream() //
-					.filter(methodDescriptor -> UUID.class.equals(methodDescriptor.getMethod().getReturnType()) 
+					.filter(methodDescriptor -> UUID.class.equals(methodDescriptor.getMethod().getReturnType())
 							// Serializable too, because some UUID are in DTO as Serializable :-)
 							|| Serializable.class.equals(methodDescriptor.getMethod().getReturnType())) //
 					.filter(methodDescriptor -> methodDescriptor.getMethod().getParameterTypes() == null
@@ -713,12 +719,12 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 			throw new CoreException(e);
 		} //
 
-		return requestables.stream() // Find all DTOs with UUID fields when values are equals to values in filter  
+		return requestables.stream() // Find all DTOs with UUID fields when values are equals to values in filter
 				.filter(requestable -> {
 					return predicates.stream().allMatch(predicate -> {
 						return descriptors.stream() //
 								.filter(descriptor -> {
-									if(predicate.getField() == null) {
+									if (predicate.getField() == null) {
 										return true;
 									}
 									return getFieldName(descriptor.getName()).equals(predicate.getField());
@@ -738,21 +744,34 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 					});
 				}).collect(Collectors.toList());
 	}
-	
+
 	@Override
 	public List<IdmRequestItemDto> findRequestItems(UUID requestId, Class<? extends Requestable> dtoClass) {
 		return this.findRequestItems(requestId, dtoClass, null);
 	}
-	
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <R extends Requestable> R convertItemToDto(IdmRequestItemDto item, Class<? extends R> type)
+			throws IOException, ClassNotFoundException {
+		R dto = convertStringToDto(item.getData(), type);
+		if (dto instanceof IdmFormValueDto) {
+			IdmFormValueDto formValueDto = (IdmFormValueDto) dto;
+			formValueDto.setOwnerType((Class<? extends FormableEntity>) Class.forName(item.getSuperOwnerType()));
+			formValueDto.setOwnerId(item.getSuperOwnerId());
+		}
+		return dto;
+	}
+
 	@SuppressWarnings("unchecked")
 	private IdmRequestDto executeRequestInternal(UUID requestId) {
 		Assert.notNull(requestId, "Role request ID is required!");
 		IdmRequestDto request = requestService.get(requestId);
 		Assert.notNull(request, "Role request is required!");
-		
+
 		// Validate request
 		List<IdmRequestItemDto> items = this.findRequestItems(request.getId(), null);
-		if(items.isEmpty()) {
+		if (items.isEmpty()) {
 			throw new ResultCodeException(CoreResultCode.REQUEST_CANNOT_BE_EXECUTED_NONE_ITEMS,
 					ImmutableMap.of("request", request.toString()));
 		}
@@ -761,21 +780,21 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 
 		// Validate items
 		sortedItems.stream() //
-		.filter(item -> !item.getState().isTerminatedState()) //
-		.filter(item -> !(RequestState.CONCEPT == item.getState() || RequestState.APPROVED == item.getState())) //
-		.forEach(item -> { //
-			throw new ResultCodeException(CoreResultCode.REQUEST_ITEM_CANNOT_BE_EXECUTED,
-					ImmutableMap.of("item", item.toString(), "state", item.getState()));
-		});
-		
+				.filter(item -> !item.getState().isTerminatedState()) //
+				.filter(item -> !(RequestState.CONCEPT == item.getState() || RequestState.APPROVED == item.getState())) //
+				.forEach(item -> { //
+					throw new ResultCodeException(CoreResultCode.REQUEST_ITEM_CANNOT_BE_EXECUTED,
+							ImmutableMap.of("item", item.toString(), "state", item.getState()));
+				});
+
 		sortedItems.stream() //
 				.filter(item -> RequestOperationType.ADD == item.getOperation()
 						|| RequestOperationType.UPDATE == item.getOperation()) //
 				.forEach(item -> { //
 					// Get DTO service
-					R dto = null;
+					Requestable dto = null;
 					try {
-						Class<? extends R> dtoClass = (Class<? extends R>) Class.forName(item.getOwnerType());
+						Class<? extends Requestable> dtoClass = (Class<? extends Requestable>) Class.forName(item.getOwnerType());
 						ReadWriteDtoService<Requestable, BaseFilter> dtoService = (ReadWriteDtoService<Requestable, BaseFilter>) getServiceByItem(
 								item, dtoClass);
 						dto = this.convertItemToDto(item, dtoClass);
@@ -786,12 +805,13 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 								e);
 					}
 				});
-		
-		// We have to ensure the referential integrity, because some items (his DTOs) could be child of terminated item (DTO)
+
+		// We have to ensure the referential integrity, because some items (his DTOs)
+		// could be child of terminated item (DTO)
 		sortedItems.stream() //
 				.filter(item -> item.getState().isTerminatedState()) // We check terminated ADDed items
-				.filter(item -> RequestOperationType.ADD == item.getOperation()) // 
-				.filter(item -> item.getOwnerId() != null) // 
+				.filter(item -> RequestOperationType.ADD == item.getOperation()) //
+				.filter(item -> item.getOwnerId() != null) //
 				.forEach(terminatedItem -> {
 					// Create predicate - find all DTOs with that UUID value in any fields
 					ImmutableList<RequestPredicate> predicates = ImmutableList
@@ -800,15 +820,17 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 							.filter(item -> !item.getState().isTerminatedState()) //
 							.filter(item -> { // Is that item child of terminated item?
 								try {
-									Class<? extends R> ownerType = (Class<? extends R>) Class.forName(item.getOwnerType());
-									R requestable = requestManager.convertItemToDto(item, ownerType);
-									List<R> filteredDtos = requestManager.filterDtosByPredicates(
+									Class<? extends Requestable> ownerType = (Class<? extends Requestable>) Class
+											.forName(item.getOwnerType());
+									Requestable requestable = requestManager.convertItemToDto(item, ownerType);
+									List<Requestable> filteredDtos = requestManager.filterDtosByPredicates(
 											ImmutableList.of(requestable), ownerType, predicates);
 									return filteredDtos.contains(requestable);
 								} catch (ClassNotFoundException | IOException e) {
 									throw new CoreException(e);
 								}
-							}).forEach(itemToCancel -> { // This item could be not executed, because is use in other already terminated (added) item.
+							}).forEach(itemToCancel -> { // This item could be not executed, because is use in other
+															// already terminated (added) item.
 								itemToCancel.setState(RequestState.CANCELED);
 								itemToCancel.setResult(new OperationResultDto.Builder(OperationState.NOT_EXECUTED)
 										.setException(new RoleRequestException(
@@ -819,21 +841,21 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 								requestItemService.save(itemToCancel);
 							});
 				});
-		
-		// Reload items ... could be changed 
+
+		// Reload items ... could be changed
 		items = this.findRequestItems(request.getId(), null);
-		List<IdmRequestItemDto> sortedItemsResult = items.stream().sorted(Comparator.comparing(IdmRequestItemDto::getCreated))
-				.collect(Collectors.toList());
+		List<IdmRequestItemDto> sortedItemsResult = items.stream()
+				.sorted(Comparator.comparing(IdmRequestItemDto::getCreated)).collect(Collectors.toList());
 
 		sortedItemsResult.stream() //
-		.filter(item -> !item.getState().isTerminatedState()) //
-		.forEach(item -> {
-			try {
-				this.resolveItem(item);
-			} catch (ClassNotFoundException | IOException e) {
-				throw new CoreException(e);
-			}
-		});
+				.filter(item -> !item.getState().isTerminatedState()) //
+				.forEach(item -> {
+					try {
+						this.resolveItem(item);
+					} catch (ClassNotFoundException | IOException e) {
+						throw new CoreException(e);
+					}
+				});
 
 		request.setState(RequestState.EXECUTED);
 		request.setResult(new OperationResultDto.Builder(OperationState.EXECUTED).build());
@@ -846,9 +868,10 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	 * @param requestable
 	 * @param item
 	 * @param ex
-	 * @return 
+	 * @return
 	 */
-	private IdmRequestItemDto changeItemState(R requestable, IdmRequestItemDto item, ResultCodeException ex) {
+	private <R extends Requestable> IdmRequestItemDto changeItemState(R requestable, IdmRequestItemDto item,
+			ResultCodeException ex) {
 		if (item.getState().isTerminatedState()) {
 			// If is item in the terminated state, then we only add result code exception,
 			// but don't modify the result state
@@ -870,9 +893,10 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	 * @param requestable
 	 * @param request
 	 * @param ex
-	 * @return 
+	 * @return
 	 */
-	private IdmRequestDto changeRequestState(R requestable, IdmRequestDto request, ResultCodeException ex) {
+	private <R extends Requestable> IdmRequestDto changeRequestState(R requestable, IdmRequestDto request,
+			ResultCodeException ex) {
 		if (request.getState().isTerminatedState()) {
 			// If is request in the terminated state, then we only add result code
 			// exception,
@@ -886,13 +910,13 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 					.setException(ex) //
 					.build()); //
 		}
-		if (requestable instanceof Codeable && ((Codeable)requestable).getCode() != null) {
-			request.setName(((Codeable)requestable).getCode());
+		if (requestable instanceof Codeable && ((Codeable) requestable).getCode() != null) {
+			request.setName(((Codeable) requestable).getCode());
 		}
 		return request;
 	}
 
-	private R get(UUID requestId, R dto) {
+	private <R extends Requestable> R get(UUID requestId, R dto) {
 		Assert.notNull(dto, "DTO is required!");
 		Assert.notNull(requestId, "Request ID is required!");
 		// Exists item for same original owner?
@@ -920,22 +944,21 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	}
 
 	private void resolveItem(IdmRequestItemDto item)
-			throws ClassNotFoundException, JsonParseException, JsonMappingException, IOException {
-
-		Assert.notNull(item, "Item is mandatory for resolving!");
+			throws ClassNotFoundException, IOException {
+		Assert.notNull(item, "Item is mandatory!");
 
 		RequestOperationType type = item.getOperation();
 		// Get DTO service
 		@SuppressWarnings("unchecked")
-		Class<? extends R> dtoClass = (Class<? extends R>) Class.forName(item.getOwnerType());
+		Class<? extends Requestable> dtoClass = (Class<? extends Requestable>) Class.forName(item.getOwnerType());
 		// Get service
 		@SuppressWarnings("unchecked")
-		ReadWriteDtoService<R, BaseFilter> dtoService = (ReadWriteDtoService<R, BaseFilter>) this.getServiceByItem(item,
+		ReadWriteDtoService<Requestable, BaseFilter> dtoService = (ReadWriteDtoService<Requestable, BaseFilter>) this.getServiceByItem(item,
 				dtoClass);
 
 		// Create or Update DTO
 		if (RequestOperationType.ADD == type || RequestOperationType.UPDATE == type) {
-			R dto = this.convertItemToDto(item, dtoClass);
+			Requestable dto = this.convertItemToDto(item, dtoClass);
 			// If is DTO form value and confidential, then we need to load value form
 			// confidential storage
 			if (dto instanceof IdmFormValueDto) {
@@ -975,21 +998,21 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 
 	}
 
-	private R post(Serializable requestId, R dto, boolean isNew) {
+	private <R extends Requestable> R post(Serializable requestId, R dto, boolean isNew) {
 		Assert.notNull(dto, "DTO is required!");
 		Assert.notNull(requestId, "Request ID is required!");
 
 		IdmRequestDto request = requestService.get(requestId);
-		
+		Assert.notNull(request, "Request is required!");
+
 		// Only request in CONCEPT or IN_PROGRESS state could creates new item or
 		// update existing item
 		if (request != null && !(RequestState.CONCEPT == request.getState()
-					|| RequestState.IN_PROGRESS == request.getState()
-					|| RequestState.EXCEPTION == request.getState())) {
+				|| RequestState.IN_PROGRESS == request.getState() || RequestState.EXCEPTION == request.getState())) {
 			throw new ResultCodeException(CoreResultCode.REQUEST_ITEM_CANNOT_BE_CREATED,
-					ImmutableMap.of("dto", dto.toString(), "state", request.getState().name())); 
+					ImmutableMap.of("dto", dto.toString(), "state", request.getState().name()));
 		}
-		
+
 		// Exists item for same original owner?
 		IdmRequestItemDto item = this.findRequestItem(request.getId(), dto);
 		try {
@@ -1012,25 +1035,25 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 
 		} catch (JsonProcessingException e) {
 			throw new ResultCodeException(CoreResultCode.DTO_CANNOT_BE_CONVERT_TO_JSON,
-					ImmutableMap.of("dto", dto.toString()));
+					ImmutableMap.of("dto", dto.toString()), e);
 		}
 	}
-	
+
 	/**
 	 * Init new request (without save)
 	 * 
 	 * @param request
 	 * @param dto
 	 */
-	private void initRequest(IdmRequestDto request, R dto) {
+	private <R extends Requestable> void initRequest(IdmRequestDto request, R dto) {
 		request.setState(RequestState.CONCEPT);
 		request.setOwnerId((UUID) dto.getId());
 		request.setOwnerType(dto.getClass().getName());
 		request.setExecuteImmediately(false);
 		request.setRequestType(dto.getClass().getSimpleName());
 		request.setResult(new OperationResultDto(OperationState.CREATED));
-		if (dto instanceof Codeable && ((Codeable)dto).getCode() != null) {
-			request.setName(((Codeable)dto).getCode());
+		if (dto instanceof Codeable && ((Codeable) dto).getCode() != null) {
+			request.setName(((Codeable) dto).getCode());
 		}
 	}
 
@@ -1047,7 +1070,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 			return identifiable.getId();
 		}
 		if (value instanceof ConfigurationMap) {
-			configurationMap = (ConfigurationMap) value;
+			ConfigurationMap configurationMap = (ConfigurationMap) value;
 			Map<String, Serializable> map = configurationMap.toMap();
 			return map.toString();
 
@@ -1111,8 +1134,8 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	 * @param dtoClass
 	 * @return
 	 */
-	private List<R> findRelatedAddedItems(IdmRequestDto request, List<RequestPredicate> predicates,
-			List<IdmRequestItemDto> items, Class<? extends R> dtoClass) {
+	private <R extends Requestable> List<R> findRelatedAddedItems(IdmRequestDto request,
+			List<RequestPredicate> predicates, List<IdmRequestItemDto> items, Class<? extends R> dtoClass) {
 		List<R> requestables = new ArrayList<>();
 
 		items.stream() //
@@ -1136,11 +1159,10 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 		return filterDtosByPredicates(requestables, dtoClass, predicates);
 	}
 
-	
 	private String getFieldName(String methodName) {
 		// Assume the method starts with either get or is.
 		return Introspector.decapitalize(methodName.substring(methodName.startsWith("is") ? 2 : 3));
-	} 
+	}
 
 	/**
 	 * Find potential parents. Invokes all method with UUID return type and without
@@ -1182,35 +1204,20 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 		});
 		return results;
 	}
-	
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public R convertItemToDto(IdmRequestItemDto item, Class<? extends R> type)
-			throws JsonParseException, JsonMappingException, IOException, ClassNotFoundException {
-		R dto = convertStringToDto(item.getData(), type);
-		if (dto instanceof IdmFormValueDto) {
-			IdmFormValueDto formValueDto = (IdmFormValueDto) dto;
-			formValueDto.setOwnerType((Class<? extends FormableEntity>) Class.forName(item.getSuperOwnerType()));
-			formValueDto.setOwnerId(item.getSuperOwnerId());
-		}
-		return dto;
-	}
 
 	private String convertDtoToString(BaseDto dto) throws JsonProcessingException {
 		return mapper.writerFor(dto.getClass()).writeValueAsString(dto);
 	}
 
-	private R convertStringToDto(String data, Class<? extends R> type)
-			throws JsonParseException, JsonMappingException, IOException {
-		if(Strings.isNullOrEmpty(data)) {
+	private <R extends Requestable> R convertStringToDto(String data, Class<? extends R> type) throws IOException {
+		if (Strings.isNullOrEmpty(data)) {
 			return null;
 		}
 		return mapper.readValue(data, type);
 	}
 
 	@SuppressWarnings("unchecked")
-	private IdmRequestItemDto findRequestItem(UUID requestId, R dto) {
+	private <R extends Requestable> IdmRequestItemDto findRequestItem(UUID requestId, R dto) {
 		Assert.notNull(dto, "DTO is required!");
 		if (dto.getId() == null) {
 			return null;
@@ -1218,7 +1225,8 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 		return findRequestItem(requestId, (UUID) dto.getId(), (Class<R>) dto.getClass());
 	}
 
-	private IdmRequestItemDto findRequestItem(UUID requestId, UUID dtoId, Class<? extends R> dtoClass) {
+	private <R extends Requestable> IdmRequestItemDto findRequestItem(UUID requestId, UUID dtoId,
+			Class<? extends R> dtoClass) {
 		Assert.notNull(dtoClass, "DTO class is required!");
 		if (dtoId == null) {
 			return null;
@@ -1287,7 +1295,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	 * @param dto
 	 * @return
 	 */
-	private ReadDtoService<R, BaseFilter> getDtoService(R dto) {
+	private <R extends Requestable> ReadDtoService<R, BaseFilter> getDtoService(R dto) {
 		@SuppressWarnings("unchecked")
 		Class<? extends R> dtoClass = (Class<? extends R>) dto.getClass();
 		return this.getDtoService(dtoClass);
@@ -1300,7 +1308,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private ReadDtoService<R, BaseFilter> getDtoService(Class<? extends R> dtoClass) {
+	private <R extends Requestable> ReadDtoService<R, BaseFilter> getDtoService(Class<? extends R> dtoClass) {
 		return (ReadDtoService<R, BaseFilter>) lookupService.getDtoService(dtoClass);
 	}
 
@@ -1313,7 +1321,8 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private ReadDtoService<?, ?> getServiceByItem(IdmRequestItemDto item, Class<? extends R> dtoClass) {
+	private <R extends Requestable> ReadDtoService<?, ?> getServiceByItem(IdmRequestItemDto item,
+			Class<? extends R> dtoClass) {
 		ReadDtoService<?, ?> readService = null;
 		if (IdmFormValueDto.class.getName().equals(item.getOwnerType())) {
 			// EAV value .. we need find form value service by super owner type
@@ -1343,9 +1352,8 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	 * @throws IntrospectionException
 	 * @throws InstantiationException
 	 */
-	@SuppressWarnings("unchecked")
-	private void addEmbedded(AbstractDto dto, UUID requestId) throws IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, IntrospectionException, InstantiationException {
+	private void addEmbedded(AbstractDto dto, UUID requestId) throws IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, IntrospectionException, InstantiationException {
 		Assert.notNull(dto, "DTO is required!");
 
 		Field[] fields = dto.getClass().getDeclaredFields();
@@ -1365,13 +1373,13 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 						if (Requestable.class.isAssignableFrom(embeddedAnnotation.dtoClass())) {
 							embeddedDto = embeddedAnnotation.dtoClass().newInstance();
 							embeddedDto.setId(id);
-							R originalEmbeddedDto = this.getDtoService((R) embeddedDto).get(embeddedDto.getId());
+							Requestable originalEmbeddedDto = this.getDtoService((Requestable) embeddedDto).get(embeddedDto.getId());
 							if (originalEmbeddedDto != null) {
 								// Call standard method for load request's DTO with original DTO
 								embeddedDto = (AbstractDto) this.get(requestId, originalEmbeddedDto);
 							} else {
 								// Call standard method for load request's DTO with mock DTO (only with ID)
-								embeddedDto = (AbstractDto) this.get(requestId, (R) embeddedDto);
+								embeddedDto = (AbstractDto) this.get(requestId, (Requestable) embeddedDto);
 							}
 						} else {
 							// If embedded DTO is not Requestable, then standard service is using
@@ -1400,8 +1408,9 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private List<IdmFormValueDto> saveAttributeValues(UUID requestId, R owner, IdmFormAttributeDto attribute,
-			List<IdmFormValueDto> previousValues, List<IdmFormValueDto> newValues, BasePermission... permission) {
+	private <R extends Requestable> List<IdmFormValueDto> saveAttributeValues(UUID requestId, R owner,
+			IdmFormAttributeDto attribute, List<IdmFormValueDto> previousValues, List<IdmFormValueDto> newValues,
+			BasePermission... permission) {
 
 		ReadDtoService<R, ?> dtoReadService = getDtoService(owner);
 		Class<? extends BaseEntity> entityClass = dtoReadService.getEntityClass();
@@ -1457,8 +1466,13 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 			//
 			if (previousValue == null) {
 				if (!newValue.isNull()) { // null values are not saved
-					results.add(
-							(IdmFormValueDto) this.post(requestId, (R) newValue, this.isFormValueNew(previousValue)));
+					if (newValue.isConfidential()) {
+						// Confidential value has to be persisted in the confidential storage
+						results.add(saveConfidentialEavValue(requestId, newValue));
+					} else {
+						results.add((IdmFormValueDto) this.post(requestId, (R) newValue,
+								this.isFormValueNew(previousValue)));
+					}
 				}
 			} else {
 				//
@@ -1507,7 +1521,8 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 	 * @param confidentialFormValue
 	 * @return
 	 */
-	private IdmFormValueDto saveConfidentialEavValue(UUID requestId, IdmFormValueDto confidentialFormValue) {
+	private IdmFormValueDto saveConfidentialEavValue(UUID requestId,
+			IdmFormValueDto confidentialFormValue) {
 		// check, if value has to be persisted in confidential storage
 		Serializable confidentialValue = confidentialFormValue.getValue();
 		if (confidentialFormValue.isConfidential()) {
@@ -1520,8 +1535,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 		}
 		Assert.notNull(confidentialFormValue);
 		// Save DTO without confidential value
-		@SuppressWarnings("unchecked")
-		Requestable persistedRequestDto = this.post(requestId, (R) confidentialFormValue,
+		Requestable persistedRequestDto = this.post(requestId, (Requestable) confidentialFormValue,
 				this.isFormValueNew(confidentialFormValue));
 		UUID requestItem = persistedRequestDto.getRequestItem();
 		Assert.notNull(requestItem);
@@ -1561,8 +1575,7 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 		return false;
 	}
 
-	@SuppressWarnings("unchecked")
-	private RequestManager<R> getRequestManager() {
+	private RequestManager getRequestManager() {
 		if (this.requestManager == null) {
 			this.requestManager = applicationContext.getBean(RequestManager.class);
 		}
@@ -1575,4 +1588,5 @@ public class DefaultRequestManager<R extends Requestable> implements RequestMana
 		return confidentialStorage.get(confidentialItem.getId(), IdmRequestItem.class,
 				RequestManager.getConfidentialStorageKey(confidentialItem.getId()));
 	}
+
 }

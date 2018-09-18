@@ -28,7 +28,7 @@ import eu.bcvsolutions.idm.core.model.event.RequestEvent.RequestEventType;
  * @author svandav
  *
  */
-@Component
+@Component(RequestApprovalProcessor.PROCESSOR_NAME)
 @Description("Approve changes in the request.")
 public class RequestApprovalProcessor extends CoreEventProcessor<IdmRequestDto> {
 	
@@ -36,7 +36,7 @@ public class RequestApprovalProcessor extends CoreEventProcessor<IdmRequestDto> 
 	public static final String CHECK_RIGHT_PROPERTY = "checkRight";
 
 	@Autowired
-	private RequestManager<Requestable> manager;
+	private RequestManager manager;
 	@Autowired
 	private RequestConfiguration requestConfiguration;
 	

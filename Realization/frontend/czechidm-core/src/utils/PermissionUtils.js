@@ -18,7 +18,7 @@ export default class PermissionUtils {
   static getPermissions(state, uiKey) {
     const uiState = UiUtils.getUiState(state, uiKey);
     if (!uiState) {
-      return false;
+      return undefined;
     }
     return uiState.permissions;
   }

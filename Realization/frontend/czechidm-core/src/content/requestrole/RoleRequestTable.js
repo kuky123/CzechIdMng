@@ -84,7 +84,7 @@ class RoleRequestTable extends Advanced.AbstractTableContent {
       return '';
     }
     return (
-      <Advanced.WorkflowProcessInfo entityIdentifier={entity.wfProcessId}/>
+      <Advanced.WorkflowProcessInfo entityIdentifier={ entity.wfProcessId } entity={ entity._embedded ? entity._embedded.wfProcessId : null }/>
     );
   }
 

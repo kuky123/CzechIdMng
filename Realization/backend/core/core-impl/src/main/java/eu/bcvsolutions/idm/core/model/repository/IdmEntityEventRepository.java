@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -66,6 +67,8 @@ public interface IdmEntityEventRepository extends AbstractEntityRepository<IdmEn
 	/**
 	 * Delete all events
 	 */
-	void deleteAllInBatch();
+	@Modifying
+	@Query("delete from #{#entityName}")
+	void deleteAll();
 	
 }

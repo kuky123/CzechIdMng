@@ -95,4 +95,9 @@ public class RequestByOwnerEvaluator extends AbstractAuthorizationEvaluator<IdmR
 		//
 		return permissions;
 	}
+	
+	@Override
+	public boolean supportsPermissions() {
+		return false;
+	}
 }

@@ -155,10 +155,17 @@ class LongRunningTaskQueue extends Advanced.AbstractTableContent {
               header={this.i18n('entity.LongRunningTaskItem.referencedEntityId')}
               cell={
                 ({ rowIndex, data, property }) => {
+                  if (!data[rowIndex]._embedded || !data[rowIndex]._embedded[property]) {
+                    return (
+                      <Advanced.UuidInfo value={ data[rowIndex][property] } />
+                    );
+                  }
+                  //
                   return (
                     <Advanced.EntityInfo
                       entityType={ Utils.Ui.getSimpleJavaType(data[rowIndex].referencedDtoType) }
                       entityIdentifier={ data[rowIndex][property] }
+                      entity={ data[rowIndex]._embedded[property] }
                       face="popover"
                       showEntityType={ false }/>
                   );

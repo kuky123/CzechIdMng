@@ -21,19 +21,19 @@ export default class AbstractEntityInfo extends Basic.AbstractContextComponent {
     };
   }
 
+  /**
+   * Returns entity manager
+   */
+  getManager() {
+    return this.props.manager;
+  }
+
   componentDidMount() {
     this.loadEntityIfNeeded();
   }
 
   componentDidUpdate() {
     this.loadEntityIfNeeded();
-  }
-
-  /**
-   * Returns entity manager
-   */
-  getManager() {
-    return this.props.manager;
   }
 
   /**
@@ -55,7 +55,7 @@ export default class AbstractEntityInfo extends Basic.AbstractContextComponent {
         const error = Utils.Ui.getError(this.context.store.getState(), uiKey) || this.state.error;
         if (!Utils.Ui.isShowLoading(this.context.store.getState(), uiKey)
             && (!error || error.statusCode === 401)) { // show loading check has to be here - new state is needed
-          this.context.store.dispatch(manager.autocompleteEntityIfNeeded(entityId, uiKey, (e, ex) => {
+          this.context.store.dispatch(manager.queueAutocompleteEntityIfNeeded(entityId, uiKey, (e, ex) => {
             // TODO: move to other place - is called only when entity is not given
             if (!ex && (face === 'full' || (face === 'link' && this.getLink()))) {
               this.onEnter();
@@ -85,7 +85,7 @@ export default class AbstractEntityInfo extends Basic.AbstractContextComponent {
     }
     if (!_permissions && entityId) {
       const uiKey = manager.resolveUiKey(null, entityId);
-      this.context.store.dispatch(manager.fetchPermissions(entityId, uiKey));
+      this.context.store.dispatch(manager.queueFetchPermissions(entityId, uiKey));
     }
   }
 
@@ -322,13 +322,17 @@ export default class AbstractEntityInfo extends Basic.AbstractContextComponent {
           data={ this.getPopoverContent(_entity) }
           children={ this.getTableChildren() }/>
 
-        <Basic.PanelFooter rendered={ this.showLink() }>
-          <Link to={ this.getLink() }>
-            <Basic.Icon value="fa:angle-double-right"/>
-            {' '}
-            {this.i18n('component.advanced.EntityInfo.link.detail.label')}
-          </Link>
-        </Basic.PanelFooter>
+        {
+          !this.showLink()
+          ||
+          <Basic.PanelFooter>
+            <Link to={ this.getLink() }>
+              <Basic.Icon value="fa:angle-double-right"/>
+              {' '}
+              {this.i18n('component.advanced.EntityInfo.link.detail.label')}
+            </Link>
+          </Basic.PanelFooter>
+        }
       </Basic.Panel>
     );
   }
@@ -343,19 +347,20 @@ export default class AbstractEntityInfo extends Basic.AbstractContextComponent {
     if (entity) { // identity prop has higher priority
       _entity = entity;
     }
+    const entityId = this.getEntityId();
     //
-    if (showLoading || (_showLoading && this.getEntityId() && !_entity)) {
+    if (showLoading || (_showLoading && entityId && !_entity)) {
       switch (face) {
         case 'text':
         case 'link':
         case 'popover': {
           return (
-            <Basic.Icon value="refresh" showLoading className={className} style={style}/>
+            <Basic.Icon value="refresh" showLoading className={ className } style={ style } title={ entityId }/>
           );
         }
         default: {
           return (
-            <Basic.Well showLoading className={ classNames('abstract-entity-info', className) } style={style}/>
+            <Basic.Well showLoading className={ classNames('abstract-entity-info', className) } style={ style }/>
           );
         }
       }
@@ -364,7 +369,9 @@ export default class AbstractEntityInfo extends Basic.AbstractContextComponent {
       if (!this.getEntityId()) {
         return null;
       }
-      return (<UuidInfo className={className} value={ this.getEntityId() } style={style} />);
+      return (
+        <UuidInfo className={ className } value={ this.getEntityId() } style={ style } />
+      );
     }
     //
     switch (face) {

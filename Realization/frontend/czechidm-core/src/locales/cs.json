@@ -246,18 +246,18 @@
       "approve_1": "Vybraný záznam [{{record}}] je třeba schválit, úkol byl úspěšně vytvořen.",
       "approve_2": "Vybrané záznamy [{{records}}] je třeba schválit, úkoly byl úspěšně vytvořeny.",
       "approve_5": "Vybrané záznamy [{{record}}] je třeba schválit, úkoly byl úspěšně vytvořeny.",
-      "accepted_1": "Vybraný záznam [{{record}}] bude zpracováne asynchronně (vyžaduje schválení nebo spouští dlouhotrvající úlohu).",
+      "accepted_1": "Vybraný záznam [{{record}}] bude zpracován asynchronně (vyžaduje schválení nebo spouští dlouhotrvající úlohu).",
       "accepted_2": "Vybrané záznamy [{{record}}] budou zpracovány asynchronně (vyžadují schválení nebo spouští dlouhotrvající úlohu).",
       "accepted_5": "Vybrané záznamy [{{record}}] budou zpracovány asynchronně (vyžadují schválení nebo spouští dlouhotrvající úlohu)."
     }
   },
   "bulkAction": {
-    "selectAllRecordsWarning": "Provadíte hromadnou operaci [{{action}}] nad právě vyfiltrovanými položkami.<br />K tomuto datu <strong>{{date}}</strong> je aktuální počet <strong class=\"highlight\">{{count}}</strong>. Zpracované položky se mohou lišit.",
+    "selectAllRecordsWarning": "Provádíte hromadnou operaci [{{action}}] nad právě vyfiltrovanými položkami.<br />K tomuto datu <strong>{{date}}</strong> je aktuální počet <strong class=\"highlight\">{{count}}</strong>. Zpracované položky se mohou lišit.",
     "removedRecord_1": "Do zpracování hromadné úlohy nebude započítána tato entita: <b>[{{entities}}]</b>.",
     "removedRecord_2": "Do zpracování hromadné úlohy nebudou započítány tyto entity: <b>[{{entities}}]</b>.",
     "removedRecord_5": "Do zpracování hromadné úlohy nebudou započítány tyto entity: <b>[{{entities}}]</b>.",
     "created": "Hromadná úloha [{{name}}] byla úspěšně spuštěna v dlouhotrvající úloze s id: [{{longRunningTaskId}}]",
-    "message_1": "Provádíte hromadnou úlohu [{{name}}] nad vybráným záznamem: <b>[{{entities}}]</b>.",
+    "message_1": "Provádíte hromadnou úlohu [{{name}}] nad vybraným záznamem: <b>[{{entities}}]</b>.",
     "message_2": "Provádíte hromadnou úlohu [{{name}}] nad {{count}} záznamy: <b>[{{entities}}]</b>",
     "message_5": "Provádíte hromadnou úlohu [{{name}}] nad {{count}} záznamy: <b>[{{entities}}]</b>",
     "button": {
@@ -528,7 +528,7 @@
       "DEFAULT": "Standardní",
       "TRANSFORM_FROM": "Transformace z",
       "TRANSFORM_TO": "Transformace do",
-      "SYSTEM": "Systemové"
+      "SYSTEM": "Systémové"
     },
     "RoleAssignTypeEnum": {
       "UNASSIGNED": "Nepřiřazena",
@@ -718,7 +718,7 @@
       "DESCRIPTION": "Popis (String)",
       "DISABLED": "Zakázaný (boolean)",
       "GUARANTEES": "Vedoucí (IdmIdentity - List identifikátorů nebo uživ. jmen)",
-      "POSITIONS": "Další pozice (IdmTreeNode - List of ids or codes)",
+      "POSITIONS": "Další pozice (IdmTreeNode - List identifikátorů nebo kódů)",
       "STATE": "Stav (ContractState - String)"
     },
     "ContractSliceAttributeEnum": {
@@ -805,7 +805,9 @@
       "NOTIFICATIONCONFIGURATION": "Notifikace - konfigurace",
       "NOTIFICATIONTEMPLATE": "Notifikace - šablony",
       "PASSWORDPOLICY": "Politiky hesel",
-      "ROLEREQUEST": "Agenda žádostí o role",
+      "ROLEREQUEST": "Agenda žádostí pro přiřazení rolí",
+      "REQUEST": "Agenda žádostí (univerzální)",
+      "REQUESTITEM": "Agenda žádostí - položky žádosti (univerzální)",
       "SCHEDULER": "Nastavení plánovače",
       "WORKFLOWDEFINITION": "Workflow - definice",
       "CONFIDENTIALSTORAGEVALUE": "Šifrovaný obsah",
@@ -964,7 +966,7 @@
         "passwordSimilarFirstName": "Heslo je příliš podobné jménu: {{0}}",
         "passwordSimilarLastName": "Heslo je příliš podobné příjmení: {{0}}",
         "date": "Heslo není možné nyní změnit, zkuste to znovu: {{0}}",
-        "advancedControlValidateType": "Rozšířená kontrola hesel je dostupná pouze pro validační politku.",
+        "advancedControlValidateType": "Rozšířená kontrola hesel je dostupná pouze pro validační politiku.",
         "specialCharacterBase": "Seznam speciálních znaků pro politiky hesel: {{0}}",
         "passwordSimilarUsernamePreValidate": "Heslo nesmí být podobné uživatelskému jménu.",
         "passwordSimilarEmailPreValidate": "Heslo nesmí být podobné emailu.",
@@ -1371,7 +1373,7 @@
       "header": "Automatické role",
       "universalRequestNotSupported": {
         "title": "Automatické role není možné spravovat v rámci této žádosti.",
-        "text": "Automatické role májí vlastní agendu žádostí, pro jejich správu použíjte ji.",
+        "text": "Automatické role mají vlastní agendu žádostí, pro jejich správu použijte ji.",
         "gotToRequests": {
           "label": "Agenda automatických rolí"
         }
@@ -1436,8 +1438,8 @@
       },
       "recalculate": {
         "label": "Přepočet",
-        "header": "Přepočet této automatické role na základě attributu?",
-        "message": "<b>Ano:</b> Přiřazení role bude provedeno nyní jako nová dlouho trvajicí úloha.<br /><b>Ne:</b> Tato konfigurace bude uložena jako koncept."
+        "header": "Přepočet této automatické role na základě atributu?",
+        "message": "<b>Ano:</b> Přiřazení role bude provedeno nyní jako nová dlouhotrvající úloha.<br /><b>Ne:</b> Tato konfigurace bude uložena jako koncept."
       },
       "button": {
         "change": {
@@ -1698,7 +1700,7 @@
           "placeholder": "Vytvořeno od"
         },
         "dateCreatedTill":{
-          "placeholder": "Vytvoředo do"
+          "placeholder": "Vytvořeno do"
         },
         "applicants":{
           "placeholder": "Vyhledat podle žádajících"
@@ -1810,14 +1812,14 @@
     },
     "requestInfo": {
       "title": "Nacházíte se v náhledu žádosti",
-      "text": "Všechny změny které provedete, budou zapsány pouze do této žádosti.",
+      "text": "Všechny změny, které provedete, budou zapsány pouze do této žádosti.",
       "button": {
         "goToRequest": {
           "label": "Přejít na detail žádosti"
         },
         "showChanges": {
           "label": "Zobrazit změny",
-          "tooltip": "Zobrazí změny provedéné v této žádosti na tomto detailu."
+          "tooltip": "Zobrazí změny provedené v této žádosti na tomto detailu."
         }
       }
     },
@@ -1932,7 +1934,7 @@
             "header_5": "$t(action.delete.header_2)",
             "message_1": "Opravdu chcete odebrat automatickou roli [<strong>{{record}}</strong>]? Všem uživatelům, kteří získali roli prostřednictvím této automatické role, bude přiřazená role odebrána.",
             "message_2": "Vybrány záznamy: [<strong>{{records}}</strong>].<br /><br />Opravdu chcete odebrat <strong>{{count}}</strong> automatické role? Všem uživatelům, kteří získali role prostřednictvím těchto automatický rolí, budou přiřazené role odebrány.",
-            "message_5": "Vybrány záznamy: [<strong>{{records}}</strong>].<br /><br />Opravdu chcete odebrat <strong>{{count}}</strong> automatických rolí? Všem uživatelům, kteří získali role prostřednictvím těchto automatický rolí, budou přiřazené role odebrány.",
+            "message_5": "Vybrány záznamy: [<strong>{{records}}</strong>].<br /><br />Opravdu chcete odebrat <strong>{{count}}</strong> automatických rolí? Všem uživatelům, kteří získali role prostřednictvím těchto automatických rolí, budou přiřazené role odebrány.",
             "error": "Při odebírání záznamu [{{record}}] nastala chyba",
             "success_1": "Vybraný záznam [{{record}}] byl úspěšně smazán",
             "success_2": "Vybrané záznamy [{{records}}] byly úspěšně smazány",
@@ -1967,7 +1969,7 @@
           "header": "{{name}} <small>role zařazena do katalogu</small>"
         },
         "save": {
-          "success": "Role byla zařazenena do katalogu [{{record}}]."
+          "success": "Role byla zařazena do katalogu [{{record}}]."
         }
       },
       "compositions": {
@@ -2031,7 +2033,7 @@
           "placeholder": "Poznámka k uživateli"
           },
         "active": "Aktivní",
-        "blockLoginDate": "Identita má blokované příhlášení do aplikace z důvodů překročení neúspěšných pokusů o přihlášení. Přihlášení bude možné po {{date}}.",
+        "blockLoginDate": "Identita má blokované přihlášení do aplikace z důvodu překročení neúspěšných pokusů o přihlášení. Přihlášení bude možné po {{date}}.",
         "button": {
 
         },
@@ -2145,7 +2147,7 @@
             "checkbox": {
               "title": "Checkbox u názvu kategorie znázorňuje, zda-li jsou některé základní oprávnění v dané kategorii přidělena:",
               "none": "Nejsou přidělena žádná oprávnění v dané kategorii,",
-              "some": "jsou přidělena nekterá z oprávnění v dané kategorii - pro zobrazení konkrétních přidělených oprávnění je možné rozbalit danou kategorii,",
+              "some": "jsou přidělena některá z oprávnění v dané kategorii - pro zobrazení konkrétních přidělených oprávnění je možné rozbalit danou kategorii,",
               "all": "jsou přidělena všechna oprávnění v dané kategorii."
             }
           }
@@ -2175,11 +2177,11 @@
         "message": {
           "wrongUser": "Změna hesla pro podřízeného není podporována",
           "success": "Heslo na účtech [{{accounts}}] pro uživatele [{{username}}] bylo úspěšně změněno.",
-          "failed": "Heslo nebylo změněno, prosisioning hesla na účty [{{accounts}}] pro uživatele [{{username}}] nebyl úspěšný.",
+          "failed": "Heslo nebylo změněno, provisioning hesla na účty [{{accounts}}] pro uživatele [{{username}}] nebyl úspěšný.",
           "notChanged": "Heslo nebylo změněno. $t(content.identity.passwordChange.message.noAccounts)",
           "isAdmin": "Jste přihlášen jako administrátor. Při změně hesla není vyžadováno původní heslo a je možné jej měnit na libovolném účtu libovolně krát.",
           "noContent": "Nemáte přiděleno oprávnění pro změnu hesla.",
-          "noAccounts": "Neexistují žádné účty na kterých je možné měnit heslo."
+          "noAccounts": "Neexistují žádné účty, na kterých je možné měnit heslo."
         },
         "button": {
           "change": "Změnit heslo"
@@ -2532,13 +2534,13 @@
             "success_plural": "Vybrané úlohy [{{records}}] byly úspěšně spuštěny ručně"
           },
           "task-dry-run": {
-            "header": "Spustit úlohu ve zkušením režimu",
-            "header_plural": "Spustit úlohy ve zkušením režimu",
-            "message": "Chcete vybranou úlohu[<strong>{{record}}</strong>] spustit ve zkušením režimu?",
-            "message_plural": "Vybrané úlohy: [<strong>{{records}}</strong>].<br /><br /> Chcete spustit <strong>{{count}}</strong> vybraných úloh ve zkušením režimu?",
-            "error": "Při spouštění úlohy [{{record}}] ve zkušením režimu nastala chyba.",
-            "success": "Vybraná úloha [{{record}}] byla úspěšně spuštěna ve zkušením režimu",
-            "success_plural": "Vybrané úlohy [{{records}}] byly úspěšně spuštěny ve zkušením režimu"
+            "header": "Spustit úlohu ve zkušebním režimu",
+            "header_plural": "Spustit úlohy ve zkušebním režimu",
+            "message": "Chcete vybranou úlohu [<strong>{{record}}</strong>] spustit ve zkušebním režimu?",
+            "message_plural": "Vybrané úlohy: [<strong>{{records}}</strong>].<br /><br /> Chcete spustit <strong>{{count}}</strong> vybraných úloh ve zkušebním režimu?",
+            "error": "Při spouštění úlohy [{{record}}] ve zkušebním režimu nastala chyba.",
+            "success": "Vybraná úloha [{{record}}] byla úspěšně spuštěna ve zkušebním režimu",
+            "success_plural": "Vybrané úlohy [{{records}}] byly úspěšně spuštěny ve zkušebním režimu"
           },
           "task-delete": {
             "header": "Odebrat úlohu",
@@ -3623,7 +3625,7 @@
         "dependent": {
           "initiatorTaskId": {
             "label": "Jiná úloha",
-            "help": "Spuštení na základě úspěšného dokončení vybrané naplánované úlohy"
+            "help": "Spuštění na základě úspěšného dokončení vybrané naplánované úlohy"
           }
         }
       },
@@ -3759,6 +3761,9 @@
       "created": {
         "label": "Datum"
       },
+      "superOwnerId": {
+        "label": "Hlavní vlastník"
+      },
       "owner": {
         "label": "Entita"
       },
@@ -3840,7 +3845,7 @@
       "name": "Změna oprávnění pro uživatele '{{0}}'",
       "task": {
         "approveByHelpDesk": {
-          "name": "Schválování 'Helpdesk'",
+          "name": "Schvalování 'Helpdesk'",
           "description":"Schválení změny oprávnění pro '{{0}}' (Helpdesk)"
         },
         "returnedRequestFromHelpdesk": {
@@ -4061,7 +4066,7 @@
           },
           "approve": {
             "label": "Schvalovat",
-            "help": "Po zakrtnutí bude přidělení role schvalováno"
+            "help": "Po zaškrtnutí bude přidělení role schvalováno"
           },
           "maincontract": {
             "label": "Přiřadit pouze na hlavní kontrakt",
@@ -4086,7 +4091,7 @@
           },
           "approve": {
             "label": "Schvalovat",
-            "help": "Po zakrtnutí bude odebrání role schvalováno"
+            "help": "Po zaškrtnutí bude odebrání role schvalováno"
           },
           "maincontract": {
             "label": "Odebrat pouze z hlavního kontraktu",
@@ -4246,7 +4251,7 @@
     },
     "PASSWORD_POLICY_NEGATIVE_VALUE": {
       "title": "V politice hesel se nemohou vyskytovat záporné hodnoty",
-      "message": "Attribut [{{attribute}}] je záporný."
+      "message": "Atribut [{{attribute}}] je záporný."
     },
     "PASSWORD_POLICY_VALIDATION": {
       "title": "Politika hesel nebyla uložena",
@@ -4636,7 +4641,7 @@
     },
     "AUTOMATIC_ROLE_REMOVE_TASK_ADD_RUNNING": {
       "title": "Role je využívána jiným procesem",
-      "message": "Automatická role [{{roleTreeNode}}] je využívána souběžně úlohou [{{taskId}}], počkejta na dokončení."
+      "message": "Automatická role [{{roleTreeNode}}] je využívána souběžně úlohou [{{taskId}}], počkejte na dokončení."
     },
     "AUTOMATIC_ROLE_REMOVE_TASK_NOT_COMPLETE": {
       "title": "Role nebyla smazána",
@@ -4768,11 +4773,11 @@
     },
     "ROLE_DELETE_FAILED_IDENTITY_ASSIGNED": {
       "title": "Role nelze smazat",
-      "message": "Roli [{{role}}] nelze smazat, protože jí májí stále přiřazeny nějaké identity."
+      "message": "Roli [{{role}}] nelze smazat, protože ji mají stále přiřazeny nějaké identity."
     },
     "SCRIPT_MORE_CODE_FOUND": {
       "title": "Nalezeno více scriptů",
-      "message": "Více než jednen script byl nalezen pro kód: [{{code}}]."
+      "message": "Více než jeden script byl nalezen pro kód: [{{code}}]."
     },
     "UNMODIFIABLE_LOCKED": {
       "title": "Nelze upravit entitu",
@@ -4827,7 +4832,7 @@
       "message": "[{{error}}]."
     },
     "SCHEDULER_DELETE_TRIGGER_FAILED": {
-      "title": "Chyba při mazáná triggeru",
+      "title": "Chyba při mazání triggeru",
       "message": "[{{error}}]."
     },
     "SCHEDULER_INTERRUPT_TASK_FAILED": {
@@ -4839,7 +4844,7 @@
       "message": "[{{error}}]."
     },
     "SCHEDULER_RESUME_TRIGGER_FAILED": {
-      "title": "Chyba při znovuzpuštění úlohy",
+      "title": "Chyba při znovuspuštění úlohy",
       "message": "[{{error}}]."
     },
     "WF_ERROR": {
@@ -4847,7 +4852,7 @@
       "message": "Při provádění workflow došlo k chybě: [{{error}}]."
     },
     "WRONG_PROXY_CONFIG": {
-      "title": "Špatná kofigurace proxy",
+      "title": "Špatná konfigurace proxy",
       "message": "Chybná konfigurace http proxy. Požadovaný formát je '[IP]:[PORT]'. Například: '153.25.16.8:1234'."
     },
     "ENTITY_TYPE_NOT_EXTERNAL_IDENTIFIABLE": {
@@ -4888,7 +4893,7 @@
     },
     "ROLE_COMPOSITION_ASSIGNED_ROLE_REMOVAL_FAILED": {
       "title": "Role nebyla odebrána",
-      "message": "Přiřažená Role [{{identityRole}}] nebyla odebrána."
+      "message": "Přiřazená role [{{identityRole}}] nebyla odebrána."
     },
     "ROLE_DELETE_FAILED_HAS_COMPOSITION": {
       "title": "Role nelze smazat",
@@ -4896,7 +4901,7 @@
     },
     "ROLE_COMPOSITION_REMOVE_TASK_ADD_RUNNING": {
       "title": "Business role je využívána jiným procesem",
-      "message": "Business role [{{roleCompositionId}}] je využívána souběžně úlohou [{{taskId}}], počkejta na dokončení."
+      "message": "Business role [{{roleCompositionId}}] je využívána souběžně úlohou [{{taskId}}], počkejte na dokončení."
     },
     "ROLE_COMPOSITION_REMOVE_TASK_RUN_CONCURRENTLY": {
       "title": "Business role je mazána jiným procesem",
@@ -4925,7 +4930,8 @@
     },
     "any": {
       "allowOnly": "Položka je povinná!",
-      "empty" : "$t(validationError.string.base)"
+      "empty" : "$t(validationError.string.base)",
+      "required": "$t(validationError.any.allowOnly)"
     },
     "object" : {
       "base" : "$t(validationError.string.base)"

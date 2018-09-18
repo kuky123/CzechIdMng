@@ -341,12 +341,17 @@ public class DefaultEntityEventManager implements EntityEventManager {
 	public IdmEntityEventDto getEvent(EntityEvent<? extends Serializable> event) {
 		Assert.notNull(event);
 		//
-		UUID changeId = getEventId(event);
-		if (changeId == null) {
+		UUID eventId = getEventId(event);
+		if (eventId == null) {
 			// event doesn't contain entity change - event is not based on entity change
 			return null;
 		}
-		return entityEventService.get(changeId);
+		return getEvent(eventId);
+	}
+	
+	@Override
+	public IdmEntityEventDto getEvent(UUID eventId) {
+		return entityEventService.get(eventId);
 	}
 	
 	@Override
@@ -354,6 +359,16 @@ public class DefaultEntityEventManager implements EntityEventManager {
 		Assert.notNull(event);
 		//
 		return event.getId();
+	}
+	
+	@Override
+	public boolean isRunnable(UUID eventId) {
+		IdmEntityEventDto event = getEvent(eventId);
+		if (event == null) {
+			return false;
+		}
+		//
+		return event.getResult().getState().isRunnable();
 	}
 	
 	@Override
@@ -605,6 +620,11 @@ public class DefaultEntityEventManager implements EntityEventManager {
 	@Override
 	public void setEnabled(String processorId, boolean enabled) {
 		setEnabled(getProcessor(processorId), enabled);
+	}
+	
+	@Override
+	public boolean isAsynchronous() {
+		return eventConfiguration.isAsynchronous();
 	}
 	
 	private void setEnabled(EntityEventProcessor<?> processor, boolean enabled) {
@@ -941,6 +961,28 @@ public class DefaultEntityEventManager implements EntityEventManager {
 		return true;
 	}
 	
+	public IdmEntityEventDto saveEvent(EntityEvent<? extends Identifiable> event, OperationResultDto result) {
+		Assert.notNull(event);
+		Identifiable content = event.getContent();
+		Assert.notNull(content);
+		//
+		IdmEntityEventDto savedEvent = toDto(event);
+		savedEvent.setOwnerId(lookupService.getOwnerId(content));
+		savedEvent.setOwnerType(getOwnerType(content));
+		savedEvent.setResult(result);
+		//
+		if (savedEvent.getPriority() == null) {
+			savedEvent.setPriority(PriorityType.NORMAL);
+		}
+		//
+		savedEvent = entityEventService.save(savedEvent);
+		//
+		event.setId(savedEvent.getId());
+		event.setPriority(savedEvent.getPriority());
+		//
+		return savedEvent;
+	}
+	
 	/**
 	 * Constructs entity event
 	 * 
@@ -975,13 +1017,17 @@ public class DefaultEntityEventManager implements EntityEventManager {
 			// notify as default event type
 			savedEvent.setEventType(CoreEventType.NOTIFY.name());
 		}
-		if (savedEvent.getPriority() == null) {
-			savedEvent.setPriority(PriorityType.NORMAL);
-		}
 		//
 		return savedEvent;
 	}
 	
+	/**
+	 * Usable for newly created events
+	 * 
+	 * @param owner
+	 * @param event
+	 * @return
+	 */
 	private IdmEntityEventDto toDto(Identifiable owner, EntityEvent<? extends Identifiable> event) {
 		IdmEntityEventDto entityEvent = toDto(event);
 		if (owner != null) {
@@ -998,6 +1044,7 @@ public class DefaultEntityEventManager implements EntityEventManager {
 		entityEvent.setResult(new OperationResultDto.Builder(OperationState.CREATED).build());
 		entityEvent.setInstanceId(eventConfiguration.getAsynchronousInstanceId());
 		if (event == null) {
+			entityEvent.setPriority(PriorityType.NORMAL);
 			return entityEvent;
 		}
 		entityEvent.setId(event.getId());
@@ -1008,7 +1055,7 @@ public class DefaultEntityEventManager implements EntityEventManager {
 		entityEvent.setRootId(event.getRootId());
 		entityEvent.setParentEventType(event.getParentType());
 		entityEvent.setExecuteDate(event.getExecuteDate()); // look out - it's the wish - when asynchronous event should be executed...
-		entityEvent.setPriority(event.getPriority());
+		entityEvent.setPriority(event.getPriority() != null ? event.getPriority() : PriorityType.NORMAL);
 		entityEvent.setContent(event.getContent());
 		entityEvent.setOriginalSource(event.getOriginalSource());
 		entityEvent.setClosed(event.isClosed());

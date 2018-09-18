@@ -62,7 +62,7 @@ public abstract class AbstractFormValueService<O extends FormableEntity, E exten
 	@Autowired @Lazy
 	private LookupService lookupService;
 	@Autowired @Lazy
-	private RequestManager<IdmFormValueDto> requestManager;
+	private RequestManager requestManager;
 	
 	@SuppressWarnings("unchecked")
 	public AbstractFormValueService(AbstractFormValueRepository<O, E> repository, ConfidentialStorage confidentialStorage) {

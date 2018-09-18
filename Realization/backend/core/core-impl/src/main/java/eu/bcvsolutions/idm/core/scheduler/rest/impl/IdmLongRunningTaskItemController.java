@@ -1,11 +1,14 @@
 package eu.bcvsolutions.idm.core.scheduler.rest.impl;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.hateoas.Resources;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import eu.bcvsolutions.idm.core.api.config.swagger.SwaggerConfig;
 import eu.bcvsolutions.idm.core.api.domain.OperationState;
+import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.entity.OperationResult;
 import eu.bcvsolutions.idm.core.api.rest.AbstractReadWriteDtoController;
 import eu.bcvsolutions.idm.core.api.rest.BaseDtoController;
@@ -33,6 +37,7 @@ import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmScheduledTaskDto;
 import eu.bcvsolutions.idm.core.scheduler.api.dto.filter.IdmProcessedTaskItemFilter;
 import eu.bcvsolutions.idm.core.scheduler.api.service.IdmProcessedTaskItemService;
 import eu.bcvsolutions.idm.core.scheduler.api.service.IdmScheduledTaskService;
+import eu.bcvsolutions.idm.core.security.api.domain.BasePermission;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -43,6 +48,7 @@ import io.swagger.annotations.AuthorizationScope;
  * Default controller for Processed Task Item
  *
  * @author Marek Klement
+ * @author Radek Tomiška
  */
 @RestController
 @RequestMapping(value = BaseDtoController.BASE_PATH + "/long-running-task-items")
@@ -52,7 +58,7 @@ import io.swagger.annotations.AuthorizationScope;
 		tags = { IdmLongRunningTaskItemController.TAG })
 public class IdmLongRunningTaskItemController extends AbstractReadWriteDtoController<IdmProcessedTaskItemDto, IdmProcessedTaskItemFilter> {
 
-
+	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(IdmLongRunningTaskItemController.class);
 	protected static final String TAG = "Long running task items";
 	//
 	private final IdmProcessedTaskItemService itemService;
@@ -127,6 +133,17 @@ public class IdmLongRunningTaskItemController extends AbstractReadWriteDtoContro
 			@PageableDefault Pageable pageable) {
 		return super.find(parameters, pageable);
 	}
+	
+	@Override
+	public Page<IdmProcessedTaskItemDto> find(IdmProcessedTaskItemFilter filter, Pageable pageable, BasePermission permission) {
+		Page<IdmProcessedTaskItemDto> dtos = super.find(filter, pageable, permission);
+		Map<UUID, BaseDto> loadedDtos = new HashMap<>();
+		dtos.forEach(dto -> {
+			loadEmbeddedEntity(loadedDtos, dto);
+		});
+		//
+		return dtos;
+	}
 
 	@Override
 	@ResponseBody
@@ -175,5 +192,22 @@ public class IdmLongRunningTaskItemController extends AbstractReadWriteDtoContro
 	protected IdmProcessedTaskItemFilter toFilter(MultiValueMap<String, Object> parameters) {
 		IdmProcessedTaskItemFilter filter = super.toFilter(parameters);
 		return filter;
+	}
+	
+	/**
+	 * Fills referenced entity to dto - prevent to load entity for each row
+	 * 
+	 * @param dto
+	 */
+	private void loadEmbeddedEntity(Map<UUID, BaseDto> loadedDtos, IdmProcessedTaskItemDto dto) {
+		UUID entityId = dto.getReferencedEntityId();
+		try {
+			if (!loadedDtos.containsKey(entityId)) {
+				loadedDtos.put(entityId, getLookupService().lookupDto(dto.getReferencedDtoType(), entityId));
+			}
+			dto.getEmbedded().put("referencedEntityId", loadedDtos.get(entityId));
+		} catch (IllegalArgumentException ex) {
+			LOG.debug("Class [{}] not found on classpath (e.g. module was uninstalled)", dto.getReferencedDtoType(), ex);
+		}
 	}
 }

@@ -19,9 +19,9 @@ import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
 
 public interface Recoverable<DTO extends AbstractDto> {
 
-	public static final String ENCODING_HANDLER = "com.sun.xml.bind.characterEscapeHandler";
-	public static final String BACKUP_FOLDER_CONFIG = "idm.sec.core.backups.default.folder.path";
-	public static final String EXPORT_FILE_SUFIX = ".xml";
+	String ENCODING_HANDLER = "com.sun.xml.bind.characterEscapeHandler";
+	String BACKUP_FOLDER_CONFIG = "idm.sec.core.backups.default.folder.path";
+	String EXPORT_FILE_SUFIX = ".xml";
 	
 	/**
 	 * Method load system entities from resources by all classpath defined by

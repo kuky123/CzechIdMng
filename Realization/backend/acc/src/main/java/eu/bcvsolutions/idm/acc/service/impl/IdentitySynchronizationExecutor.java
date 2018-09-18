@@ -298,7 +298,7 @@ public class IdentitySynchronizationExecutor extends AbstractSynchronizationExec
 
 		// Create role request for default role and primary contract
 		IdmRoleRequestDto roleRequest = roleRequestService.createRequest(primeContract, defaultRole);
-		roleRequest = roleRequestService.startRequestInternal(roleRequest.getId(), false);
+		roleRequest = roleRequestService.startRequestInternal(roleRequest.getId(), false, true);
 
 		// Load concept (can be only one)
 		IdmConceptRoleRequestFilter conceptFilter = new IdmConceptRoleRequestFilter();

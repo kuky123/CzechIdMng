@@ -1,7 +1,13 @@
 package eu.bcvsolutions.idm.core.rest.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
@@ -12,6 +18,7 @@ import com.google.common.collect.ImmutableMap;
 
 import eu.bcvsolutions.idm.core.api.domain.CoreResultCode;
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
+import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmEntityStateDto;
 import eu.bcvsolutions.idm.core.api.dto.filter.IdmEntityStateFilter;
 import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
@@ -19,6 +26,7 @@ import eu.bcvsolutions.idm.core.api.rest.BaseController;
 import eu.bcvsolutions.idm.core.api.rest.BaseDtoController;
 import eu.bcvsolutions.idm.core.api.service.EntityEventManager;
 import eu.bcvsolutions.idm.core.api.service.IdmEntityStateService;
+import eu.bcvsolutions.idm.core.security.api.domain.BasePermission;
 import eu.bcvsolutions.idm.core.security.api.domain.IdmGroupPermission;
 import io.swagger.annotations.Api;
 
@@ -40,12 +48,32 @@ import io.swagger.annotations.Api;
 public class IdmEntityStateController extends DefaultReadWriteDtoController<IdmEntityStateDto, IdmEntityStateFilter> {
 	
 	protected static final String TAG = "Entity states";
+	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(IdmEntityStateController.class);
 	//
 	@Autowired private EntityEventManager manager;
 	
 	@Autowired
 	public IdmEntityStateController(IdmEntityStateService service) {
 		super(service);
+	}
+	
+	@Override
+	public Page<IdmEntityStateDto> find(IdmEntityStateFilter filter, Pageable pageable, BasePermission permission) {
+		Page<IdmEntityStateDto> results = super.find(filter, pageable, permission);
+		// fill entity embedded for FE
+		Map<UUID, BaseDto> loadedDtos = new HashMap<>();
+		results.getContent().forEach(dto -> {
+			UUID ownerId = dto.getOwnerId();
+			if (!loadedDtos.containsKey(ownerId)) {
+				try {
+					loadedDtos.put(ownerId, getLookupService().lookupDto(dto.getOwnerType(), ownerId));
+				} catch (IllegalArgumentException ex) {
+					LOG.debug("Class [{}] not found on classpath (e.g. module was uninstalled)", dto.getOwnerType(), ex);
+				}
+			}
+			dto.getEmbedded().put("ownerId", loadedDtos.get(ownerId));
+		});
+		return results;
 	}
 	
 	@Override

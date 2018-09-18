@@ -43,7 +43,7 @@ export class RoleCatalogueRoleTable extends Advanced.AbstractTableContent {
     }
     //
     super.showDetail(entity, () => {
-      this.refs.guaranteeRole.focus();
+      this.refs.roleCatalogue.focus();
     });
   }
 

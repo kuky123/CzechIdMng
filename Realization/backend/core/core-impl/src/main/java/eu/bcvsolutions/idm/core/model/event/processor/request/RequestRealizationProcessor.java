@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Description;
 import org.springframework.stereotype.Component;
 
-import eu.bcvsolutions.idm.core.api.domain.Requestable;
 import eu.bcvsolutions.idm.core.api.dto.AbstractRequestDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmRequestDto;
 import eu.bcvsolutions.idm.core.api.event.CoreEventProcessor;
@@ -20,14 +19,14 @@ import eu.bcvsolutions.idm.core.model.event.RequestEvent.RequestEventType;
  * @author svandav
  *
  */
-@Component
+@Component(RequestRealizationProcessor.PROCESSOR_NAME)
 @Description("Processor realizes of the request")
 public class RequestRealizationProcessor extends CoreEventProcessor<IdmRequestDto> {
 
 	public static final String PROCESSOR_NAME = "request-realization-processor";
 	
 	@Autowired
-	private RequestManager<Requestable> manager;
+	private RequestManager manager;
 
 	public RequestRealizationProcessor() {
 		super(RequestEventType.EXECUTE);

@@ -10,7 +10,11 @@ import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.hateoas.core.Relation;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
+
 import eu.bcvsolutions.idm.core.api.dto.BaseDto;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * Default DTO for audit detail.
@@ -56,6 +60,10 @@ public class IdmAuditDto implements BaseDto {
 	private String subOwnerCode;
 	
 	private String subOwnerType;
+	
+	@JsonProperty(value = "_embedded", access = Access.READ_ONLY)
+	@ApiModelProperty(readOnly = true)
+	private Map<String, BaseDto> embedded;
 
     public UUID getModifierId() {
         return modifierId;
@@ -223,5 +231,16 @@ public class IdmAuditDto implements BaseDto {
 		changedColumns.forEach(changedColumn -> {
 			addChanged(changedColumn);
 		});
+	}
+	
+	public Map<String, BaseDto> getEmbedded() {
+		if(embedded == null){
+			embedded = new HashMap<>();
+		}
+		return embedded;
+	}
+
+	public void setEmbedded(Map<String, BaseDto> emmbedded) {
+		this.embedded = emmbedded;
 	}
 }

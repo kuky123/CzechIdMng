@@ -106,6 +106,7 @@ export class AccountTable extends Advanced.AbstractTableContent {
       <Advanced.EntityInfo
         entityType={ this._getType(data[rowIndex].targetEntityType) }
         entityIdentifier={ data[rowIndex].targetEntityId}
+        entity={ data[rowIndex]._embedded ? data[rowIndex]._embedded.targetEntityId : null }
         showIcon
         face="popover"
         showEntityType/>
@@ -120,7 +121,8 @@ export class AccountTable extends Advanced.AbstractTableContent {
       forceSystemEntitySearchParameters,
       columns,
       _permissions,
-      showAddButton
+      showAddButton,
+      className
     } = this.props;
     const { detail, systemEntity, connectorObject } = this.state;
     //
@@ -138,6 +140,7 @@ export class AccountTable extends Advanced.AbstractTableContent {
           manager={this.getManager()}
           forceSearchParameters={forceSearchParameters}
           showRowSelection={Managers.SecurityManager.hasAnyAuthority(['ACCOUNT_DELETE'])}
+          className={ className }
           rowClass={({rowIndex, data}) => { return (data[rowIndex].inProtection) ? 'disabled' : ''; }}
           actions={
             Managers.SecurityManager.hasAnyAuthority(['ACCOUNT_DELETE'])
@@ -205,7 +208,8 @@ export class AccountTable extends Advanced.AbstractTableContent {
                 return (
                   <Advanced.EntityInfo
                     entityType="system"
-                    entityIdentifier={ data[rowIndex]._embedded.system.id }
+                    entityIdentifier={ data[rowIndex].system }
+                    entity={ data[rowIndex]._embedded.system }
                     face="popover" />
                 );
               }

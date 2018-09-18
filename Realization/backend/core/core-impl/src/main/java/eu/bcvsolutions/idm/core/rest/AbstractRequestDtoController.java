@@ -52,7 +52,7 @@ public abstract class AbstractRequestDtoController<DTO extends Requestable, F ex
 		extends AbstractReadWriteDtoController<DTO, F> {
 
 	@Autowired
-	private RequestManager<DTO> requestManager;
+	private RequestManager requestManager;
 
 	public AbstractRequestDtoController(ReadWriteDtoService<DTO, F> entityService) {
 		super(entityService);

@@ -39,8 +39,20 @@ public interface LookupService extends ScriptEnabled {
 	 * @param identifiableType
 	 * @param entityId
 	 * @return {@link BaseDto}
+	 * @throws IllegalArgumentException if service for load dto not found
 	 */
 	BaseDto lookupDto(Class<? extends Identifiable> identifiableType, Serializable entityId);
+	
+	/**
+	 * Returns {@link BaseDto} by given identifier and type. 
+	 * {@link BaseEntity} and {@link BaseDto} type can be given. 
+	 * 
+	 * @param identifiableType cannonical class name
+	 * @param entityId
+	 * @return {@link BaseDto}
+	 * @throws IllegalArgumentExceptionif service for load dto not found or identifiableType is not valid
+	 */
+	BaseDto lookupDto(String identifiableType, Serializable entityId);
 	
 	/**
 	 * Returns {@link EntityLookup} for given identifiable class

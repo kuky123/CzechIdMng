@@ -6,7 +6,9 @@ import java.util.UUID;
 
 import org.springframework.context.ApplicationEvent;
 
+import eu.bcvsolutions.idm.core.api.config.domain.EventConfiguration;
 import eu.bcvsolutions.idm.core.api.domain.Identifiable;
+import eu.bcvsolutions.idm.core.api.domain.OperationState;
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
 import eu.bcvsolutions.idm.core.api.dto.EntityEventProcessorDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmEntityEventDto;
@@ -193,6 +195,15 @@ public interface EntityEventManager {
 	IdmEntityEventDto getEvent(EntityEvent<? extends Serializable> event);
 	
 	/**
+	 * Returns persisted event with given id, when event with given id is not persisted, then returns {@code null}.
+	 * 
+	 * @param event
+	 * @return
+	 * @since 9.1.0
+	 */
+	IdmEntityEventDto getEvent(UUID eventId);
+	
+	/**
 	 * Returns entity event, if given event is based on persisted entity event, otherwise returns {@code null}. 
 	 * 
 	 * @param event
@@ -200,6 +211,16 @@ public interface EntityEventManager {
 	 * @since 8.0.0
 	 */
 	UUID getEventId(EntityEvent<? extends Serializable> event);
+	
+	/**
+	 * Returns true, when persisted event is runnable (created or running already). 
+	 * 
+	 * @see OperationState#isRunnable()
+	 * @param eventId
+	 * @return
+	 * @since 9.1.0
+	 */
+	boolean isRunnable(UUID eventId);
 	
 	/**
 	 * Resurrects given event from persisted state. Event can be processed.
@@ -226,7 +247,16 @@ public interface EntityEventManager {
 	void executeEvent(IdmEntityEventDto event);
 	
 	/**
-	 * Saves event
+	 * Persists event "as it is". Event id is set (if it was empty).
+	 * 
+	 * @param event
+	 * @param result event result [optional]
+	 * @since 9.1.0
+	 */
+	IdmEntityEventDto saveEvent(EntityEvent<? extends Identifiable> event, OperationResultDto result);
+	
+	/**
+	 * Persists event
 	 * 
 	 * @param event
 	 * @param result
@@ -277,4 +307,13 @@ public interface EntityEventManager {
 	 * @param enabled
 	 */
 	void setEnabled(String processorId, boolean enabled);
+	
+	/**
+	 * Returns true, if asynchronous event processing is enabled
+	 * 
+	 * @see EventConfiguration
+	 * @return
+	 * @since 9.1.0
+	 */
+	boolean isAsynchronous();
 }
