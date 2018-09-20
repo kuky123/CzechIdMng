@@ -9,7 +9,9 @@ import eu.bcvsolutions.idm.core.scheduler.api.service.AbstractSchedulableTaskExe
 import eu.bcvsolutions.idm.ic.api.*;
 import eu.bcvsolutions.idm.ic.connid.domain.ConnIdIcConvertUtil;
 import eu.bcvsolutions.idm.ic.service.impl.DefaultIcConnectorFacade;
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +21,18 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * This LRT exports all items from Identity synchronization to CSV file
+ *
+ * @author Marek Klement
  */
 @Component
-@Description("Get all items on synchronization - system and parse it into CSV")
+@Description("Get all items on schema - system and parse it into CSV")
 public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecutor<Boolean> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExportCSVFromSystemsExecutor.class);
@@ -34,10 +41,11 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
     private static final String PARAM_SCHEMA_UUID = "UUID of Schema";
     //
     private String DEFAULT_LINE_END = "\n";
+
     private Character DEFAULT_LINE_SEPARATOR = ';';
     //
 
-    private UUID synchronizationId;
+    private UUID schemaId;
     private String pathToFile;
     private boolean checkedHeader = false;
     private int size = 0;
@@ -67,7 +75,7 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
             throw new IllegalArgumentException("Can write into the file! Path to file: " + pathToFile);
         }
         //
-        SysSchemaObjectClassDto schema = sysSchemaObjectClassService.get(synchronizationId);
+        SysSchemaObjectClassDto schema = sysSchemaObjectClassService.get(schemaId);
         if (schema == null) {
             throw new IllegalArgumentException("Schema is null! Probably wrong UUID.");
         }
@@ -103,14 +111,23 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
      * @return true if everything went right
      */
     private boolean writeIntoFile(IcConnectorInstance icConnectorInstance, IcConnectorConfiguration config, IcObjectClass icObjectClass) {
+        CSVWriter writer = null;
         try {
-            final CSVWriter writer = new CSVWriter(new FileWriter(pathToFile, true), DEFAULT_LINE_SEPARATOR, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, DEFAULT_LINE_END);
+            writer = new CSVWriter(new FileWriter(pathToFile, true), DEFAULT_LINE_SEPARATOR, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER, System.lineSeparator());
             //
-            defaultIcConnectorFacade.search(icConnectorInstance, config, icObjectClass, null, connectorObject -> handleConnectorObject(connectorObject, writer));
+            CSVWriter finalWriter = writer;
+            defaultIcConnectorFacade.search(icConnectorInstance, config, icObjectClass, null, connectorObject -> handleConnectorObject(connectorObject, finalWriter));
             //
-            writer.close();
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return true;
     }
@@ -148,10 +165,8 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
                 int valuesSize = value.getValues().size();
                 StringBuilder toBeWriten = new StringBuilder();
                 for (int j = 0; j < valuesSize; ++j) {
-                    if (j == (valuesSize - 1)) {
-                        toBeWriten.append(value.getValues().get(j).toString());
-                    } else {
-                        toBeWriten.append(value.getValues().get(j).toString());
+                    toBeWriten.append(value.getValues().get(j).toString());
+                    if (j != (valuesSize - 1)) {
                         toBeWriten.append(DEFAULT_LINE_END);
                     }
                 }
@@ -170,7 +185,7 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
      * @return boolean
      */
     private boolean checkNameAndUid(String name) {
-        return !name.equals("__NAME__") && !name.equals("__UID__");
+        return !name.equals(Name.NAME) && !name.equals(Uid.NAME);
     }
 
     /**
@@ -220,7 +235,7 @@ public class ExportCSVFromSystemsExecutor extends AbstractSchedulableTaskExecuto
     public void init(Map<String, Object> properties) {
         LOG.debug("Start init");
         super.init(properties);
-        synchronizationId = getParameterConverter().toUuid(properties, PARAM_SCHEMA_UUID);
+        schemaId = getParameterConverter().toUuid(properties, PARAM_SCHEMA_UUID);
         pathToFile = getParameterConverter().toString(properties, PARAM_CSV_FILE_PATH);
     }
 }
