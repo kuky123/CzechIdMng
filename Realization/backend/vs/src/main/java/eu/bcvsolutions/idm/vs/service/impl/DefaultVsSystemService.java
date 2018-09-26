@@ -8,6 +8,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import eu.bcvsolutions.idm.acc.domain.*;
+import eu.bcvsolutions.idm.acc.dto.*;
+import eu.bcvsolutions.idm.acc.dto.filter.SysRoleSystemFilter;
+import eu.bcvsolutions.idm.acc.dto.filter.SysSyncConfigFilter;
+import eu.bcvsolutions.idm.acc.service.api.*;
+import org.identityconnectors.framework.common.objects.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,20 +25,7 @@ import org.springframework.util.CollectionUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-import eu.bcvsolutions.idm.acc.domain.AttributeMappingStrategyType;
-import eu.bcvsolutions.idm.acc.domain.SystemEntityType;
-import eu.bcvsolutions.idm.acc.domain.SystemOperationType;
-import eu.bcvsolutions.idm.acc.dto.SysConnectorKeyDto;
-import eu.bcvsolutions.idm.acc.dto.SysSchemaAttributeDto;
-import eu.bcvsolutions.idm.acc.dto.SysSchemaObjectClassDto;
-import eu.bcvsolutions.idm.acc.dto.SysSystemAttributeMappingDto;
-import eu.bcvsolutions.idm.acc.dto.SysSystemDto;
-import eu.bcvsolutions.idm.acc.dto.SysSystemMappingDto;
 import eu.bcvsolutions.idm.acc.dto.filter.SysSchemaAttributeFilter;
-import eu.bcvsolutions.idm.acc.service.api.SysSchemaAttributeService;
-import eu.bcvsolutions.idm.acc.service.api.SysSystemAttributeMappingService;
-import eu.bcvsolutions.idm.acc.service.api.SysSystemMappingService;
-import eu.bcvsolutions.idm.acc.service.api.SysSystemService;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmRoleDto;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityService;
@@ -81,6 +74,11 @@ public class DefaultVsSystemService implements VsSystemService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DefaultVsSystemService.class);
 
+    private static final String NAME_OF_MAPPING = "Link virtual accounts to identities";
+    private static final String NAME_OF_SYNC = "Link virtual accounts to identities";
+    private static final String ROLE_NAME = " - uživatel";
+    private static final String IDM_ATTRIBUTE_NAME = "username";
+
 	private final SysSystemService systemService;
 	private final FormService formService;
 	private final IdmFormAttributeService formAttributeService;
@@ -99,6 +97,10 @@ public class DefaultVsSystemService implements VsSystemService {
 	private VsSystemImplementerService systemImplementerService;
 	@Autowired
 	private VsConfiguration vsConfiguration;
+    @Autowired
+    private SysSyncConfigService configService;
+    @Autowired
+    private SysRoleSystemService roleSystemService;
 
 	@Autowired
 	public DefaultVsSystemService(SysSystemService systemService, FormService formService,
@@ -293,9 +295,139 @@ public class DefaultVsSystemService implements VsSystemService {
 
 		// Create mapping by default attributes
 		this.createDefaultMapping(system, schemaAccount, vsSystem);
+        //
+		// Create mapping for Connection
+        SysSystemMappingDto foundMapping = createMapping(system, schemaAccount.getId());
+        if (foundMapping == null) {
+            throw new IllegalArgumentException("Mapping not found!");
+        }
+        SysSystemAttributeMappingDto attributeMapping = createAttributeMapping(foundMapping.getId(), schemaAccount.getId());
+        if (attributeMapping == null) {
+            throw new IllegalArgumentException("Attribute Mapping not found!");
+        }
+        IdmRoleDto role = createRoleAndConnectToSystem(system, foundMapping.getId());
+        if (role == null) {
+            throw new IllegalArgumentException("Role not found!");
+        }
+        SysSyncIdentityConfigDto synchronization = createReconciliationConfig(attributeMapping.getId(), foundMapping.getId(), system.getId(), role.getId());
+        if (synchronization == null) {
+            throw new IllegalArgumentException("Synchronization not found!");
+        }
 
 		return this.systemService.get(system.getId());
 	}
+
+    private IdmRoleDto createRoleAndConnectToSystem(SysSystemDto system, UUID foundMapping) {
+        String code = system.getName() + ROLE_NAME;
+        IdmRoleDto newRole = roleService.getByCode(code);
+        if (newRole == null) {
+            newRole = new IdmRoleDto();
+            newRole.setCode(code);
+            newRole.setName(code);
+            newRole.setPriority(0);
+            newRole = roleService.save(newRole);
+        }
+        //
+        SysRoleSystemFilter systemFilter = new SysRoleSystemFilter();
+        systemFilter.setRoleId(newRole.getId());
+        List<SysRoleSystemDto> systemRoles = roleSystemService.find(systemFilter, null).getContent();
+        SysRoleSystemDto systemRole;
+        if (systemRoles.size() == 0) {
+            systemRole = new SysRoleSystemDto();
+            systemRole.setRole(newRole.getId());
+            systemRole.setSystem(system.getId());
+            systemRole.setSystemMapping(foundMapping);
+            roleSystemService.save(systemRole);
+        }
+        //
+        return newRole;
+    }
+
+    private SysSyncIdentityConfigDto createReconciliationConfig(UUID correlationAttribute, UUID systemMapping, UUID systemId, UUID roleId) {
+        SysSyncConfigFilter filter = new SysSyncConfigFilter();
+        filter.setName(NAME_OF_SYNC);
+        filter.setSystemId(systemId);
+        List<AbstractSysSyncConfigDto> allSync = configService.find(filter, null).getContent();
+        SysSyncIdentityConfigDto synchronization;
+        if (allSync.size() > 0) {
+            synchronization = (SysSyncIdentityConfigDto) allSync.get(0);
+        } else {
+            synchronization = new SysSyncIdentityConfigDto();
+            synchronization.setEnabled(true);
+            synchronization.setName(NAME_OF_SYNC);
+            synchronization.setCorrelationAttribute(correlationAttribute);
+            synchronization.setReconciliation(true);
+            synchronization.setSystemMapping(systemMapping);
+            synchronization.setUnlinkedAction(SynchronizationUnlinkedActionType.LINK);
+            synchronization.setLinkedAction(SynchronizationLinkedActionType.IGNORE);
+            synchronization.setMissingEntityAction(SynchronizationMissingEntityActionType.IGNORE);
+            synchronization.setDefaultRole(roleId);
+            synchronization = (SysSyncIdentityConfigDto) configService.save(synchronization);
+        }
+        return synchronization;
+    }
+
+    private SysSystemAttributeMappingDto createAttributeMapping(UUID foundMapping, UUID schemaId) {
+        SysSchemaAttributeFilter filter = new SysSchemaAttributeFilter();
+        filter.setObjectClassId(schemaId);
+        List<SysSchemaAttributeDto> schemaAttributes = schemaAttributeService.find(filter, null).getContent();
+        UUID idOfAttributeName = null;
+        for (SysSchemaAttributeDto attribute : schemaAttributes) {
+            if (attribute.getName().equals(Name.NAME)) {
+                idOfAttributeName = attribute.getId();
+                break;
+            }
+        }
+        //
+        SysSystemAttributeMappingDto attributeMapping = systemAttributeMappingService.findBySystemMappingAndName(foundMapping, IDM_ATTRIBUTE_NAME);
+        //
+        if (attributeMapping == null) {
+            attributeMapping = new SysSystemAttributeMappingDto();
+            attributeMapping.setEntityAttribute(true);
+            if (idOfAttributeName != null) {
+                attributeMapping.setSchemaAttribute(idOfAttributeName);
+            } else {
+                throw new IllegalArgumentException("Attribute uid name not found!");
+            }
+            attributeMapping.setIdmPropertyName(IDM_ATTRIBUTE_NAME);
+            attributeMapping.setSystemMapping(foundMapping);
+            attributeMapping.setName(IDM_ATTRIBUTE_NAME);
+            attributeMapping.setUid(true);
+            attributeMapping = systemAttributeMappingService.save(attributeMapping);
+        } else if (!attributeMapping.isUid()) {
+            throw new IllegalArgumentException("Attribute mapping with name was already set and is not IDENTIFIER!");
+        }
+
+        return attributeMapping;
+    }
+
+    private SysSystemMappingDto createMapping(SysSystemDto system, UUID schemaId) {
+        boolean alreadyExists = false;
+        SysSystemMappingDto foundMapping = null;
+        List<SysSystemMappingDto> mappings = systemMappingService.findBySystem(system, SystemOperationType.SYNCHRONIZATION, SystemEntityType.IDENTITY);
+        for (SysSystemMappingDto mapping : mappings) {
+            if (mapping.getName().equals(NAME_OF_MAPPING)) {
+                alreadyExists = true;
+                foundMapping = mapping;
+                break;
+            }
+        }
+        SysSystemMappingDto newMapping;
+        if (!alreadyExists) {
+            newMapping = new SysSystemMappingDto();
+            newMapping.setName(NAME_OF_MAPPING);
+            newMapping.setEntityType(SystemEntityType.IDENTITY);
+            newMapping.setOperationType(SystemOperationType.SYNCHRONIZATION);
+            newMapping.setObjectClass(schemaId);
+            newMapping.setProtectionEnabled(true);
+            newMapping = systemMappingService.save(newMapping);
+        } else {
+            newMapping = foundMapping;
+            LOG.warn("Attribute mapping already exists!");
+        }
+
+        return newMapping;
+    }
 
 	/**
 	 * Create default mapping for virtual system by given default attributes
