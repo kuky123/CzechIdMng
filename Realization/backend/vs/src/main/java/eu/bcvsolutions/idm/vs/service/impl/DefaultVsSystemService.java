@@ -74,10 +74,10 @@ public class DefaultVsSystemService implements VsSystemService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DefaultVsSystemService.class);
 
-    private static final String NAME_OF_MAPPING = "Link virtual accounts to identities";
-    private static final String NAME_OF_SYNC = "Link virtual accounts to identities";
-    private static final String ROLE_NAME = " - uživatel";
-    private static final String IDM_ATTRIBUTE_NAME = "username";
+    public static final String NAME_OF_MAPPING = "Link virtual accounts to identities";
+    public static final String NAME_OF_SYNC = "Link virtual accounts to identities";
+    public static final String ROLE_NAME = " - uživatel";
+    public static final String IDM_ATTRIBUTE_NAME = "username";
 
 	private final SysSystemService systemService;
 	private final FormService formService;

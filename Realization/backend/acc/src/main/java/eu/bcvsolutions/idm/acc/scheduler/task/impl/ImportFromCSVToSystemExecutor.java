@@ -49,14 +49,14 @@ public class ImportFromCSVToSystemExecutor extends AbstractSchedulableTaskExecut
 
     private static final Logger LOG = LoggerFactory.getLogger(ImportFromCSVToSystemExecutor.class);
     //
-    private static final String PARAM_CSV_FILE_PATH = "Path to file";
-    private static final String PARAM_SYSTEM_NAME = "Name of system";
-    private static final String PARAM_ATTRIBUTE_SEPARATOR = "Attribute separator";
-    private static final String PARAM_NAME_ATTRIBUTE = "Name attribute";
-    private static final String PARAM_UID_ATTRIBUTE = "Uid attribute";
-    private static final String PARAM_MULTIVALUED_SEPARATOR = "Separator of multivalued attributes";
+    public static final String PARAM_CSV_FILE_PATH = "Path to file";
+    public static final String PARAM_SYSTEM_NAME = "Name of system";
+    public static final String PARAM_ATTRIBUTE_SEPARATOR = "Attribute separator";
+    public static final String PARAM_NAME_ATTRIBUTE = "Name attribute";
+    public static final String PARAM_UID_ATTRIBUTE = "Uid attribute";
+    public static final String PARAM_MULTIVALUED_SEPARATOR = "Separator of multivalued attributes";
     //
-    private String DEFAULT_NOTIFY_PROPERTY = "requiredConfirmation";
+    public String DEFAULT_NOTIFY_PROPERTY = "requiredConfirmation";
     //
     private String systemName;
     private String pathToFile;
@@ -193,18 +193,18 @@ public class ImportFromCSVToSystemExecutor extends AbstractSchedulableTaskExecut
                     }
                     //
                     if (name.equals(uidHeaderAttribute)) {
-                        //list.add(createAttribute(Uid.NAME, values));
                         uidAttribute = new IcUidAttributeImpl(name, values[0], null);
                     }
                 }
                 IcConnectorObject object = defaultIcConnectorFacade.readObject(icConnectorInstance, config, icObjectClass, uidAttribute);
                 if (object == null) {
+                    if(config instanceof IcConnectorConfigurationCzechIdMImpl) {
+                        addUidAttribute(list, uidAttribute);
+                    }
                     defaultIcConnectorFacade.createObject(icConnectorInstance, config, icObjectClass, list);
                     increaseCounter();
                 } else {
-                    String[] temp = new String[1];
-                    temp[0] = uidAttribute.getUidValue();
-                    list.add(createAttribute(Uid.NAME, temp));
+                    addUidAttribute(list, uidAttribute);
                     defaultIcConnectorFacade.updateObject(icConnectorInstance, config, icObjectClass, uidAttribute, list);
                     increaseCounter();
                 }
@@ -222,6 +222,13 @@ public class ImportFromCSVToSystemExecutor extends AbstractSchedulableTaskExecut
             }
         }
         return true;
+    }
+
+    private void addUidAttribute(List<IcAttribute> list, IcUidAttribute uidAttribute){
+        String[] temp = new String[1];
+        assert uidAttribute != null;
+        temp[0] = uidAttribute.getUidValue();
+        list.add(createAttribute(Uid.NAME, temp));
     }
 
     /**

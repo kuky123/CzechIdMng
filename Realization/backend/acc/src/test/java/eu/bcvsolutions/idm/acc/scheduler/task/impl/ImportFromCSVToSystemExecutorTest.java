@@ -5,6 +5,7 @@ import eu.bcvsolutions.idm.acc.dto.SysSchemaObjectClassDto;
 import eu.bcvsolutions.idm.acc.dto.SysSystemDto;
 import eu.bcvsolutions.idm.acc.entity.TestResource;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemService;
+import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmLongRunningTaskDto;
 import eu.bcvsolutions.idm.core.scheduler.api.service.LongRunningTaskManager;
 import eu.bcvsolutions.idm.test.api.AbstractIntegrationTest;
 import org.junit.After;
@@ -21,15 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 public class ImportFromCSVToSystemExecutorTest extends AbstractIntegrationTest {
-
-    private static final String PARAM_CSV_FILE_PATH = "Path to file";
-    private static final String PARAM_SYSTEM_NAME = "Name of system";
-    private static final String PARAM_ATTRIBUTE_SEPARATOR = "Attribute separator";
-    private static final String PARAM_NAME_ATTRIBUTE = "Name attribute";
-    private static final String PARAM_UID_ATTRIBUTE = "Uid attribute";
-    private static final String PARAM_MULTIVALUED_SEPARATOR = "Separator of multivalued attributes";
-
-    //
 
     private static final String FILE_PATH = System.getProperty("user.dir") + "/src/test/resources/scheduler/task/impl/importTestFile.csv";
 
@@ -61,16 +53,21 @@ public class ImportFromCSVToSystemExecutorTest extends AbstractIntegrationTest {
         ImportFromCSVToSystemExecutor lrt = new ImportFromCSVToSystemExecutor();
         // create setting of lrt
         Map<String, Object> configOfLRT = new HashMap<>();
-        configOfLRT.put(PARAM_ATTRIBUTE_SEPARATOR, ";");
-        configOfLRT.put(PARAM_CSV_FILE_PATH, FILE_PATH);
-        configOfLRT.put(PARAM_MULTIVALUED_SEPARATOR, ",");
-        configOfLRT.put(PARAM_NAME_ATTRIBUTE, "NAME");
-        configOfLRT.put(PARAM_UID_ATTRIBUTE, "NAME");
-        configOfLRT.put(PARAM_SYSTEM_NAME, system.getName());
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_ATTRIBUTE_SEPARATOR, ";");
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_CSV_FILE_PATH, FILE_PATH);
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_MULTIVALUED_SEPARATOR, ",");
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_NAME_ATTRIBUTE, "NAME");
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_UID_ATTRIBUTE, "NAME");
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_SYSTEM_NAME, system.getName());
         lrt.init(configOfLRT);
         Boolean obj = longRunningTaskManager.executeSync(lrt);
         Assert.assertNotNull(obj);
         Assert.assertTrue(obj);
+        IdmLongRunningTaskDto task = longRunningTaskManager.getLongRunningTask(lrt);
+        Long count = task.getCount();
+        Long total = 3L;
+        Assert.assertEquals(task.getCounter(), count);
+        Assert.assertEquals(total,count);
         //delete system
         systemService.delete(system);
     }

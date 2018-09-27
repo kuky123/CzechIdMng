@@ -1,7 +1,23 @@
 package eu.bcvsolutions.idm.vs.service.impl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import eu.bcvsolutions.idm.acc.domain.SystemEntityType;
+import eu.bcvsolutions.idm.acc.domain.SystemOperationType;
+import eu.bcvsolutions.idm.acc.dto.AbstractSysSyncConfigDto;
+import eu.bcvsolutions.idm.acc.dto.SysSystemAttributeMappingDto;
+import eu.bcvsolutions.idm.acc.dto.SysSystemMappingDto;
+import eu.bcvsolutions.idm.acc.dto.filter.SysSyncConfigFilter;
+import eu.bcvsolutions.idm.acc.entity.SysSystemMapping;
+import eu.bcvsolutions.idm.acc.scheduler.task.impl.ImportFromCSVToSystemExecutor;
+import eu.bcvsolutions.idm.acc.service.api.SysSyncConfigService;
+import eu.bcvsolutions.idm.acc.service.api.SysSystemAttributeMappingService;
+import eu.bcvsolutions.idm.acc.service.api.SysSystemMappingService;
+import eu.bcvsolutions.idm.acc.service.api.SysSystemService;
+import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmLongRunningTaskDto;
+import eu.bcvsolutions.idm.core.scheduler.api.service.LongRunningTaskManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -31,6 +47,7 @@ import eu.bcvsolutions.idm.vs.service.api.VsSystemImplementerService;
 public class VsSystemServiceTest extends AbstractIntegrationTest {
 
 	private static String VS_SYSTEM = "VS_SYSTEM_ONE";
+    private static final String FILE_PATH = System.getProperty("user.dir") + "/src/test/resources/service/impl/vsTestImport.csv";
 
 	@Autowired
 	private TestHelper helper;
@@ -38,6 +55,16 @@ public class VsSystemServiceTest extends AbstractIntegrationTest {
 	private VsSystemImplementerService systemImplementersService;
 	@Autowired
 	private ConfigurationService configurationService;
+	@Autowired
+    private SysSystemMappingService systemMappingService;
+	@Autowired
+    private SysSystemAttributeMappingService systemAttributeMappingService;
+    @Autowired
+    private SysSyncConfigService configService;
+    @Autowired
+    private LongRunningTaskManager longRunningTaskManager;
+    @Autowired
+    private SysSystemService systemService;
 	
 	@Before
 	public void init() {
@@ -117,5 +144,69 @@ public class VsSystemServiceTest extends AbstractIntegrationTest {
 		Assert.assertEquals(1, implementes.size());
 		Assert.assertEquals(userOneName, implementes.get(0).getUsername());
 	}
+
+	@Test
+	public void checkCreatedMappingAndSync(){
+        VsSystemDto config = new VsSystemDto();
+        config.setName(VS_SYSTEM);
+        SysSystemDto system = helper.createVirtualSystem(config);
+        //
+        Assert.assertNotNull(system);
+        //
+        Assert.assertEquals(system.getName(), VS_SYSTEM);
+        Assert.assertTrue(system.isVirtual());
+        //
+        List<SysSystemMappingDto> mappings = systemMappingService.findBySystemId(system.getId(),SystemOperationType.SYNCHRONIZATION,SystemEntityType.IDENTITY);
+        Assert.assertEquals("Wrong size of found mappings!",1,mappings.size());
+        SysSystemMappingDto mapping = mappings.get(0);
+        Assert.assertNotNull("Mapping is null!", mapping);
+        //
+        List<SysSystemAttributeMappingDto> attributeMappings = systemAttributeMappingService.findBySystemMapping(mapping);
+        Assert.assertEquals("Wrong size of found attributes for mapping!",1,attributeMappings.size());
+        SysSystemAttributeMappingDto attributeMapping = attributeMappings.get(0);
+        Assert.assertNotNull("Mapping is null!", attributeMapping);
+        Assert.assertEquals("Wrong IdmPropertyName - username!", "username", attributeMapping.getIdmPropertyName());
+        Assert.assertEquals("Wrong Name of attribute mapping - username!", "username", attributeMapping.getName());
+        //
+        SysSyncConfigFilter filter = new SysSyncConfigFilter();
+        filter.setSystemId(system.getId());
+        filter.setName("Link virtual accounts to identities");
+        List<AbstractSysSyncConfigDto> syncConfigs = configService.find(filter,null).getContent();
+        Assert.assertEquals("Wrong size of synchronizations!",1,syncConfigs.size());
+        Assert.assertNotNull("Sync config is null!", syncConfigs.get(0));
+    }
+
+    @Test
+    public void importDataVirtualTest(){
+        VsSystemDto config = new VsSystemDto();
+        config.setName(VS_SYSTEM);
+        SysSystemDto system = helper.createVirtualSystem(config);
+        //
+        Assert.assertNotNull(system);
+        //
+        Assert.assertEquals(system.getName(), VS_SYSTEM);
+        Assert.assertTrue(system.isVirtual());
+        //
+        ImportFromCSVToSystemExecutor lrt = new ImportFromCSVToSystemExecutor();
+        Map<String, Object> configOfLRT = new HashMap<>();
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_ATTRIBUTE_SEPARATOR, ";");
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_CSV_FILE_PATH, FILE_PATH);
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_MULTIVALUED_SEPARATOR, ",");
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_NAME_ATTRIBUTE, "username");
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_UID_ATTRIBUTE, "username");
+        configOfLRT.put(ImportFromCSVToSystemExecutor.PARAM_SYSTEM_NAME, system.getName());
+        lrt.init(configOfLRT);
+        //
+        Boolean obj = longRunningTaskManager.executeSync(lrt);
+        Assert.assertNotNull(obj);
+        Assert.assertTrue(obj);
+        IdmLongRunningTaskDto task = longRunningTaskManager.getLongRunningTask(lrt);
+        Long count = task.getCount();
+        Long total = 3L;
+        Assert.assertEquals(task.getCounter(), count);
+        Assert.assertEquals(total,count);
+        //delete system
+        systemService.delete(system);
+    }
 
 }
