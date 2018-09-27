@@ -75,7 +75,8 @@ export default class EavAttributeForm extends Basic.AbstractContextComponent {
       readOnly,
       localizationKey,
       localizationModule,
-      localizationType
+      localizationType,
+      useDefaultValue
     } = this.props;
     //
     if (!rendered || !formAttributes) {
@@ -125,7 +126,7 @@ export default class EavAttributeForm extends Basic.AbstractContextComponent {
             const FormValueComponent = component.component;
             const ManagerType = component.manager;
             let value = {};
-            if (attribute.defaultValue) {
+            if (useDefaultValue && attribute.defaultValue) {
               value = { value: attribute.defaultValue};
             }
             return (
@@ -150,6 +151,10 @@ EavAttributeForm.propTypes = {
   localizationKey: PropTypes.string,
   localizationModule: PropTypes.string,
   localizationType: PropTypes.string,
+  /**
+   * Use default value as filled value
+   */
+  useDefaultValue: PropTypes.bool
 };
 EavAttributeForm.defaultProps = {
   ...Basic.AbstractContextComponent.defaultProps,
@@ -157,5 +162,6 @@ EavAttributeForm.defaultProps = {
   readOnly: false,
   localizationKey: null,
   localizationModule: 'core',
-  localizationType: null
+  localizationType: null,
+  useDefaultValue: true
 };

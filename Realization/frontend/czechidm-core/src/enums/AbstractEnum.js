@@ -1,9 +1,10 @@
-
-
+import _ from 'lodash';
 import { i18n } from '../services/LocalizationService';
 
 /**
  * workaround for enumeration in javascript
+ *
+ * @author Vít Švanda
  */
 export default class AbstractEnum {
 
@@ -63,5 +64,22 @@ export default class AbstractEnum {
   static isDisabled(/* key*/) {
     // enabled by default
     return false;
+  }
+
+  /**
+   * Enumeration values
+   *
+   * @param  {AbstractEnum} enumeration
+   * @return {arrayOf(Symbol)} enumeration values (symbols)
+   */
+  static values(enumeration) {
+    const enumValues = [];
+    for (const enumItem in enumeration) {
+      if (_.isSymbol(enumeration[enumItem])) {
+        enumValues.push(enumeration[enumItem]);
+      }
+    }
+    //
+    return enumValues;
   }
 }

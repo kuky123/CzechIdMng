@@ -117,6 +117,7 @@ public class DefaultSysProvisioningOperationService
 	
 	@Override
 	protected Page<SysProvisioningOperation> findEntities(SysProvisioningOperationFilter filter, Pageable pageable, BasePermission... permission) {
+		// TODO: rewrite to toPredicates ...
 		if (filter == null) {
 			return repository.findAll(pageable);
 		}

@@ -56,9 +56,6 @@ class ContractAttributeEnum extends AbstractEnum {
       case this.VALID_TILL: {
         return 'validTill';
       }
-      case this.WORK_POSITION: {
-        return 'workPosition';
-      }
       case this.POSITION: {
         return 'position';
       }
@@ -94,9 +91,6 @@ class ContractAttributeEnum extends AbstractEnum {
       }
       case 'validTill': {
         return this.VALID_TILL;
-      }
-      case 'workPosition': {
-        return this.WORK_POSITION;
       }
       case 'position': {
         return this.POSITION;
@@ -141,7 +135,6 @@ ContractAttributeEnum.IDENTITY = Symbol('IDENTITY');
 ContractAttributeEnum.MAIN = Symbol('MAIN');
 ContractAttributeEnum.STATE = Symbol('STATE');
 ContractAttributeEnum.POSITION = Symbol('POSITION');
-ContractAttributeEnum.WORK_POSITION = Symbol('WORK_POSITION');
 ContractAttributeEnum.VALID_FROM = Symbol('VALID_FROM');
 ContractAttributeEnum.VALID_TILL = Symbol('VALID_TILL');
 ContractAttributeEnum.EXTERNE = Symbol('EXTERNE');

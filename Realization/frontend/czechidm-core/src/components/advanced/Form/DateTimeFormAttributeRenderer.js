@@ -37,7 +37,7 @@ export default class DateTimeFormAttributeRenderer extends AbstractFormAttribute
   }
 
   renderSingleInput() {
-    const { attribute, readOnly, values } = this.props;
+    const { attribute, values } = this.props;
     //
     return (
       <Basic.DateTimePicker
@@ -48,7 +48,7 @@ export default class DateTimeFormAttributeRenderer extends AbstractFormAttribute
         placeholder={ this.getPlaceholder() }
         value={ this.toInputValue(values) }
         helpBlock={ this.getHelpBlock() }
-        readOnly={ readOnly || attribute.readonly }/>
+        readOnly={ this.isReadOnly() }/>
     );
   }
 

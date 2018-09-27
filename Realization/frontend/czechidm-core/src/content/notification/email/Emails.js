@@ -6,6 +6,8 @@ import EmailTable from './EmailTable';
 
 /**
  * List of email in audit log
+ *
+ * @author Radek Tomiška
  */
 export default class Emails extends Basic.AbstractContent {
 
@@ -18,8 +20,8 @@ export default class Emails extends Basic.AbstractContent {
     return 'content.emails';
   }
 
-  componentDidMount() {
-    this.selectNavigationItem('notification-emails');
+  getNavigationKey() {
+    return 'notification-emails';
   }
 
   render() {

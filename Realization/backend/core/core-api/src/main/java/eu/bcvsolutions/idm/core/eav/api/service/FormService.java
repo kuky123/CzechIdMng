@@ -13,6 +13,7 @@ import eu.bcvsolutions.idm.core.api.domain.Identifiable;
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
 import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.entity.AbstractEntity;
+import eu.bcvsolutions.idm.core.api.event.EntityEvent;
 import eu.bcvsolutions.idm.core.api.exception.ForbiddenEntityException;
 import eu.bcvsolutions.idm.core.api.script.ScriptEnabled;
 import eu.bcvsolutions.idm.core.api.service.ConfidentialStorage;
@@ -61,6 +62,16 @@ public interface FormService extends ScriptEnabled {
 	 * @return
 	 */
 	boolean isFormable(Class<? extends Identifiable> ownerType);
+	
+	/**
+	 * Finds definition by given id
+	 * 
+	 * @param definitionId
+	 * @param permission base permissions to evaluate (AND)
+	 * @return
+	 * @throws ForbiddenEntityException if authorization policies doesn't met
+	 */
+	IdmFormDefinitionDto getDefinition(UUID definitionId, BasePermission... permission);
 	
 	/**
 	 * Finds main definition by given type
@@ -256,7 +267,6 @@ public interface FormService extends ScriptEnabled {
 	IdmFormAttributeDto saveAttribute(Class<? extends Identifiable> ownerType, IdmFormAttributeDto attribute, BasePermission... permission);
 		
 	/**
-	 * Saves form values to given owner and form definition.
 	 * 
 	 * @see {@link #getDefaultDefinitionType(Class)}
 	 * @param owner
@@ -269,7 +279,7 @@ public interface FormService extends ScriptEnabled {
 	List<IdmFormValueDto> saveValues(Identifiable owner, IdmFormDefinitionDto formDefinition, List<IdmFormValueDto> values, BasePermission... permission);
 	
 	/**
-	 * Saves form values to given owner and form definition.
+	 * Saves form values to given owner and form definition. Only given form attributes by the given values will be saved ("PATCH").
 	 * 
 	 * @see {@link #getDefaultDefinitionType(Class)}
 	 * @param owner
@@ -282,7 +292,7 @@ public interface FormService extends ScriptEnabled {
 	List<IdmFormValueDto> saveValues(Identifiable owner, UUID formDefinition, List<IdmFormValueDto> values, BasePermission... permission);
 	
 	/**
-	 * Saves form values to given owner and form definition.
+	 * Saves form values to given owner and form definition. Only given form attributes by the given values will be saved ("PATCH").
 	 * 
 	 * @see {@link #getDefaultDefinitionType(Class)}
 	 * @param ownerId
@@ -301,7 +311,7 @@ public interface FormService extends ScriptEnabled {
 			BasePermission... permission);
 	
 	/**
-	 * Saves form values to given owner and form definition. Only given form attributes by the given values will be saved.
+	 * Saves form values to given owner and form definition. Only given form attributes by the given values will be saved ("PATCH").
 	 * 
 	 * @see {@link #getDefaultDefinitionType(Class)}
 	 * @param owner
@@ -316,6 +326,15 @@ public interface FormService extends ScriptEnabled {
 			IdmFormDefinitionDto formDefinition,
 			List<IdmFormValueDto> values,
 			BasePermission... permission);
+	
+	/**
+	 * Saves form values to given owner and form definition. Only given form attributes by the given values will be saved ("PATCH").
+	 * 
+	 * @param event Previously published event. Given event is processed, not published anymore
+	 * @return 
+	 * @throws ForbiddenEntityException if authorization policies doesn't met (event permissions are evaluated)
+	 */
+	IdmFormInstanceDto saveFormInstance(EntityEvent<IdmFormInstanceDto> event);
 	
 	/**
 	 * Saves form values to given owner and form attribute - saves attribute values only.

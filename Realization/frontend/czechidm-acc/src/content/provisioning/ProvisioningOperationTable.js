@@ -145,28 +145,19 @@ export class ProvisioningOperationTable extends Advanced.AbstractTableContent {
           ref="table"
           uiKey={uiKey}
           manager={ manager }
-          showRowSelection={showRowSelection}
-          actions={actions}
-          forceSearchParameters={forceSearchParameters}
-          filterOpened={filterOpened}
+          showRowSelection={ showRowSelection }
+          actions={ actions }
+          forceSearchParameters={ forceSearchParameters }
+          filterOpened={ filterOpened }
           filter={
-            <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
+            <Advanced.Filter onSubmit={ this.useFilter.bind(this) }>
               <Basic.AbstractForm ref="filterForm">
                 <Basic.Row>
-                  <Basic.Col lg={ 4 }>
-                    <Advanced.Filter.DateTimePicker
-                      mode="date"
-                      ref="from"
-                      placeholder={this.i18n('filter.dateFrom.placeholder')}/>
-                  </Basic.Col>
-                  <Basic.Col lg={ 4 }>
-                    <Advanced.Filter.DateTimePicker
-                      mode="date"
-                      ref="till"
-                      placeholder={this.i18n('filter.dateTill.placeholder')}/>
+                  <Basic.Col lg={ 8 }>
+                    <Advanced.Filter.FilterDate ref="fromTill"/>
                   </Basic.Col>
                   <Basic.Col lg={ 4 } className="text-right">
-                    <Advanced.Filter.FilterButtons cancelFilter={this.cancelFilter.bind(this)}/>
+                    <Advanced.Filter.FilterButtons cancelFilter={ this.cancelFilter.bind(this) }/>
                   </Basic.Col>
                 </Basic.Row>
 
@@ -175,13 +166,13 @@ export class ProvisioningOperationTable extends Advanced.AbstractTableContent {
                     <Advanced.Filter.EnumSelectBox
                       ref="resultState"
                       placeholder={this.i18n('acc:entity.ProvisioningOperation.resultState')}
-                      enum={Enums.OperationStateEnum}/>
+                      enum={ Enums.OperationStateEnum }/>
                   </Basic.Col>
                   <Basic.Col lg={ 4 }>
                     <Advanced.Filter.EnumSelectBox
                       ref="operationType"
                       placeholder={this.i18n('acc:entity.ProvisioningOperation.operationType')}
-                      enum={ProvisioningOperationTypeEnum}/>
+                      enum={ ProvisioningOperationTypeEnum }/>
                   </Basic.Col>
                   <Basic.Col lg={ 4 }>
                     {

@@ -12,6 +12,7 @@ import eu.bcvsolutions.idm.core.api.domain.PriorityType;
 import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.entity.BaseEntity;
 import eu.bcvsolutions.idm.core.api.service.Configurable;
+import eu.bcvsolutions.idm.core.security.api.domain.BasePermission;
 
 /**
  * Event state holder (content + metadata)
@@ -29,6 +30,7 @@ public interface EntityEvent<E extends Serializable> extends ResolvableTypeProvi
 	String EVENT_PROPERTY_PARENT_EVENT_ID = "idm:parent-event-id"; // parent event id
 	String EVENT_PROPERTY_PARENT_EVENT_TYPE = "idm:parent-event-type"; // parent event type
 	String EVENT_PROPERTY_SUPER_OWNER_ID = "idm:super-owner-id"; // entity event super owner id (e.g. identity (~super owner) - identityRole (event owner))
+	String EVENT_PROPERTY_PERMISSION = "idm:permission"; // permission to evaluate (AND)
 	
 	/**
 	 * Operation type
@@ -231,4 +233,20 @@ public interface EntityEvent<E extends Serializable> extends ResolvableTypeProvi
 	 * @return
 	 */
 	Class<? extends E> getEventClassType();
+	
+	/**
+	 * Permissions set to evaluate with this event (AND).
+	 * Look out: permissions are not persisted (persistent events are executed under system)
+	 * 
+	 * @return
+	 */
+	BasePermission[] getPermission();
+	
+	/**
+	 * Permissions set to evaluate with this event (AND).
+	 * Look out: permissions are not persisted (persistent events are executed under system)
+	 * 
+	 * @param permission
+	 */
+	void setPermission(BasePermission... permission);
 }

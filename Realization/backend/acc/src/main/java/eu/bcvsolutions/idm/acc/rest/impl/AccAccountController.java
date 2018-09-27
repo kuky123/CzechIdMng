@@ -8,6 +8,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -125,7 +126,6 @@ public class AccAccountController extends AbstractReadWriteDtoController<AccAcco
 	
 	@Override
 	public Page<AccAccountDto> find(AccAccountFilter filter, Pageable pageable, BasePermission permission) {
-		// TODO Auto-generated method stub
 		Page<AccAccountDto> dtos = super.find(filter, pageable, permission);
 		Map<UUID, BaseDto> loadedDtos = new HashMap<>();
 		dtos.forEach(dto -> {
@@ -358,6 +358,9 @@ public class AccAccountController extends AbstractReadWriteDtoController<AccAcco
 	 */
 	private void loadEmbeddedEntity(Map<UUID, BaseDto> loadedDtos, AccAccountDto dto) {
 		UUID entityId = dto.getTargetEntityId();
+		if (entityId == null || StringUtils.isEmpty(dto.getTargetEntityType())) {
+			return; // IdM entity is not linked to account 
+		}
 		try {
 			if (!loadedDtos.containsKey(entityId)) {
 				loadedDtos.put(entityId, getLookupService().lookupDto(dto.getTargetEntityType(), entityId));

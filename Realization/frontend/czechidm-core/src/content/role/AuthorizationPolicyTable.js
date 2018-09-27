@@ -560,7 +560,8 @@ export class AuthorizationPolicyTable extends Advanced.AbstractTableContent {
                       <Basic.ContentHeader text={ this.i18n('entity.AuthorizationPolicy.evaluatorProperties.title') }/>
                       <Advanced.EavForm
                         ref="formInstance"
-                        formInstance={ formInstance }/>
+                        formInstance={ formInstance }
+                        useDefaultValue/>
                     </div>
 
                   </Basic.Col>

@@ -23,7 +23,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @author Radek Tomiška
  */
 @Relation(collectionRelation = "roles")
-public class IdmRoleDto extends AbstractDto implements Disableable, Codeable, ExternalIdentifiable, Requestable {
+public class IdmRoleDto extends FormableDto implements Disableable, Codeable, ExternalIdentifiable, Requestable {
 
     private static final long serialVersionUID = 1L;
 

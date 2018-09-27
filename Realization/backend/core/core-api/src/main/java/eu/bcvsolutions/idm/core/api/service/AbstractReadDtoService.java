@@ -462,7 +462,6 @@ public abstract class AbstractReadDtoService<DTO extends BaseDto, E extends Base
 	
 	@Override
 	public DTO checkAccess(DTO dto, BasePermission... permission) {
-		// TODO: getEntity instead ?
 		checkAccess(toEntity(dto, null), permission);
 		//
 		return dto;

@@ -121,7 +121,7 @@ export default class UiUtils {
       return '';
     }
     if (EntityUtils.isDisabled(entity)) {
-      return 'success';
+      return 'disabled';
     }
     return '';
   }

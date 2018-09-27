@@ -120,19 +120,19 @@ class RoleRequestTable extends Advanced.AbstractTableContent {
             <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
               <Basic.AbstractForm ref="filterForm">
                 <Basic.Row>
-                  <Basic.Col lg={ 6 }>
+                  <Basic.Col lg={ 4 }>
                     <Advanced.Filter.TextField
                       ref="applicant"
                       placeholder={this.i18n('filter.applicant.placeholder')}/>
                   </Basic.Col>
-                  <Basic.Col lg={ 3 }>
+                  <Basic.Col lg={ 4 }>
                     <Advanced.Filter.EnumSelectBox
                       ref="states"
                       placeholder={ this.i18n('filter.states.placeholder') }
                       enum={ RoleRequestStateEnum }
                       multiSelect/>
                   </Basic.Col>
-                  <Basic.Col lg={ 3 } className="text-right">
+                  <Basic.Col lg={ 4 } className="text-right">
                     <Advanced.Filter.FilterButtons cancelFilter={this.cancelFilter.bind(this)}/>
                   </Basic.Col>
                 </Basic.Row>
@@ -144,19 +144,13 @@ class RoleRequestTable extends Advanced.AbstractTableContent {
                       multiSelect
                       manager={this.identityManager}/>
                   </Basic.Col>
-                  <Basic.Col lg={ 2 }>
-                  </Basic.Col>
-                  <Basic.Col lg={ 2 }>
-                    <Advanced.Filter.DateTimePicker
-                      mode="date"
-                      ref="createdFrom"
-                      placeholder={this.i18n('filter.dateCreatedFrom.placeholder')}/>
-                  </Basic.Col>
-                  <Basic.Col lg={ 2 }>
-                    <Advanced.Filter.DateTimePicker
-                      mode="date"
-                      ref="createdTill"
-                      placeholder={this.i18n('filter.dateCreatedTill.placeholder')}/>
+                  <Basic.Col lg={ 8 }>
+                    <Advanced.Filter.FilterDate
+                      ref="fromTill"
+                      fromProperty="createdFrom"
+                      fromPlaceholder={this.i18n('filter.dateCreatedFrom.placeholder')}
+                      tillProperty="createdTill"
+                      tillPlaceholder={this.i18n('filter.dateCreatedTill.placeholder')}/>
                   </Basic.Col>
                 </Basic.Row>
               </Basic.AbstractForm>

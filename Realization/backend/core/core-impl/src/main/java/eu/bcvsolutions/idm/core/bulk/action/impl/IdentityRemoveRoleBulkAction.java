@@ -162,10 +162,12 @@ public class IdentityRemoveRoleBulkAction extends AbstractBulkAction<IdmIdentity
 			}
 		}
 		//
-		LOG.warn("For identity id: [{}] username: [{}] wasn't found role.", identity.getId(), identity.getUsername());
+		LOG.warn("For identity id: [{}] username: [{}] wasn't found roles to removal."
+				+ " Roles not found or cannot be removed (its automatic role, business role or for insufficient permissions).", 
+				identity.getId(), identity.getUsername());
 		return new OperationResult.Builder(OperationState.NOT_EXECUTED)
 				.setModel(
-						new DefaultResultModel(CoreResultCode.BULK_ACTION_ROLE_NOT_FOUND,
+						new DefaultResultModel(CoreResultCode.BULK_ACTION_IDENTITY_REMOVE_ROLE_FAILED,
 								ImmutableMap.of("identity", identity.getId()))) //
 				.build();
 	}

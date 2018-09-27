@@ -95,5 +95,5 @@ public class RoleCatalogueRoleByRoleEvaluatorIntegrationTest extends AbstractInt
 		} finally {
 			logout();
 		}
-	}	
+	}
 }

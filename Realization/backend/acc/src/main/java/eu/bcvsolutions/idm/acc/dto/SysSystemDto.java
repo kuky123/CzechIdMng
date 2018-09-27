@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import eu.bcvsolutions.idm.core.api.domain.Codeable;
 import eu.bcvsolutions.idm.core.api.domain.Disableable;
 import eu.bcvsolutions.idm.core.api.domain.Embedded;
-import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
+import eu.bcvsolutions.idm.core.api.dto.FormableDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmPasswordPolicyDto;
 import eu.bcvsolutions.idm.ic.api.IcConnectorInstance;
 import eu.bcvsolutions.idm.ic.impl.IcConnectorInstanceImpl;
@@ -23,7 +23,7 @@ import eu.bcvsolutions.idm.ic.impl.IcConnectorInstanceImpl;
  *
  */
 @Relation(collectionRelation = "systems")
-public class SysSystemDto extends AbstractDto implements Codeable, Disableable {
+public class SysSystemDto extends FormableDto implements Codeable, Disableable {
 
 	private static final long serialVersionUID = 1L;
 

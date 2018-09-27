@@ -89,7 +89,7 @@ export default class SelectBoxFormAttributeRenderer extends UuidFormAttributeRen
   }
 
   toInputValues(formValues) {
-    const { attribute } = this.props;
+    const { attribute, useDefaultValue } = this.props;
     //
     let formValue = null;
     if (formValues && _.isArray(formValues)) {
@@ -104,13 +104,16 @@ export default class SelectBoxFormAttributeRenderer extends UuidFormAttributeRen
       formValue = formValues;
     }
     if (formValue === null) {
-      return attribute.defaultValue;
+      if (useDefaultValue) {
+        return attribute.defaultValue;
+      }
+      return null;
     }
     return this.getInputValue(formValue);
   }
 
   renderSingleInput() {
-    const { attribute, readOnly, values } = this.props;
+    const { attribute, values } = this.props;
     //
     return (
       <Basic.SelectBox
@@ -120,7 +123,7 @@ export default class SelectBoxFormAttributeRenderer extends UuidFormAttributeRen
         manager={ this.getManager() }
         value={ !attribute.multiple ? this.toInputValue(values) : this.toInputValues(values) }
         helpBlock={ this.getHelpBlock() }
-        readOnly={ readOnly || attribute.readonly }
+        readOnly={ this.isReadOnly() }
         required={ this.isRequired() }
         multiSelect={ attribute.multiple }/>
     );

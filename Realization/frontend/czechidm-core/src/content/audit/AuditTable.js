@@ -89,21 +89,12 @@ export class AuditTable extends Advanced.AbstractTableContent {
       <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
         <Basic.AbstractForm ref="filterForm" showLoading={showLoading}>
           <Basic.Row>
-            <Basic.Col lg={ 4 } rendered={ _.includes(columns, 'revisionDate') }>
-              <Advanced.Filter.DateTimePicker
-                mode="datetime"
-                ref="from"
-                placeholder={this.i18n('filter.dateFrom.placeholder')}/>
+            <Basic.Col lg={ 8 } rendered={ _.includes(columns, 'revisionDate') }>
+              <Advanced.Filter.FilterDate ref="fromTill"/>
             </Basic.Col>
-            <Basic.Col lg={ 4 } rendered={ _.includes(columns, 'revisionDate') }>
-              <Advanced.Filter.DateTimePicker
-                mode="datetime"
-                ref="till"
-                placeholder={this.i18n('filter.dateTill.placeholder')}/>
-            </Basic.Col>
-            <div className="col-lg-4 text-right">
+            <Basic.Col lg={ 4 } className="text-right">
               <Advanced.Filter.FilterButtons cancelFilter={this.cancelFilter.bind(this)}/>
-            </div>
+            </Basic.Col>
           </Basic.Row>
           <Basic.Row>
             <Basic.Col lg={ 4 } rendered={ _.includes(columns, 'type') }>

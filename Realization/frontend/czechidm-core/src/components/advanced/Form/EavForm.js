@@ -69,6 +69,10 @@ export default class EavForm extends Basic.AbstractContextComponent {
     let filledFormValues = [];
     //
     formInstance.getAttributes().forEach(attribute => {
+      if (attribute.readonly) {
+        // readOnly (~ disabled from our point of view) attributes are not sent to BE
+        return true;
+      }
       const formComponent = this.refs[attribute.code];
       if (!formComponent) {
         // unsupported persistentType
@@ -93,7 +97,7 @@ export default class EavForm extends Basic.AbstractContextComponent {
   }
 
   render() {
-    const { formInstance, rendered, showLoading, readOnly } = this.props;
+    const { formInstance, rendered, showLoading, readOnly, useDefaultValue } = this.props;
     //
     if (!rendered || !formInstance) {
       return null;
@@ -135,6 +139,7 @@ export default class EavForm extends Basic.AbstractContextComponent {
                 attribute={ attribute }
                 values={ formInstance.getValues(attribute.code) }
                 readOnly={ readOnly }
+                useDefaultValue={ useDefaultValue }
                 manager={ ManagerType ? new ManagerType() : null }/>
             );
           })
@@ -150,10 +155,18 @@ EavForm.propTypes = {
    * FormInstance (definition + values)
    */
   formInstance: PropTypes.object,
-  readOnly: PropTypes.bool
+  /**
+   * ReadOnly form
+   */
+  readOnly: PropTypes.bool,
+  /**
+   * Use default value as filled value
+   */
+  useDefaultValue: PropTypes.bool
 };
 EavForm.defaultProps = {
   ...Basic.AbstractContextComponent.defaultProps,
   formInstance: null,
-  readOnly: false
+  readOnly: false,
+  useDefaultValue: false
 };

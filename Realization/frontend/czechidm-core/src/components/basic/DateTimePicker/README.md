@@ -8,7 +8,7 @@ All parameters from AbstractFormComponent are supported. Added parameters:
 
 | Parameter | Type | Description | Default  |
 | --- | :--- | :--- | :--- |
-| mode  | oneOf(['date', 'time', 'datetime'])   | Defined mode of component (can be 'date' or 'time' or nothing for datetime)| 'datetime' |
+| mode  | oneOf(['date', 'time', 'datetime'])   |  Defined mode of component see @DateTimePicker. Use 'datetime' for DateTime columns, timezone is ignored for LocalDate columns. | 'datetime' |
 | dateFormat | string   | Defined input date format (use moment.js)  | DD.MM.YYYY |
 | timeFormat | string   | Defined input time format (use moment.js)  | HH:mm |
 | componentSpan  | string | defined span for component | col-sm-5 |
@@ -50,10 +50,13 @@ All parameters from AbstractFormComponent are supported. Added parameters:
 ### Pick date only in future
 ```html
 isValidDate(current) {
+  if (!current) {
+    return true; // if value is not required
+  }
   const date = new Date();
   const yesterday = date.setDate(date.getDate() - 1);
   return current.isAfter(yesterday);
-};
+}
 ...
 <DateTimePicker
     ref="dateInFuture"

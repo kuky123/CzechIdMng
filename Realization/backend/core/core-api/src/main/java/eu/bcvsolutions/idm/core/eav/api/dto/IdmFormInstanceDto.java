@@ -23,6 +23,8 @@ import eu.bcvsolutions.idm.core.eav.api.domain.PersistentType;
 
 /**
  * Used as value holder for form service - form definition + their values by owner.
+ * 
+ * TODO: create "SmartFormInstanceDto" - only string "codes", "owner" and "values" can be given, without definition and attributes uuid 
  *
  * @author Radek Tomiška
  */
