@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @author Radek Tomiška
  */
 @Relation(collectionRelation = "treeNodes")
-public class IdmTreeNodeDto extends AbstractDto implements Disableable, ExternalIdentifiable {
+public class IdmTreeNodeDto extends FormableDto implements Disableable, ExternalIdentifiable {
 
     private static final long serialVersionUID = 1337282508070610164L;
     //

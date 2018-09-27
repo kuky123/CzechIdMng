@@ -71,7 +71,7 @@ class DateTimePicker extends AbstractFormComponent {
   }
 
   validate(showValidationError) {
-    const {required} = this.props;
+    const {required, isValidDate} = this.props;
     const {value} = this.state;
 
     const showValidations = showValidationError != null ? showValidationError : true;
@@ -86,6 +86,9 @@ class DateTimePicker extends AbstractFormComponent {
       if (result && value) {
         const iso8601Value = moment(value, this.getFormat(), true);
         if (iso8601Value && !iso8601Value.isValid()) {
+          result = false;
+          key = 'date.unvalid';
+        } else if (isValidDate && !isValidDate(value)) {
           result = false;
           key = 'date.unvalid';
         }
@@ -146,7 +149,8 @@ class DateTimePicker extends AbstractFormComponent {
     }
     if (!mode || mode === 'datetime') {
       return moment(value, this.getFormat()).toISOString(); // iso 8601
-    } else if (mode === 'date') {
+    }
+    if (mode === 'date') {
       return moment(value, this.getFormat()).format('YYYY-MM-DD'); // iso 8601
     }
     // time
@@ -270,6 +274,9 @@ class DateTimePicker extends AbstractFormComponent {
 
 DateTimePicker.propTypes = {
   ...AbstractFormComponent.propTypes,
+  /**
+   *  Defined mode of component see @DateTimePicker. Use 'datetime' for DateTime columns, timezone is ignored for LocalDate columns.
+   */
   mode: PropTypes.oneOf(['date', 'time', 'datetime']),
   locale: PropTypes.oneOf(['cs', 'en']), // TODO: supports other locales needs import
   dateFormat: PropTypes.string,
@@ -282,7 +289,8 @@ DateTimePicker.propTypes = {
 
 const { componentSpan, ...otherDefaultProps} = AbstractFormComponent.defaultProps; // componentSpan override
 DateTimePicker.defaultProps = {
-  ...otherDefaultProps
+  ...otherDefaultProps,
+  mode: 'datetime'
 };
 
 export default DateTimePicker;

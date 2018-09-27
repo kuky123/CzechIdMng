@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.envers.RevisionType;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -305,6 +306,9 @@ public class IdmAuditController extends AbstractReadWriteDtoController<IdmAuditD
 	private void loadEmbeddedEntity(Map<UUID, BaseDto> loadedDtos, IdmAuditDto dto) {
 		if (!RevisionType.DEL.name().equals(dto.getModification())) {
 			UUID entityId = dto.getEntityId();
+			if (entityId == null || StringUtils.isEmpty(dto.getType())) {
+				return; // just form sure - IdmAudit entity doesn't specify it as required (but it should be)
+			}
 			try {
 				if (!loadedDtos.containsKey(entityId)) {
 					loadedDtos.put(entityId, getLookupService().lookupDto(dto.getType(), entityId));

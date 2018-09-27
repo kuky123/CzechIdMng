@@ -129,7 +129,7 @@ public class AbstractFormValueEvaluator<T extends AbstractFormValue<?>> extends 
 		}
 		// 
 		// self only
-		if (isSelfOnly(policy) && !securityService.getCurrentId().equals(entity.getOwner().getId())) {
+		if (isSelfOnly(policy) && !securityService.getCurrentId().equals(getOwner(entity).getId())) {
 			return permissions;
 		}
 		//

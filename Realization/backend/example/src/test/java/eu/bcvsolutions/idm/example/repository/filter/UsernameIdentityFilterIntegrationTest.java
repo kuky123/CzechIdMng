@@ -21,7 +21,7 @@ import eu.bcvsolutions.idm.test.api.AbstractIntegrationTest;
  *
  */
 @Transactional
-public class UsernameIdentityFilterTest extends AbstractIntegrationTest {
+public class UsernameIdentityFilterIntegrationTest extends AbstractIntegrationTest {
 
 	@Autowired
 	private UsernameIdentityFilter usernameIdentityFilter;

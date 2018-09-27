@@ -29,7 +29,7 @@ export default class RichTextAreaFormAttributeRenderer extends TextFormAttribute
   }
 
   renderSingleInput() {
-    const { attribute, readOnly, values } = this.props;
+    const { values } = this.props;
     //
     return (
       <RichTextArea
@@ -38,7 +38,7 @@ export default class RichTextAreaFormAttributeRenderer extends TextFormAttribute
         value={ this.toInputValue(values) }
         placeholder={ this.getPlaceholder() }
         helpBlock={ this.getHelpBlock() }
-        readOnly={ readOnly || attribute.readonly }
+        readOnly={ this.isReadOnly() }
         required={ this.isRequired() }/>
     );
   }

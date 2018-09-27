@@ -31,7 +31,8 @@ export default class NotificationConfigurations extends Advanced.AbstractTableCo
   }
 
   componentDidMount() {
-    this.selectNavigationItems(['notification', 'notification-configurations']);
+    super.componentDidMount();
+    //
     this.context.store.dispatch(manager.fetchSupportedNotificationTypes());
     this.refs.filterForm.focus();
   }
@@ -46,6 +47,10 @@ export default class NotificationConfigurations extends Advanced.AbstractTableCo
 
   getContentKey() {
     return 'content.notificationConfigurations';
+  }
+
+  getNavigationKey() {
+    return 'notification-configurations';
   }
 
   showDetail(entity, event) {
@@ -109,7 +114,6 @@ export default class NotificationConfigurations extends Advanced.AbstractTableCo
             ref="table"
             uiKey={uiKey}
             filterOpened={filterOpened}
-            _searchParameters={ this.getSearchParameters() }
             manager={this.getManager()}
             showRowSelection={SecurityManager.hasAnyAuthority(['NOTIFICATIONCONFIGURATION_UPDATE'])}
             actions={
@@ -140,7 +144,7 @@ export default class NotificationConfigurations extends Advanced.AbstractTableCo
                 onCancel={ this.cancelFilter.bind(this) }
                 supportedNotificationTypes={_supportedNotificationTypes}/>
             }
-            >
+            _searchParameters={ this.getSearchParameters() }>
             <Advanced.Column
               property=""
               header=""
@@ -161,8 +165,16 @@ export default class NotificationConfigurations extends Advanced.AbstractTableCo
               cell={
                 ({ rowIndex, data }) => {
                   const templId = data[rowIndex].template;
+                  if (!templId) {
+                    return null;
+                  }
+                  //
                   return (
-                    <Advanced.EntityInfo entityType="notificationTemplate" entityIdentifier={templId} face="popover" />
+                    <Advanced.EntityInfo
+                      entityType="notificationTemplate"
+                      entityIdentifier={ templId }
+                      entity={ data[rowIndex]._embedded.template }
+                      face="popover" />
                   );
                 }
                 }
@@ -239,12 +251,12 @@ NotificationConfigurations.defaultProps = {
   _supportedNotificationTypesLoading: true
 };
 
-function select(state, component) {
+function select(state) {
   return {
     _showLoading: Utils.Ui.isShowLoading(state, `${uiKey}-detail`),
     _supportedNotificationTypesLoading: Utils.Ui.isShowLoading(state, NotificationConfigurationManager.SUPPORTED_NOTIFICATION_TYPES),
     _supportedNotificationTypes: DataManager.getData(state, NotificationConfigurationManager.SUPPORTED_NOTIFICATION_TYPES),
-    _searchParameters: Utils.Ui.getSearchParameters(state, component.uiKey)
+    _searchParameters: Utils.Ui.getSearchParameters(state, uiKey)
   };
 }
 
@@ -289,8 +301,10 @@ class Filter extends Advanced.Filter {
             <Basic.Col lg={ 4 }>
               <Advanced.Filter.EnumSelectBox
                 ref="notificationType"
-                placeholder={this.i18n('entity.NotificationConfiguration.notificationType')}
-                options={!supportedNotificationTypes ? null : supportedNotificationTypes.map(type => { return { value: type, niceLabel: type }; })}/>
+                placeholder={ this.i18n('entity.NotificationConfiguration.notificationType') }
+                options={ !supportedNotificationTypes ? null : supportedNotificationTypes.map(type => { return { value: type, niceLabel: type }; }) }
+                useObject={ false }
+                useSymbol={ false }/>
             </Basic.Col>
             <Basic.Col lg={ 4 }>
               <Advanced.Filter.SelectBox

@@ -17,11 +17,12 @@ import eu.bcvsolutions.idm.test.api.AbstractIntegrationTest;
 
 /**
  * Test for {@link TextExampleProductFilter}
+ * 
  * @author Ondrej Kopr <kopr@xyxy.cz>
- *
+ * @author Radek Tomiška
  */
 @Transactional
-public class TextExampleProductFilterTest extends AbstractIntegrationTest {
+public class TextExampleProductFilterIntegrationTest extends AbstractIntegrationTest {
 
 	@Autowired
 	private ExampleProductService productService;
@@ -31,13 +32,10 @@ public class TextExampleProductFilterTest extends AbstractIntegrationTest {
 	@Test
 	public void testFilteringFound() {
 		String textValue = getHelper().createName() + System.currentTimeMillis();
-		ExampleProductDto productOne = createProduct(getHelper().createName() + textValue.toLowerCase() + System.currentTimeMillis());
-		ExampleProductDto productTwo = createProduct(getHelper().createName());
-		ExampleProductDto productThree = createProduct(getHelper().createName());
-		productTwo.setCode(textValue + getHelper().createName());
+		ExampleProductDto productOne = getHelper().createProduct(getHelper().createName() + textValue.toLowerCase() + System.currentTimeMillis());
+		ExampleProductDto productTwo = getHelper().createProduct(getHelper().createName(), textValue + getHelper().createName(), null);
+		ExampleProductDto productThree = getHelper().createProduct();
 		productThree.setDescription(getHelper().createName() + textValue.toUpperCase() + getHelper().createName());
-		
-		productService.save(productTwo);
 		productService.save(productThree);
 		
 		ExampleProductFilter filter = new ExampleProductFilter();
@@ -60,9 +58,9 @@ public class TextExampleProductFilterTest extends AbstractIntegrationTest {
 	@Test
 	public void testFilteringNotFound() {
 		String textValue = "textValue" + System.currentTimeMillis();
-		createProduct("123" + textValue + System.currentTimeMillis());
-		ExampleProductDto productTwo = createProduct(getHelper().createName());
-		ExampleProductDto productThree = createProduct(getHelper().createName());
+		getHelper().createProduct("123" + textValue + System.currentTimeMillis());
+		ExampleProductDto productTwo = getHelper().createProduct();
+		ExampleProductDto productThree = getHelper().createProduct();
 		productTwo.setCode(textValue + getHelper().createName());
 		productThree.setDescription(getHelper().createName() + textValue + getHelper().createName());
 		
@@ -75,18 +73,9 @@ public class TextExampleProductFilterTest extends AbstractIntegrationTest {
 		
 		assertEquals(0, products.size());
 	}
-
-	/**
-	 * Create example product DTO.
-	 * TODO: is possible create example test helper. This is second similar method in Example module.
-	 *
-	 * @param name
-	 * @return
-	 */
-	private ExampleProductDto createProduct(String name) {
-		ExampleProductDto product = new ExampleProductDto();
-		product.setName(name);
-		product.setCode(getHelper().createName());
-		return productService.save(product);
+	
+	@Override
+	protected eu.bcvsolutions.idm.example.TestHelper getHelper() {
+		return (eu.bcvsolutions.idm.example.TestHelper) super.getHelper();
 	}
 }

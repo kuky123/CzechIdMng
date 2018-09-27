@@ -28,13 +28,16 @@ public class FreeProductEvaluator extends AbstractAuthorizationEvaluator<Example
 
 	@Override
 	public Predicate getPredicate(Root<ExampleProduct> root, CriteriaQuery<?> query, CriteriaBuilder builder, AuthorizationPolicy policy, BasePermission... permission) {
-		return builder.isNull(root.get(ExampleProduct_.price));
+		return builder.or(
+				builder.isNull(root.get(ExampleProduct_.price)),
+				builder.equal(root.get(ExampleProduct_.price), BigDecimal.ZERO)
+				);
 	}
 
 	@Override
 	public Set<String> getPermissions(ExampleProduct authorizable, AuthorizationPolicy policy) {
 		Set<String> permissions = super.getPermissions(authorizable, policy);
-		if (authorizable.getPrice() == null || BigDecimal.ZERO.equals(authorizable.getPrice())) {
+		if (authorizable.getPrice() == null || BigDecimal.ZERO.compareTo(authorizable.getPrice()) == 0) {
 			permissions.addAll(policy.getPermissions());
 		}
 		return permissions;

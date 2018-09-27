@@ -42,7 +42,7 @@ export default class BooleanSelectFormAttributeRenderer extends BooleanFormAttri
   }
 
   renderSingleInput() {
-    const { attribute, readOnly, values } = this.props;
+    const { values } = this.props;
     //
     return (
       <Basic.BooleanSelectBox
@@ -50,7 +50,7 @@ export default class BooleanSelectFormAttributeRenderer extends BooleanFormAttri
         label={ this.getLabel() }
         value={ this.toInputValue(values) }
         helpBlock={ this.getHelpBlock() }
-        readOnly={ readOnly || attribute.readonly }
+        readOnly={ this.isReadOnly() }
         required={ this.isRequired() }
         placeholder={ this.getPlaceholder() }/>
     );

@@ -23,6 +23,7 @@ import eu.bcvsolutions.idm.core.api.config.domain.EventConfiguration;
 import eu.bcvsolutions.idm.core.api.domain.OperationState;
 import eu.bcvsolutions.idm.core.api.domain.PriorityType;
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
+import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.dto.EntityEventProcessorDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmEntityEventDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmEntityStateDto;
@@ -50,9 +51,11 @@ import eu.bcvsolutions.idm.core.event.ConditionalContent;
 import eu.bcvsolutions.idm.core.event.TestContent;
 import eu.bcvsolutions.idm.core.event.TestContentTwo;
 import eu.bcvsolutions.idm.core.event.TestEntityEventProcessorConfiguration;
+import eu.bcvsolutions.idm.core.event.domain.MockDto;
 import eu.bcvsolutions.idm.core.event.domain.MockOwner;
 import eu.bcvsolutions.idm.core.model.event.IdentityEvent;
 import eu.bcvsolutions.idm.core.model.event.IdentityEvent.IdentityEventType;
+import eu.bcvsolutions.idm.core.model.event.processor.ObserveDtoProcessor;
 import eu.bcvsolutions.idm.core.model.event.processor.event.EntityEventDeleteExecutedProcessor;
 import eu.bcvsolutions.idm.core.security.api.domain.GuardedString;
 import eu.bcvsolutions.idm.test.api.AbstractIntegrationTest;
@@ -565,5 +568,22 @@ public class DefaultEntityEventManagerIntergationTest extends AbstractIntegratio
 		//
 		findOwner = manager.findOwner(manager.getOwnerType(owner), owner.getId());
 		Assert.assertEquals(owner.getId(), findOwner.getId());
+	}
+	
+	@Test
+	public void testBaseDtoProcessing() {
+		MockDto mockDto = new MockDto();
+		
+		ObserveDtoProcessor.listenContent(mockDto.getId());
+		
+		CoreEvent<BaseDto> event = new CoreEvent<BaseDto>(CoreEventType.NOTIFY, mockDto);
+		
+		EventContext<BaseDto> processed = manager.process(event);
+		
+		Assert.assertNotNull(processed.getLastResult());
+		Boolean observed = (Boolean) processed.getLastResult().getEvent().getProperties().get(ObserveDtoProcessor.PROPERTY_OBSERVED);
+		//
+		Assert.assertNotNull(observed);
+		Assert.assertTrue(observed);
 	}
 }

@@ -24,7 +24,7 @@ export default class BooleanFormAttributeRenderer extends AbstractFormAttributeR
       if (this.isRequired() || (attribute.defaultValue != null && attribute.defaultValue.toLowerCase() === 'true')) {
         formValue.booleanValue = rawValue;
       } else {
-        // not required and false filled - dont need to be saved at all
+        // not required and false filled - don't need to be saved at all
         formValue.booleanValue = null;
       }
     } else {
@@ -47,7 +47,7 @@ export default class BooleanFormAttributeRenderer extends AbstractFormAttributeR
   }
 
   renderSingleInput() {
-    const { attribute, readOnly, values } = this.props;
+    const { values } = this.props;
     //
     return (
       <Basic.Checkbox
@@ -55,7 +55,7 @@ export default class BooleanFormAttributeRenderer extends AbstractFormAttributeR
         label={ this.getLabel() }
         value={ this.toInputValue(values) }
         helpBlock={ this.getHelpBlock() }
-        readOnly={ readOnly || attribute.readonly }
+        readOnly={ this.isReadOnly() }
         required={ this.isRequired() }/>
     );
   }

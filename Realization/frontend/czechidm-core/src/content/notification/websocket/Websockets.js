@@ -18,8 +18,8 @@ export default class Websockets extends Basic.AbstractContent {
     return 'content.websockets';
   }
 
-  componentDidMount() {
-    this.selectNavigationItem('notification-websockets');
+  getNavigationKey() {
+    return 'notification-websockets';
   }
 
   render() {

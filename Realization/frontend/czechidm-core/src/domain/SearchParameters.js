@@ -254,6 +254,16 @@ export default class SearchParameters {
           filter.forEach(singleValue => {
             url += `&${property}=${encodeURIComponent(singleValue)}`;
           });
+        } else if (_.isObject(filter)) {
+          // expand nested properties
+          for (const nestedProperty in filter) {
+            if (!filter.hasOwnProperty(nestedProperty)) {
+              continue;
+            }
+            if (filter[nestedProperty] !== null && filter[nestedProperty] !== undefined) {
+              url += `&${nestedProperty}=${encodeURIComponent(filter[nestedProperty])}`;
+            }
+          }
         } else {
           url += `&${property}=${encodeURIComponent(filter)}`;
         }

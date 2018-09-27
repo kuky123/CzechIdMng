@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty;
  */
 @Relation(collectionRelation = "identities")
 @ApiModel(description = "Identity domain object")
-public class IdmIdentityDto extends AbstractDto implements Disableable, Codeable, ExternalCodeable, ExternalIdentifiable {
+public class IdmIdentityDto extends FormableDto implements Disableable, Codeable, ExternalCodeable, ExternalIdentifiable {
 
 	private static final long serialVersionUID = 1L;
 	@NotEmpty

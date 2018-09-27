@@ -65,10 +65,13 @@ export default class ShortTextFormAttributeRenderer extends TextFormAttributeRen
    * @return {oneOf([string, boolean, long])}
    */
   toInputValues(formValues) {
-    const { attribute } = this.props;
+    const { attribute, useDefaultValue } = this.props;
     //
     if (formValues === null) {
-      return attribute.defaultValue;
+      if (useDefaultValue) {
+        return attribute.defaultValue;
+      }
+      return null;
     }
     if (_.isArray(formValues)) {
       // multi values are transformed to multi lines

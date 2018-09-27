@@ -4,6 +4,7 @@ import * as Basic from '../../../components/basic';
 import * as Advanced from '../../../components/advanced';
 import * as Utils from '../../../utils';
 import { IdentityManager } from '../../../redux';
+import NotificationFilter from '../NotificationFilter';
 import NotificationRecipientsCell from '../NotificationRecipientsCell';
 import NotificationSentState from '../NotificationSentState';
 import NotificationLevelEnum from '../../../enums/NotificationLevelEnum';
@@ -73,63 +74,10 @@ export class WebsocketTable extends Advanced.AbstractTableContent {
           rowClass={({rowIndex, data}) => { return Utils.Ui.getRowClass(data[rowIndex]); }}
           filterOpened={filterOpened}
           filter={
-            <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
-              <Basic.AbstractForm ref="filterForm">
-                <Basic.Row>
-                  <div className="col-lg-4">
-                    <Advanced.Filter.DateTimePicker
-                      mode="date"
-                      ref="from"
-                      placeholder={this.i18n('content.notifications.filter.dateFrom.placeholder')}/>
-                  </div>
-                  <div className="col-lg-4">
-                    <Advanced.Filter.DateTimePicker
-                      mode="date"
-                      ref="till"
-                      placeholder={this.i18n('content.notifications.filter.dateTill.placeholder')}/>
-                  </div>
-                  <div className="col-lg-4 text-right">
-                    <Advanced.Filter.FilterButtons cancelFilter={this.cancelFilter.bind(this)}/>
-                  </div>
-                </Basic.Row>
-
-                <Basic.Row>
-                  <div className="col-lg-4">
-                    <Advanced.Filter.TextField
-                      ref="text"
-                      placeholder={this.i18n('content.notifications.filter.text.placeholder')}/>
-                  </div>
-                  <div className="col-lg-4">
-                    <Advanced.Filter.SelectBox
-                      ref="recipient"
-                      placeholder={this.i18n('content.notifications.filter.recipient.placeholder')}
-                      multiSelect={false}
-                      manager={this.identityManager}
-                      returnProperty="username"/>
-                  </div>
-                  <div className="col-lg-4">
-                    <Advanced.Filter.SelectBox
-                      ref="sender"
-                      placeholder={this.i18n('content.notifications.filter.sender.placeholder')}
-                      multiSelect={false}
-                      manager={this.identityManager}
-                      returnProperty="username"/>
-                  </div>
-                </Basic.Row>
-
-                <Basic.Row className="last">
-                  <div className="col-lg-4">
-                    <Advanced.Filter.BooleanSelectBox
-                      ref="sent"
-                      placeholder={this.i18n('content.notifications.filter.sent.placeholder')}/>
-                  </div>
-                  <div className="col-lg-4">
-                  </div>
-                  <div className="col-lg-4">
-                  </div>
-                </Basic.Row>
-              </Basic.AbstractForm>
-            </Advanced.Filter>
+            <NotificationFilter
+              ref="filterForm"
+              onSubmit={ this.useFilter.bind(this) }
+              onCancel={ this.cancelFilter.bind(this) }/>
           }
           _searchParameters={ this.getSearchParameters() }>
 

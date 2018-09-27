@@ -201,7 +201,7 @@ OperationResult.propTypes = {
    *
    * @type {[type]}
    */
-  detailLink: PropTypes.oneOf([
+  detailLink: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.func
   ]),

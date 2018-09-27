@@ -103,6 +103,9 @@
       "label": "Do",
       "placeholder": "Datum do"
     },
+    "date": {
+      "placeholder": "Datum"
+    },
     "text": {
       "help": {
         "header": "Filtrování",
@@ -388,6 +391,17 @@
         "option": {
           "yes": "Ano",
           "no": "Ne"
+        },
+        "FilterDate": {
+          "face": {
+            "placeholder": "$t(filter.date.placeholder)"
+          },
+          "from": {
+            "placeholder": "$t(filter.dateFrom.placeholder)"
+          },
+          "till": {
+            "placeholder": "$t(filter.dateTill.placeholder)"
+          }
         }
       },
       "Table": {
@@ -750,6 +764,11 @@
       "IMMEDIATE": "Ihned",
       "HIGH": "Vysoká",
       "NORMAL": "Normální"
+    },
+    "DateFaceEnum": {
+      "TODAY": "Dnes",
+      "THIS_MONTH": "Tento měsíc",
+      "BETWEEN": "Mezi"
     }
   },
   "dashboard": {
@@ -3306,6 +3325,7 @@
       "id": "ID",
       "taskAssignee": "Přiřazeno",
       "filter": {
+        "created": "Datum vytvoření",
         "createdBefore": "Úkoly vytvořené před",
         "createdAfter": "Úkoly vytvořené po"
       }
@@ -4586,6 +4606,10 @@
     "BULK_ACTION_ROLE_NOT_FOUND": {
       "title": "Nebyly/a nalezena role",
       "message": "Role pro identitu [{{identity}}], nebyla nalezeny/a."
+    },
+    "BULK_ACTION_IDENTITY_REMOVE_ROLE_FAILED": {
+      "title": "Role nebyly odebrány",
+      "message": "Role pro identitu [{{identity}}] nebyly odebrány. Role nebyly nalezeny nebo nemohou býti odebrány - jednalo o roli automackou, business roli nebo na odebrání role nepostačovalo Vaše oprávění."
     },
     "BULK_ACTION_CONTRACT_NOT_FOUND": {
       "title": "Nebyl nalezen kontrakt",

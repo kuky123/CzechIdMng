@@ -24,7 +24,6 @@ import eu.bcvsolutions.idm.core.eav.api.domain.PersistentType;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormAttributeDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormDefinitionDto;
 import eu.bcvsolutions.idm.core.eav.api.service.IdmFormAttributeService;
-import eu.bcvsolutions.idm.core.eav.api.service.IdmFormDefinitionService;
 import eu.bcvsolutions.idm.core.eav.repository.IdmFormAttributeRepository;
 import eu.bcvsolutions.idm.test.api.AbstractIntegrationTest;
 
@@ -34,15 +33,15 @@ import eu.bcvsolutions.idm.test.api.AbstractIntegrationTest;
  * @author Radek Tomiška
  *
  */
-public class DefaultFormDefinitionIntegrationTest extends AbstractIntegrationTest {
+public class DefaultIdmFormDefinitionIntegrationTest extends AbstractIntegrationTest {
 	
-	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DefaultFormDefinitionIntegrationTest.class);
+	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DefaultIdmFormDefinitionIntegrationTest.class);
 
 	@Autowired private ApplicationContext context;
 	@Autowired private IdmFormAttributeRepository formAttributeRepository;
 	@Autowired private IdmFormAttributeService formAttributeService;
 	//
-	private IdmFormDefinitionService formDefinitionService;	
+	private DefaultIdmFormDefinitionService formDefinitionService;	
 	
 	private Random r = new Random();
 	
@@ -167,6 +166,14 @@ public class DefaultFormDefinitionIntegrationTest extends AbstractIntegrationTes
 		IdmFormDefinitionDto formDefinitionTwo = new IdmFormDefinitionDto();
 		formDefinitionTwo.setType(type);
 		formDefinitionTwo.setCode(getHelper().createName());
+		formDefinitionTwo.setMain(true);
+		formDefinitionTwo = formDefinitionService.save(formDefinitionTwo);
+		formDefinitionOne = formDefinitionService.get(formDefinitionOne);
+		//
+		Assert.assertFalse(formDefinitionOne.isMain());
+		Assert.assertTrue(formDefinitionTwo.isMain());
+		//
+		// update
 		formDefinitionTwo.setMain(true);
 		formDefinitionTwo = formDefinitionService.save(formDefinitionTwo);
 		formDefinitionOne = formDefinitionService.get(formDefinitionOne);

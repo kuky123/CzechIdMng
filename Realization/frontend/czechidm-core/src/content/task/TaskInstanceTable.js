@@ -7,6 +7,10 @@ import { IdentityManager } from '../../redux';
 /**
 * Table of tasks
 * Without given props search parameter show this table only tasks for logged identity.
+*
+* FIXME: remember filled filter (generalize AbstractTableContent ... exception now)
+*
+* @author Vít Švanda
 */
 export class TaskInstanceTable extends Basic.AbstractContent {
 
@@ -24,12 +28,6 @@ export class TaskInstanceTable extends Basic.AbstractContent {
 
   getContentKey() {
     return 'content.task.instances';
-  }
-
-  componentDidMount() {
-  }
-
-  componentDidUpdate() {
   }
 
   useFilter(event) {
@@ -99,7 +97,7 @@ export class TaskInstanceTable extends Basic.AbstractContent {
                      placeholder={this.i18n('entity.WorkflowTaskInstance.taskAssignee')}
                      manager={this.identityManager}/>
                  </Basic.Col>
-                 <Basic.Col lg={ 6 } className="textright">
+                 <Basic.Col lg={ 6 } className="text-right">
                    <Advanced.Filter.FilterButtons cancelFilter={this.cancelFilter.bind(this)}/>
                  </Basic.Col>
                </Basic.Row>
@@ -112,21 +110,21 @@ export class TaskInstanceTable extends Basic.AbstractContent {
                  </Basic.Col>
                </Basic.Row>
                <Basic.Row className="last">
-                 <Basic.Col lg={ 6 }>
-                   <Advanced.Filter.DateTimePicker
-                     ref="createdBefore"
-                     placeholder={this.i18n('entity.WorkflowTaskInstance.filter.createdBefore')}/>
+                 <Basic.Col lg={ 8 }>
+                   <Advanced.Filter.FilterDate
+                     ref="fromTill"
+                     facePlaceholder={ this.i18n('entity.WorkflowTaskInstance.filter.created') }
+                     fromProperty="createdAfter"
+                     fromPlaceholder={ this.i18n('entity.WorkflowTaskInstance.filter.createdAfter') }
+                     tillProperty="createdBefore"
+                     tillPlaceholder={ this.i18n('entity.WorkflowTaskInstance.filter.createdBefore') }/>
                  </Basic.Col>
-                 <Basic.Col lg={ 6 }>
-                   <Advanced.Filter.DateTimePicker
-                     ref="createdAfter"
-                     placeholder={this.i18n('entity.WorkflowTaskInstance.filter.createdAfter')}/>
+                 <Basic.Col lg={ 4 }>
                  </Basic.Col>
                </Basic.Row>
              </Basic.AbstractForm>
            </Advanced.Filter>
-         }
-        >
+         }>
           <Advanced.Column
             header=""
             className="detail-button"

@@ -184,11 +184,12 @@ class PasswordPolicyCharacters extends Basic.AbstractContent {
                     ref="numberBase"
                     label={this.i18n('entity.PasswordPolicy.numberBase')}
                     required/>
-                  <Basic.TextField
-                    ref="specialCharBase"
-                    label={this.i18n('entity.PasswordPolicy.specialCharBase')}
-                    required/>
                 </div>
+
+                <Basic.TextField
+                  ref="specialCharBase"
+                  label={this.i18n('entity.PasswordPolicy.specialCharBase')}
+                  required/>
               </Basic.AbstractForm>
             </Basic.PanelBody>
             <Basic.PanelFooter showLoading={showLoading} >

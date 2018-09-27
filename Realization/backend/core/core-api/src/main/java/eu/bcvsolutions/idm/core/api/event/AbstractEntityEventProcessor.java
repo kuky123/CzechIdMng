@@ -1,6 +1,7 @@
 package eu.bcvsolutions.idm.core.api.event;
 
 import java.io.Serializable;
+import java.lang.reflect.Modifier;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,8 +15,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationListener;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.core.GenericTypeResolver;
+import org.springframework.core.ResolvableType;
 import org.springframework.util.Assert;
 
 import com.google.common.collect.ImmutableMap;
@@ -46,7 +49,7 @@ import eu.bcvsolutions.idm.core.security.api.service.EnabledEvaluator;
  */
 public abstract class AbstractEntityEventProcessor<E extends Serializable> implements 
 		EntityEventProcessor<E>, 
-		ApplicationListener<AbstractEntityEvent<E>>,
+		GenericApplicationListener,
 		BeanNameAware {
 
 	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(AbstractEntityEventProcessor.class);
@@ -102,6 +105,28 @@ public abstract class AbstractEntityEventProcessor<E extends Serializable> imple
 	/**
 	 * {@inheritDoc}
 	 * 
+	 * Processor listens entity events only
+	 */
+	@Override
+	public boolean supportsEventType(ResolvableType eventType) {
+		return EntityEvent.class.isAssignableFrom(eventType.getRawClass());
+	}
+	
+	@Override
+	public boolean supportsSourceType(Class<?> sourceType) {
+		if (sourceType == null) {
+			return true; // solved by standard support method above
+		}
+		// only for interfaces and abstract classes (backward compatibility)
+		if (entityClass.isInterface() || Modifier.isAbstract(entityClass.getModifiers())) {
+			return entityClass.isAssignableFrom(sourceType);
+		}
+		return entityClass.equals(sourceType);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * 
 	 * Returns true by default - processor will be processed.
 	 */
 	@Override
@@ -113,11 +138,16 @@ public abstract class AbstractEntityEventProcessor<E extends Serializable> imple
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(java.lang.Object)
 	 * 
-	 * {@link AbstractEntityEvent} without template is used - we want to handle events with superclasses too (solved by {@link #support} method).
+	 * {@link ApplicationEvent} is used - we want to handle events with super classes too (solved by {@link #support} method).
 	 */
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void onApplicationEvent(AbstractEntityEvent event) {
+	public void onApplicationEvent(ApplicationEvent rawEvent) {
+		if (!(rawEvent instanceof EntityEvent)) {
+			// not an EntityEvent - just for sure, but its solved by GenericApplicationListener supports method.
+			return;
+		}
+		EntityEvent event = (EntityEvent) rawEvent;
 		if (!supports(event)) {
 			// event is not supported with this processor
 			// its on the start to prevent debug logging

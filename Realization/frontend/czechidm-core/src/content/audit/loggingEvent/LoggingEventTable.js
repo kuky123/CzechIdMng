@@ -68,21 +68,15 @@ class LoggingEventTable extends Advanced.AbstractTableContent {
       <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
         <Basic.AbstractForm ref="filterForm">
           <Basic.Row>
-            <Basic.Col lg={ 4 }>
-              <Advanced.Filter.DateTimePicker
-                mode="datetime"
-                ref="from"
-                placeholder={this.i18n('content.audit.filter.dateFrom.placeholder')}/>
+            <Basic.Col lg={ 8 }>
+              <Advanced.Filter.FilterDate
+                ref="fromTill"
+                fromPlaceholder={ this.i18n('content.audit.filter.dateFrom.placeholder') }
+                tillPlaceholder={ this.i18n('content.audit.filter.dateTill.placeholder') }/>
             </Basic.Col>
-            <Basic.Col lg={ 4 }>
-              <Advanced.Filter.DateTimePicker
-                mode="datetime"
-                ref="till"
-                placeholder={this.i18n('content.audit.filter.dateTill.placeholder')}/>
-            </Basic.Col>
-            <div className="col-lg-4 text-right">
+            <Basic.Col lg={ 4 } className="text-right">
               <Advanced.Filter.FilterButtons cancelFilter={this.cancelFilter.bind(this)}/>
-            </div>
+            </Basic.Col>
           </Basic.Row>
           <Basic.Row className="last">
             <Basic.Col lg={ 4 }>
@@ -145,7 +139,8 @@ class LoggingEventTable extends Advanced.AbstractTableContent {
           filterOpened
           manager={manager} showId={false}
           rowClass={({rowIndex, data}) => { return Utils.Ui.getRowClass(data[rowIndex]); }}
-          filter={ this._getAdvancedFilter() }>
+          filter={ this._getAdvancedFilter() }
+          _searchParameters={ this.getSearchParameters() }>
           <Advanced.Column
             header=""
             className="detail-button"

@@ -103,6 +103,9 @@
       "label": "To",
       "placeholder": "Date to"
     },
+    "date": {
+      "placeholder": "Date"
+    },
     "text": {
       "help": {
         "header": "Filtering",
@@ -358,6 +361,17 @@
         "option": {
           "yes": "Yes",
           "no": "No"
+        },
+        "FilterDate": {
+          "face": {
+            "placeholder": "$t(filter.date.placeholder)"
+          },
+          "from": {
+            "placeholder": "$t(filter.dateFrom.placeholder)"
+          },
+          "till": {
+            "placeholder": "$t(filter.dateTill.placeholder)"
+          }
         }
       },
       "Table": {
@@ -719,6 +733,11 @@
       "IMMEDIATE": "Immediate",
       "HIGH": "High",
       "NORMAL": "Normal"
+    },
+    "DateFaceEnum": {
+      "TODAY": "Today",
+      "THIS_MONTH": "This month",
+      "BETWEEN": "Between"
     }
   },
   "dashboard": {
@@ -3263,6 +3282,7 @@
       "id": "Task Id",
       "taskAssignee": "Assigned",
       "filter": {
+        "created": "Tasks created",
         "createdBefore": "Tasks created before",
         "createdAfter": "Tasks created after"
       }
@@ -4543,6 +4563,10 @@
     "BULK_ACTION_ROLE_NOT_FOUND": {
       "title": "Roles not found",
       "message": "Roles for remove not found for identity: [{{identity}}]."
+    },
+    "BULK_ACTION_IDENTITY_REMOVE_ROLE_FAILED": {
+      "title": "Roles not removed",
+      "message": "Roles for identity [{{identity}}] not removed. Roles not found or cannot be removed (its automatic role, business role or for insufficient permissions)."
     },
     "BULK_ACTION_CONTRACT_NOT_FOUND": {
       "title": "Contract not found",

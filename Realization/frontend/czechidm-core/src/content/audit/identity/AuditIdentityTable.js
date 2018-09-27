@@ -60,18 +60,9 @@ export class AuditIdentityTable extends Advanced.AbstractTableContent {
       <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
         <Basic.AbstractForm ref="filterForm">
           <Basic.Row>
-            <div className="col-lg-4">
-              <Advanced.Filter.DateTimePicker
-                mode="datetime"
-                ref="from"
-                placeholder={this.i18n('filter.dateFrom.placeholder')}/>
-            </div>
-            <div className="col-lg-4">
-              <Advanced.Filter.DateTimePicker
-                mode="datetime"
-                ref="till"
-                placeholder={this.i18n('filter.dateTill.placeholder')}/>
-            </div>
+            <Basic.Col lg={ 8 }>
+              <Advanced.Filter.FilterDate ref="fromTill"/>
+            </Basic.Col>
             <div className="col-lg-4 text-right">
               <Advanced.Filter.FilterButtons cancelFilter={this.cancelFilter.bind(this)}/>
             </div>

@@ -67,12 +67,14 @@ public abstract class AbstractReadWriteDtoService<DTO extends BaseDto, E extends
 			E persistEntity = null;
 			if (dto.getId() != null) {
 				persistEntity = this.getEntity(dto.getId());
+				
 				if (persistEntity != null) {
 					// check access on previous entity - update is needed
 					checkAccess(persistEntity, IdmBasePermission.UPDATE);
 				}
 			}
-			checkAccess(toEntity(dto, persistEntity), permission); // TODO: remove one checkAccess?
+			// full dto is given, loaded entity is not needed - prevent to touch hibernate entity
+			checkAccess(toEntity(dto, null), permission);
 		}
 		//
 		return saveInternal(dto);

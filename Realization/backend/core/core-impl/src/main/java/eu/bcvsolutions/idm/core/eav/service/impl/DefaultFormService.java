@@ -42,6 +42,7 @@ import eu.bcvsolutions.idm.core.api.domain.Identifiable;
 import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.event.CoreEvent;
 import eu.bcvsolutions.idm.core.api.event.CoreEvent.CoreEventType;
+import eu.bcvsolutions.idm.core.api.event.EntityEvent;
 import eu.bcvsolutions.idm.core.api.exception.CoreException;
 import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
 import eu.bcvsolutions.idm.core.api.service.EntityEventManager;
@@ -100,6 +101,12 @@ public class DefaultFormService implements FormService {
 		this.formValueServices = OrderAwarePluginRegistry.create(formValueServices);
 		this.entityEventManager = entityEventManager;
 		this.lookupService = lookupService;
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public IdmFormDefinitionDto getDefinition(UUID definitionId, BasePermission... permission) {
+		return formDefinitionService.get(definitionId, permission);
 	}
 
 	@Override
@@ -393,7 +400,22 @@ public class DefaultFormService implements FormService {
 		formDefinition = checkDefaultDefinition(ownerEntity.getClass(), formDefinition);
 		IdmFormInstanceDto formInstance = new IdmFormInstanceDto(ownerEntity, formDefinition, newValues);
 		//
-		FormValueService<FormableEntity> formValueService = getFormValueService(ownerEntity);
+		CoreEvent<IdmFormInstanceDto> event = new CoreEvent<IdmFormInstanceDto>(CoreEventType.UPDATE, formInstance);
+		// check permissions - check access to filled form values
+		event.setPermission(permission);
+		// publish event for save form instance
+		return entityEventManager.process(event).getContent();
+	}
+	
+	@Override
+	@Transactional
+	public IdmFormInstanceDto saveFormInstance(EntityEvent<IdmFormInstanceDto> event) {
+		IdmFormInstanceDto formInstance = event.getContent();
+		FormableEntity ownerEntity = getOwnerEntity(formInstance.getOwnerId(), formInstance.getOwnerType());
+		Assert.notNull(ownerEntity, "Form values owner is required!");
+		IdmFormDefinitionDto formDefinition = checkDefaultDefinition(formInstance.getOwnerType(), formInstance.getFormDefinition());
+		//
+		FormValueService<FormableEntity> formValueService = getFormValueService(formInstance.getOwnerType());
 		//
 		Map<UUID, Map<UUID, IdmFormValueDto>> previousValues = new HashMap<>(); // values by attributes
 		formValueService.getValues(ownerEntity, formDefinition).forEach(formValue -> {
@@ -416,11 +438,8 @@ public class DefaultFormService implements FormService {
 						attribute, 
 						attributePreviousValues,
 						attributeEntry.getValue(),
-						permission));
+						event.getPermission()));
 		}
-		//
-		// publish event - eav was saved
-		entityEventManager.process(new CoreEvent<>(CoreEventType.EAV_SAVE, lookupService.lookupDto(ownerEntity.getClass(), ownerEntity.getId())));
 		//
 		return new IdmFormInstanceDto(ownerEntity, formDefinition, results);
 	}
@@ -740,7 +759,7 @@ public class DefaultFormService implements FormService {
 		//
 		BasePermission[] permissions = PermissionUtils.trimNull(permission);
 		FormableEntity ownerEntity = getOwnerEntity(owner);
-		formDefinition = checkDefaultDefinition(owner.getClass(), formDefinition);
+		formDefinition = getDefinition(checkDefaultDefinition(owner.getClass(), formDefinition).getId()); // load => prevent to modify input definition
 		FormValueService<FormableEntity> formValueService = getFormValueService(owner);
 		List<IdmFormValueDto> values = formValueService.getValues(ownerEntity, formDefinition, permission);
 		IdmFormInstanceDto formInstance = new IdmFormInstanceDto(ownerEntity, formDefinition, values);

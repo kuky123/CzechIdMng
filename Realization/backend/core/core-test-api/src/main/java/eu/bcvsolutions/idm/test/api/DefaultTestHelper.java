@@ -138,6 +138,11 @@ public class DefaultTestHelper implements TestHelper {
 	}
 	
 	@Override
+	public LoginDto login(IdmIdentityDto identity) {
+		return login(identity.getUsername(), identity.getPassword());
+	}
+	
+	@Override
 	public LoginDto login(String username, String password) {
 		return login(username, new GuardedString(password));
 	}

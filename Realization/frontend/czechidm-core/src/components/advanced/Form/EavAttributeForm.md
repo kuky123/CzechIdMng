@@ -20,6 +20,7 @@ If localization with the key will not be found. For label and help block will be
 | localizationKey  | string   | UI identifier - it's used as key in store (saving, loading ...) |  |
 | localizationType  | string   | Parent entity identifier |  |
 | formAttributes  | array of objects   | For localization |  |
+| useDefaultValue | bool | Use configured attribute default value as filled. | true |
 
 
 ## Usage

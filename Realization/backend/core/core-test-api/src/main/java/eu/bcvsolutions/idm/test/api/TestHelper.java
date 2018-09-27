@@ -72,6 +72,15 @@ public interface TestHelper {
 	
 	/**
 	 * Login as given identity.
+	 * Identity has to exists and has to set password as guarded string, assigned identity roles and permissions will be used.
+	 * 
+	 * @param identity
+	 * @return
+	 */
+	LoginDto login(IdmIdentityDto identity);
+	
+	/**
+	 * Login as given identity.
 	 * Identity has to exists, assigned identity roles and permissions will be used.
 	 * 
 	 * @param username

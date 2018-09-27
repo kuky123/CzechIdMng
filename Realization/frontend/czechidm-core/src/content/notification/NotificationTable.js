@@ -1,19 +1,16 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import uuid from 'uuid';
-import _ from 'lodash';
 //
 import * as Basic from '../../components/basic';
 import * as Advanced from '../../components/advanced';
 import * as Utils from '../../utils';
-import { IdentityManager, SecurityManager, NotificationConfigurationManager, DataManager } from '../../redux';
-import NotificationStateEnum from '../../enums/NotificationStateEnum';
+import { IdentityManager, SecurityManager } from '../../redux';
+import NotificationFilter from './NotificationFilter';
 import NotificationLevelEnum from '../../enums/NotificationLevelEnum';
 import NotificationRecipientsCell from './NotificationRecipientsCell';
 import NotificationSentState from './NotificationSentState';
 import SearchParameters from '../../domain/SearchParameters';
-
-const notificationConfigurationManager = new NotificationConfigurationManager();
 
 /**
 * Audit for sent notifications
@@ -36,11 +33,6 @@ export class NotificationTable extends Advanced.AbstractTableContent {
 
   getContentKey() {
     return 'content.notifications';
-  }
-
-  componentDidMount() {
-    super.componentDidMount();
-    this.context.store.dispatch(notificationConfigurationManager.fetchSupportedNotificationTypes());
   }
 
   useFilter(event) {
@@ -77,14 +69,9 @@ export class NotificationTable extends Advanced.AbstractTableContent {
   }
 
   render() {
-    const { uiKey, notificationManager, supportedNotificationTypes } = this.props;
+    const { uiKey, notificationManager } = this.props;
     const { filterOpened } = this.state;
     const forceSearchParameters = new SearchParameters().setFilter('notificationType', 'notification');
-    //
-    let _supportedNotificationTypes = null;
-    if (supportedNotificationTypes) {
-      _supportedNotificationTypes = _.union(supportedNotificationTypes, ['notification']);
-    }
     //
     return (
       <div>
@@ -97,68 +84,10 @@ export class NotificationTable extends Advanced.AbstractTableContent {
           rowClass={({rowIndex, data}) => { return Utils.Ui.getRowClass(data[rowIndex]); }}
           filterOpened={filterOpened}
           filter={
-            <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
-              <Basic.AbstractForm ref="filterForm">
-                <Basic.Row>
-                  <div className="col-lg-4">
-                    <Advanced.Filter.DateTimePicker
-                      mode="date"
-                      ref="from"
-                      placeholder={this.i18n('filter.dateFrom.placeholder')}/>
-                  </div>
-                  <div className="col-lg-4">
-                    <Advanced.Filter.DateTimePicker
-                      mode="date"
-                      ref="till"
-                      placeholder={this.i18n('filter.dateTill.placeholder')}/>
-                  </div>
-                  <div className="col-lg-4 text-right">
-                    <Advanced.Filter.FilterButtons cancelFilter={this.cancelFilter.bind(this)}/>
-                  </div>
-                </Basic.Row>
-
-                <Basic.Row>
-                  <div className="col-lg-4">
-                    <Advanced.Filter.TextField
-                      ref="text"
-                      placeholder={this.i18n('filter.text.placeholder')}/>
-                  </div>
-                  <div className="col-lg-4">
-                    <Advanced.Filter.SelectBox
-                      ref="recipient"
-                      placeholder={this.i18n('filter.recipient.placeholder')}
-                      multiSelect={false}
-                      manager={this.identityManager}
-                      returnProperty="username"/>
-                  </div>
-                  <div className="col-lg-4">
-                    <Advanced.Filter.SelectBox
-                      ref="sender"
-                      placeholder={this.i18n('filter.sender.placeholder')}
-                      multiSelect={false}
-                      manager={this.identityManager}
-                      returnProperty="username"/>
-                  </div>
-                </Basic.Row>
-
-                <Basic.Row className="last">
-                  <div className="col-lg-4">
-                    <Advanced.Filter.EnumSelectBox
-                      ref="state"
-                      placeholder={this.i18n('filter.sent.placeholder')}
-                      enum={NotificationStateEnum}/>
-                  </div>
-                  <div className="col-lg-4 hidden">
-                    <Advanced.Filter.EnumSelectBox
-                      ref="notificationType"
-                      placeholder={ this.i18n('entity.NotificationConfiguration.notificationType') }
-                      options={ !_supportedNotificationTypes ? null : _supportedNotificationTypes.map(type => { return { value: type, niceLabel: type }; }) }/>
-                  </div>
-                  <div className="col-lg-4">
-                  </div>
-                </Basic.Row>
-              </Basic.AbstractForm>
-            </Advanced.Filter>
+            <NotificationFilter
+              ref="filterForm"
+              onSubmit={ this.useFilter.bind(this) }
+              onCancel={ this.cancelFilter.bind(this) }/>
           }
           buttons={
             [
@@ -233,8 +162,7 @@ NotificationTable.defaultProps = {
 function select(state, component) {
   return {
     _searchParameters: Utils.Ui.getSearchParameters(state, component.uiKey),
-    _showLoading: component.notificationManager.isShowLoading(state, `${component.uiKey}-detail`),
-    supportedNotificationTypes: DataManager.getData(state, NotificationConfigurationManager.SUPPORTED_NOTIFICATION_TYPES)
+    _showLoading: component.notificationManager.isShowLoading(state, `${component.uiKey}-detail`)
   };
 }
 
