@@ -198,9 +198,6 @@ public class ImportFromCSVToSystemExecutor extends AbstractSchedulableTaskExecut
                 }
                 IcConnectorObject object = defaultIcConnectorFacade.readObject(icConnectorInstance, config, icObjectClass, uidAttribute);
                 if (object == null) {
-                    if(config instanceof IcConnectorConfigurationCzechIdMImpl) {
-                        addUidAttribute(list, uidAttribute);
-                    }
                     defaultIcConnectorFacade.createObject(icConnectorInstance, config, icObjectClass, list);
                     increaseCounter();
                 } else {
@@ -224,7 +221,13 @@ public class ImportFromCSVToSystemExecutor extends AbstractSchedulableTaskExecut
         return true;
     }
 
-    private void addUidAttribute(List<IcAttribute> list, IcUidAttribute uidAttribute){
+    /**
+     * Add uid attribute to list
+     *
+     * @param list         where to add uid attribute
+     * @param uidAttribute attribute itself
+     */
+    private void addUidAttribute(List<IcAttribute> list, IcUidAttribute uidAttribute) {
         String[] temp = new String[1];
         assert uidAttribute != null;
         temp[0] = uidAttribute.getUidValue();
@@ -340,6 +343,12 @@ public class ImportFromCSVToSystemExecutor extends AbstractSchedulableTaskExecut
         return attribute;
     }
 
+    /**
+     * Converts empty strings to null values - will not add anything in this case
+     *
+     * @param values potencional empty value
+     * @return Adjusted list
+     */
     private List<Object> convertEmptyStrings(String[] values) {
         List<Object> toReturn = new LinkedList<>();
         for (String value : values) {
