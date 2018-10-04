@@ -120,7 +120,15 @@ public enum AccResultCode implements ResultCode {
 	ROLE_ACCOUNT_NOT_FOUND(HttpStatus.BAD_REQUEST, "No role account found for account id [%s] !"),
 	// Role bulk operations
 	ROLE_ACM_BULK_ACTION_NUMBER_OF_IDENTITIES(HttpStatus.OK, "Role [%s] has [%s] role-identities."),
-	ROLE_ACM_BULK_ACTION_NONE_IDENTITIES(HttpStatus.NOT_FOUND, "No role has any  role-identities.");
+	ROLE_ACM_BULK_ACTION_NONE_IDENTITIES(HttpStatus.NOT_FOUND, "No role has any  role-identities."),
+	// Import CSV
+	IMPORT_CANT_READ_FILE_PATH(HttpStatus.BAD_REQUEST, "Can read the file in path [%s]."),
+	IMPORT_WRONG_LINE_LENGTH(HttpStatus.BAD_REQUEST, "On line [%s] was found some error."),
+	CONNECTOR_INSTANCE_NOT_FOUND(HttpStatus.BAD_REQUEST, "Connector instance for system %s not found!"),
+	CONNECTOR_OBJECT_CLASS_NOT_FOUND(HttpStatus.BAD_REQUEST, "Connector object class for system %s not found!"),
+	SYSTEM_NAME_NOT_FOUND(HttpStatus.BAD_REQUEST, "System with name [%s] was not found."),
+	SYSTEM_SCHEMA_ATTRIBUTES_NOT_FOUND(HttpStatus.BAD_REQUEST, "No attributes for object class name %s on system %s were found");
+
 
 	private final HttpStatus status;
 	private final String message;
