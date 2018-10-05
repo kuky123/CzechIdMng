@@ -127,7 +127,7 @@ public class ImportFromCSVToSystemExecutor extends AbstractSchedulableTaskExecut
 					ImmutableMap.of("system", systemName));
 		}
 
-		return convertToSystem(icConnectorInstance, config, icObjectClass, attributes);
+		return importToSystem(icConnectorInstance, config, icObjectClass, attributes);
 	}
 
 	/**
@@ -182,73 +182,59 @@ public class ImportFromCSVToSystemExecutor extends AbstractSchedulableTaskExecut
 	 * @param icObjectClass       connecting object class
 	 * @return true if everything was OK
 	 */
-	private boolean convertToSystem(IcConnectorInstance icConnectorInstance,
-									IcConnectorConfiguration config,
-									IcObjectClass icObjectClass,
-									List<SysSchemaAttributeDto> attributes) {
+	private boolean importToSystem(IcConnectorInstance icConnectorInstance, IcConnectorConfiguration config,
+			IcObjectClass icObjectClass, List<SysSchemaAttributeDto> attributes) {
 		//
-		CSVParser parser = new CSVParserBuilder()
-				.withEscapeChar(CSVParser.DEFAULT_ESCAPE_CHARACTER)
-				.withQuoteChar('"')
-				.withSeparator(separator)
-				.build();
+		CSVParser parser = new CSVParserBuilder().withEscapeChar(CSVParser.DEFAULT_ESCAPE_CHARACTER).withQuoteChar('"')
+				.withSeparator(separator).build();
 		CSVReader reader = null;
 		try {
-			reader = new CSVReaderBuilder(new FileReader(pathToFile))
-					.withCSVParser(parser)
-					.build();
+			reader = new CSVReaderBuilder(new FileReader(pathToFile)).withCSVParser(parser).build();
 			String[] header = reader.readNext();
 			for (String[] line : reader) {
-				List<IcAttribute> list = new LinkedList<>();
-				IcUidAttribute uidAttribute = null;
-				for (int column = 0; column < line.length; ++column) {
-					String[] values = line[column].split(multivaluedSeparator);
-					String name = header[column];
-					//
-					if (name.equals(IcAttributeInfo.ENABLE)) {
-						IcAttributeImpl attribute = new IcAttributeImpl();
-						attribute.setName(name);
-						attribute.setValues(Collections.singletonList(Boolean.valueOf(values[0])));
-						list.add(attribute);
-					} else {
-						list.add(createAttribute(name, values, attributes));
-					}
-					//
-					if (name.equals(nameHeaderAttribute)) {
-						list.add(createAttribute(Name.NAME, values, attributes));
-					}
-					//
-					if (name.equals(uidHeaderAttribute)) {
-						uidAttribute = new IcUidAttributeImpl(name, values[0], null);
-					}
-				}
-				IcConnectorObject object = defaultIcConnectorFacade
-						.readObject(icConnectorInstance, config, icObjectClass, uidAttribute);
-				//
-				Exception exception = null;
 				AccAccountDto account = new AccAccountDto();
 				account.setId(UUID.randomUUID());
-				//
-				if (object == null) {
-					try {
-						defaultIcConnectorFacade
-								.createObject(icConnectorInstance, config, icObjectClass, list);
-					} catch (Exception e) {
-						exception = e;
+				try {
+					List<IcAttribute> list = new LinkedList<>();
+					IcUidAttribute uidAttribute = null;
+					for (int column = 0; column < line.length; ++column) {
+						String[] values = line[column].split(multivaluedSeparator);
+						String name = header[column];
+						//
+						if (name.equals(IcAttributeInfo.ENABLE)) {
+							IcAttributeImpl attribute = new IcAttributeImpl();
+							attribute.setName(name);
+							attribute.setValues(Collections.singletonList(Boolean.valueOf(values[0])));
+							list.add(attribute);
+						} else {
+							list.add(createAttribute(name, values, attributes));
+						}
+						//
+						if (name.equals(nameHeaderAttribute)) {
+							list.add(createAttribute(Name.NAME, values, attributes));
+						}
+						//
+						if (name.equals(uidHeaderAttribute)) {
+							uidAttribute = new IcUidAttributeImpl(name, values[0], null);
+							// Only decorator
+							account.setUid(values[0]);
+						}
 					}
-					logItems(account, exception);
-				} else {
-					addUidAttribute(list, uidAttribute, attributes);
-					try {
-						defaultIcConnectorFacade
-								.updateObject(icConnectorInstance, config, icObjectClass, uidAttribute, list);
-					} catch (Exception e) {
-						exception = e;
+					IcConnectorObject object = defaultIcConnectorFacade.readObject(icConnectorInstance, config,
+							icObjectClass, uidAttribute);
+					//
+					if (object == null) {
+						defaultIcConnectorFacade.createObject(icConnectorInstance, config, icObjectClass, list);
+					} else {
+						addUidAttribute(list, uidAttribute, attributes);
+						defaultIcConnectorFacade.updateObject(icConnectorInstance, config, icObjectClass, uidAttribute,
+								list);
 					}
-					logItems(account, exception);
-					increaseCounter();
+					logItems(account, null);
+				} catch (Exception e) {
+					logItems(account, e);
 				}
-
+				increaseCounter();
 			}
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e);
@@ -274,12 +260,14 @@ public class ImportFromCSVToSystemExecutor extends AbstractSchedulableTaskExecut
 		if (exception == null) {
 			logItemProcessed(account, new OperationResult
 					.Builder(OperationState.EXECUTED)
+					.setCode(account.getUid())
 					.build());
 			increaseCounter();
 		} else {
 			logItemProcessed(account, new OperationResult
 					.Builder(OperationState.EXCEPTION)
 					.setCause(exception)
+					.setCode(account.getUid())
 					.build());
 		}
 	}
