@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router';
-import { formatPattern, getParamNames } from 'react-router/lib/PatternUtils';
 import _ from 'lodash';
 import Immutable from 'immutable';
 //
@@ -21,16 +20,16 @@ const TARGET_PARAMETER = '_target';
  * @return {string} formated href
  */
 function _resolveToWithParameters(to, rowData, target) {
-  const parameterNames = getParamNames(to);
-  let parameterValues = new Immutable.Map({});
-  parameterNames.map(parameter => {
-    if (parameter === TARGET_PARAMETER && target) {
-      parameterValues = parameterValues.set(parameter, DefaultCell.getPropertyValue(rowData, target));
-    } else {
-      parameterValues = parameterValues.set(parameter, DefaultCell.getPropertyValue(rowData, parameter));
-    }
-  });
-  return formatPattern(to, parameterValues.toJS());
+  // const parameterNames = getParamNames(to);
+  // let parameterValues = new Immutable.Map({});
+  // parameterNames.map(parameter => {
+  //   if (parameter === TARGET_PARAMETER && target) {
+  //     parameterValues = parameterValues.set(parameter, DefaultCell.getPropertyValue(rowData, target));
+  //   } else {
+  //     parameterValues = parameterValues.set(parameter, DefaultCell.getPropertyValue(rowData, parameter));
+  //   }
+  // });
+  // return formatPattern(to, parameterValues.toJS());
 }
 
 function _linkFunction(to, rowIndex, data, event) {

@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import invariant from 'invariant';
 import _ from 'lodash';
@@ -1036,7 +1037,7 @@ AdvancedTable.propTypes = {
    * loadinig indicator
    */
   _showLoading: PropTypes.bool,
-  _entities: PropTypes.arrayOf(React.PropTypes.object),
+  _entities: PropTypes.arrayOf(PropTypes.object),
   _total: PropTypes.number,
   /**
    * Persisted / used search parameters in redux

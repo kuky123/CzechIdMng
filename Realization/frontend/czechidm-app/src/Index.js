@@ -6,7 +6,6 @@
 import 'babel-polyfill';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Helmet from 'react-helmet';
 // https://github.com/rackt/react-router/blob/master/upgrade-guides/v2.0.0.md#changes-to-thiscontext
 // TODO: serving static resources requires different approach - https://github.com/rackt/react-router/blob/master/docs/guides/basics/Histories.md#createbrowserhistory
 import { Router, hashHistory } from 'react-router';
@@ -392,7 +391,6 @@ store.dispatch(ConfigActions.appInit(config, moduleDescriptors, componentDescrip
     const flashManager = new Managers.FlashMessagesManager();
     ReactDOM.render(
       <div style={{ margin: 15 }}>
-        <Helmet title="503" />
         <Basic.FlashMessage
           icon="exclamation-sign"
           message={flashManager.convertFromError(error)}/>

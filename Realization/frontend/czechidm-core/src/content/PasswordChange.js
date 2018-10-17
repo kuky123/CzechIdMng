@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
 //
@@ -323,7 +324,7 @@ class PasswordChange extends Basic.AbstractContent {
 
 PasswordChange.propTypes = {
   ...Basic.AbstractContent.propTypes,
-  userContext: React.PropTypes.object
+  userContext: PropTypes.object
 };
 PasswordChange.defaultProps = {
   ...Basic.AbstractContent.defaultProps,

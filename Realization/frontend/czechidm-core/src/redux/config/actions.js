@@ -1,4 +1,4 @@
-import { formatPattern } from 'react-router/lib/PatternUtils';
+
 import Immutable from 'immutable';
 // reused actions
 import FlashMessagesManager from '../../redux/flash/FlashMessagesManager';
@@ -254,7 +254,7 @@ export function getNavigationItems(navigation, parentId = null, section = null, 
     }
     // construct target to link from path and parameters
     if (item.path) {
-      item.to = formatPattern(item.path, resolveNavigationParameters(userContext, params));
+    //  item.to = formatPattern(item.path, resolveNavigationParameters(userContext, params));
     }
 
     return true;

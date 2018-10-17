@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import classnames from 'classnames';
 //
 import AbstractComponent from '../AbstractComponent/AbstractComponent';
@@ -82,18 +83,18 @@ SortHeaderCell.propTypes = {
   /**
    * Current searchparameters - sort
    */
-  searchParameters: React.PropTypes.object,
+  searchParameters: PropTypes.object,
   /**
    * Callback action for data sorting
 
    * @param string property
    * @param string order [ASC, DESC]
    */
-  sortHandler: React.PropTypes.func,
+  sortHandler: PropTypes.func,
   /**
    * loadinig indicator
    */
-  showLoading: React.PropTypes.bool
+  showLoading: PropTypes.bool
 };
 SortHeaderCell.defaultProps = {
   showLoading: false
@@ -139,7 +140,7 @@ SortIcon.propTypes = {
   /**
    * loadinig indicator
    */
-  showLoading: React.PropTypes.bool
+  showLoading: PropTypes.bool
 };
 SortIcon.defaultProps = {
   active: null,

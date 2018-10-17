@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 //
@@ -295,7 +296,7 @@ LongRunningTask.propTypes = {
     PropTypes.string,
     PropTypes.node
   ]),
-  footerButtons: PropTypes.arrayOf(React.PropTypes.object),
+  footerButtons: PropTypes.arrayOf(PropTypes.object),
   updateInterval: PropTypes.number,
   /**
    * Show task properties

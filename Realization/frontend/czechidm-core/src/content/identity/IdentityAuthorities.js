@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
 //
@@ -81,7 +82,7 @@ class IdentityAuthorities extends Basic.AbstractContent {
 
 IdentityAuthorities.propTypes = {
   _showLoading: PropTypes.bool,
-  authorities: PropTypes.arrayOf(React.PropTypes.object)
+  authorities: PropTypes.arrayOf(PropTypes.object)
 };
 IdentityAuthorities.defaultProps = {
   _showLoading: true,

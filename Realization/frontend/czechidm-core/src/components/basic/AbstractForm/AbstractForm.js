@@ -1,5 +1,6 @@
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import AbstractContextComponent from '../AbstractContextComponent/AbstractContextComponent';
 import AbstractFormComponent from '../AbstractFormComponent/AbstractFormComponent';
 import merge from 'object-assign';
@@ -298,14 +299,14 @@ class AbstractForm extends AbstractContextComponent {
 AbstractForm.contextTypes = {
   ...AbstractContextComponent.contextTypes,
   // TODO: router is not used?
-  router: React.PropTypes.object
+  router: PropTypes.object
 };
 
 AbstractForm.propTypes = {
-  showLoading: React.PropTypes.bool,
-  readOnly: React.PropTypes.bool,
-  disabled: React.PropTypes.bool,
-  data: React.PropTypes.object
+  showLoading: PropTypes.bool,
+  readOnly: PropTypes.bool,
+  disabled: PropTypes.bool,
+  data: PropTypes.object
 };
 
 AbstractForm.defaultProps = {

@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import _ from 'lodash';
 import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
@@ -332,7 +333,7 @@ class Create extends Basic.AbstractContent {
 }
 
 Create.propTypes = {
-  userContext: React.PropTypes.object
+  userContext: PropTypes.object
 };
 Create.defaultProps = {
   userContext: null

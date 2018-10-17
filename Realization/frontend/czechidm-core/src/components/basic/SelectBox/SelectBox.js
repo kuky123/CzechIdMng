@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import Select from 'react-select';
 import Joi from 'joi';
@@ -145,19 +146,19 @@ class SelectBox extends AbstractFormComponent {
               options: finalOptions,
               complete: finalOptions.length >= result.page.totalElements,
             };
-            if (!data.complete) {
-              data.options.push({
-                [NICE_LABEL]: <Waypoint onEnter={this._loadMoreContent.bind(this, input)}>{this.i18n('results', { escape: false, count: data.options.length, total: result.page.totalElements})}</Waypoint>,
-                [ITEM_FULL_KEY]: input,
-                disabled: true // info only
-              });
-            } else {
-              data.options.push({
-                [NICE_LABEL]: this.i18n('results', { escape: false, count: data.options.length, total: result.page.totalElements}),
-                [ITEM_FULL_KEY]: input,
-                disabled: true // info only
-              });
-            }
+            // if (!data.complete) {
+            //   data.options.push({
+            //     [NICE_LABEL]: <Waypoint onEnter={this._loadMoreContent.bind(this, input)}>{this.i18n('results', { escape: false, count: data.options.length, total: result.page.totalElements})}</Waypoint>,
+            //     [ITEM_FULL_KEY]: input,
+            //     disabled: true // info only
+            //   });
+            // } else {
+            //   data.options.push({
+            //     [NICE_LABEL]: this.i18n('results', { escape: false, count: data.options.length, total: result.page.totalElements}),
+            //     [ITEM_FULL_KEY]: input,
+            //     disabled: true // info only
+            //   });
+            // }
           }
           this.setState({
             options: data.options,

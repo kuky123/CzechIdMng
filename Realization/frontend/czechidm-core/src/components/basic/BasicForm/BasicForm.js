@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import AbstractForm from '../AbstractForm/AbstractForm';
 import Button from '../Button/Button';
 import ApiOperationTypeEnum from '../../../enums/ApiOperationTypeEnum';
@@ -52,7 +53,7 @@ class BasicForm extends AbstractForm {
 export default BasicForm;
 
 BasicForm.propTypes = {
-  name: React.PropTypes.string.isRequired,
-  saveFunc: React.PropTypes.func
-  // mode: React.PropTypes.symbol
+  name: PropTypes.string.isRequired,
+  saveFunc: PropTypes.func
+  // mode: PropTypes.symbol
 };

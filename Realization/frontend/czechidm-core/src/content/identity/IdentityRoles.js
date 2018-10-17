@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
 import _ from 'lodash';
@@ -346,8 +347,8 @@ IdentityRoles.propTypes = {
   identity: PropTypes.object,
   _showLoading: PropTypes.bool,
   _showLoadingContracts: PropTypes.bool,
-  _entities: PropTypes.arrayOf(React.PropTypes.object),
-  _contracts: PropTypes.arrayOf(React.PropTypes.object),
+  _entities: PropTypes.arrayOf(PropTypes.object),
+  _contracts: PropTypes.arrayOf(PropTypes.object),
   userContext: PropTypes.object,
   _permissions: PropTypes.oneOfType([
     PropTypes.bool,

@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import AbstractComponent from '../AbstractComponent/AbstractComponent';
 import Cell from './Cell';
 
@@ -111,7 +112,7 @@ Row.propTypes = {
   /**
    * loadinig indicator
    */
-  showLoading: React.PropTypes.bool,
+  showLoading: PropTypes.bool,
   /**
    * input data as array of json objects
    */
@@ -132,11 +133,11 @@ Row.propTypes = {
   /**
    * Row selection
    */
-  onRowSelect: React.PropTypes.func,
+  onRowSelect: PropTypes.func,
   /**
    * If row is selected
    */
-  selected: React.PropTypes.bool,
+  selected: PropTypes.bool,
   /**
    * css added to row
    */

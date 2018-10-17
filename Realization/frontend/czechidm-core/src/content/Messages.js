@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
 //
@@ -108,8 +109,8 @@ class Messages extends Basic.AbstractContent {
 }
 
 Messages.propTypes = {
-  maxHistory: React.PropTypes.number,
-  messages: React.PropTypes.array
+  maxHistory: PropTypes.number,
+  messages: PropTypes.array
 };
 Messages.defaultProps = {
   maxHistory: 100,

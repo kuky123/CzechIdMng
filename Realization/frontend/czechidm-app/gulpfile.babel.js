@@ -574,7 +574,7 @@ gulp.task('install', cb => {
 
 gulp.task('watch', cb => {
   selectStageAndProfile();
-  runSequence('clean', 'removeAppLink', 'makeModules', 'loadModules', 'createModuleAssembler', 'loadModuleStyles', 'loadModuleRoutes', 'createRouteAssembler', 'loadModuleComponents', 'createComponentAssembler', 'themes', 'runTest', 'config', 'copyConfig', 'styles', 'lint', 'images', 'js', 'fonts', 'loadModuleLocales', 'browserSync', 'watchTask', 'watchify', cb);
+  runSequence('clean', 'removeAppLink', 'makeModules', 'loadModules', 'createModuleAssembler', 'loadModuleStyles', 'loadModuleRoutes', 'createRouteAssembler', 'loadModuleComponents', 'createComponentAssembler', 'themes', 'config', 'copyConfig', 'styles', 'lint', 'images', 'js', 'fonts', 'loadModuleLocales', 'browserSync', 'watchTask', 'watchify', cb);
 });
 
 gulp.task('watch-nosync', cb => {

@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { SplitButton } from 'react-bootstrap';
 import AbstractComponent from '../AbstractComponent/AbstractComponent';
 import Icon from '../Icon/Icon';

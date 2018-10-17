@@ -24,8 +24,8 @@ const _DEFAULT_MESSAGE = {
   key: null, // key for unique checking
   title: null,
   message: null,
-  level: 'success', // React.PropTypes.oneOf(['success', 'info', 'warning', 'error']),
-  position: 'tr', // React.PropTypes.oneOf(['tr', 'tc']),
+  level: 'success', // PropTypes.oneOf(['success', 'info', 'warning', 'error']),
+  position: 'tr', // PropTypes.oneOf(['tr', 'tc']),
   autoDismiss: 5,
   dismissible: true,
   action: null,
