@@ -238,19 +238,21 @@ public abstract class AbstractEntityEventProcessor<E extends Serializable> imple
 		} catch(Exception ex) {
 			// persist state if needed
 			UUID eventId = entityEventManager.getEventId(event) ;
+			// log error
+			ResultModel resultModel;
+			if (ex instanceof ResultCodeException) {
+				resultModel = ((ResultCodeException) ex).getError().getError();
+			} else {
+				resultModel = new DefaultResultModel(
+						CoreResultCode.EVENT_EXECUTE_PROCESSOR_FAILED, 
+						ImmutableMap.of(
+								"eventId", String.valueOf(eventId),
+								"processor", getName()));
+			}
+			//
+			LOG.error(resultModel.toString(), ex);
+			//
 			if (eventId != null) {
-				ResultModel resultModel;
-				if (ex instanceof ResultCodeException) {
-					resultModel = ((ResultCodeException) ex).getError().getError();
-				} else {
-					resultModel = new DefaultResultModel(
-							CoreResultCode.EVENT_EXECUTE_PROCESSOR_FAILED, 
-							ImmutableMap.of(
-									"eventId", eventId,
-									"processor", getName()));
-				}
-				//
-				LOG.error(resultModel.toString(), ex);
 				//
 				result = new DefaultEventResult.Builder<>(event, this)
 						.setResult(new OperationResult

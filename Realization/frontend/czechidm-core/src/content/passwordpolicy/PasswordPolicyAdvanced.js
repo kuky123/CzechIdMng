@@ -148,42 +148,42 @@ class PasswordPolicyAdvanced extends Basic.AbstractContent {
                 uiKey={uiKey}
                 readOnly={!SecurityManager.hasAuthority(Utils.Entity.isNew(entity) ? 'PASSWORDPOLICY_CREATE' : 'PASSWORDPOLICY_UPDATE')}>
                 <Basic.Checkbox ref="enchancedControl"
-                  helpBlock={this.i18n('entity.PasswordPolicy.help.enchancedControl')}
-                  label={this.i18n('entity.PasswordPolicy.enchancedControl')}/>
+                  helpBlock={this.i18n('entity.PasswordPolicy.enchancedControl.help')}
+                  label={this.i18n('entity.PasswordPolicy.enchancedControl.label')}/>
                 <Basic.LabelWrapper label=" ">
                   <Basic.Alert
                     className="no-margin"
                     icon="exclamation-sign"
                     key="passwordPolicyHelpRules"
-                    text={this.i18n('entity.PasswordPolicy.help.rules')} />
+                    text={this.i18n('rulesHelp')} />
                 </Basic.LabelWrapper>
                 <Basic.Checkbox ref="passwordLengthRequired"
-                  label={this.i18n('entity.PasswordPolicy.passwordLengthRequired')}/>
+                  label={this.i18n('entity.PasswordPolicy.passwordLengthRequired.label')}/>
 
                 <Basic.Checkbox ref="upperCharRequired"
-                  label={this.i18n('entity.PasswordPolicy.upperCharRequired')}/>
+                  label={this.i18n('entity.PasswordPolicy.upperCharRequired.label')}/>
 
                 <Basic.Checkbox ref="lowerCharRequired"
-                  label={this.i18n('entity.PasswordPolicy.lowerCharRequired')}/>
+                  label={this.i18n('entity.PasswordPolicy.lowerCharRequired.label')}/>
 
                 <Basic.Checkbox ref="numberRequired"
-                  label={this.i18n('entity.PasswordPolicy.numberRequired')}/>
+                  label={this.i18n('entity.PasswordPolicy.numberRequired.label')}/>
 
                 <Basic.Checkbox ref="specialCharRequired"
-                  label={this.i18n('entity.PasswordPolicy.specialCharRequired')}/>
+                  label={this.i18n('entity.PasswordPolicy.specialCharRequired.label')}/>
 
                 <Basic.TextField ref="minRulesToFulfill"
                   type="number"
                   validation={ Utils.Ui.getIntegerValidation() }
-                  helpBlock={this.i18n('entity.PasswordPolicy.help.minRulesToFulfill')}
-                  label={this.i18n('entity.PasswordPolicy.minRulesToFulfill')} />
+                  helpBlock={this.i18n('entity.PasswordPolicy.minRulesToFulfill.help')}
+                  label={this.i18n('entity.PasswordPolicy.minRulesToFulfill.label')} />
 
                 <Basic.EnumSelectBox
                   ref="identityAttributeCheck"
-                  helpBlock={ this.i18n('entity.PasswordPolicy.help.identityAttributeCheck') }
+                  helpBlock={ this.i18n('entity.PasswordPolicy.identityAttributeCheck.help') }
                   enum={ PasswordPolicyIdentityAttributeEnum }
                   multiSelect
-                  label={ this.i18n('entity.PasswordPolicy.identityAttributeCheck') }
+                  label={ this.i18n('entity.PasswordPolicy.identityAttributeCheck.label') }
                   useSymbol={ false }/>
               </Basic.AbstractForm>
             </Basic.PanelBody>

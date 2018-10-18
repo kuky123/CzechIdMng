@@ -141,6 +141,7 @@ function i18nInit(cb) {
     LocalizationService.init(ConfigLoader,
       (error) => {
         if (error) {
+          // FIXME: locale is broken ... but en message will be better
           cb({ level: 'error', title: 'Nepodařilo se iniciovat lokalizaci', message: error });
         } else {
           dispatch(i18nReady(LocalizationService.getCurrentLanguage(), cb, true));
@@ -163,6 +164,7 @@ export function i18nChange(lng, cb = () => {}) {
       (error) => {
         if (error) {
           const flashMessagesManager = new FlashMessagesManager();
+          // FIXME: locale is broken ... but en message will be better
           dispatch(flashMessagesManager.addMessage({level: 'error', title: 'Nepodařilo se iniciovat lokalizaci', message: error }));
         } else {
           dispatch(i18nReady(LocalizationService.getCurrentLanguage(), cb, false));

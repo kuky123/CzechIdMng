@@ -83,6 +83,8 @@ function adapter(storage) {
           // prevent to persist react elements
           // FIXME: restore react fragment from text
           message.children = null;
+          // messages are hidden automatically after F5
+          message.hidden = true;
         });
         callback(null, storage.setItem(key, JSON.stringify(value)));
       } catch (e) {
@@ -377,7 +379,8 @@ store.dispatch(ConfigActions.appInit(config, moduleDescriptors, componentDescrip
       ]
     };
     // init websocket for user messages (after F5 etc.)
-    store.dispatch(Managers.SecurityManager.connectStompClient());
+    // @deprecated @since 9.2.0, will be removed (move websocket notification support to your custom module if needed)
+    // store.dispatch(Managers.SecurityManager.connectStompClient());
     //
     // app entry point
     ReactDOM.render(

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.quartz.DisallowConcurrentExecution;
+import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
@@ -21,6 +22,7 @@ import eu.bcvsolutions.idm.core.api.dto.DefaultResultModel;
 import eu.bcvsolutions.idm.core.api.dto.ResultModel;
 import eu.bcvsolutions.idm.core.api.entity.OperationResult;
 import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
+import eu.bcvsolutions.idm.core.api.service.ConfigurationService;
 import eu.bcvsolutions.idm.core.api.service.EntityEventManager;
 import eu.bcvsolutions.idm.core.api.service.LookupService;
 import eu.bcvsolutions.idm.core.api.utils.AutowireHelper;
@@ -36,23 +38,23 @@ import eu.bcvsolutions.idm.core.scheduler.api.exception.ConcurrentExecutionExcep
 /**
  * Template for long running task executor. This template persists long running tasks.
  * 
- * TODO: interface only + AOP executor
- * TODO: refactor autowired fields to bean post processors
- * TODO: Configurable API
- * 
  * @author Radek Tomiška
  * @since 7.6.0
  *
  */
-public abstract class AbstractLongRunningTaskExecutor<V> implements LongRunningTaskExecutor<V> {
+public abstract class AbstractLongRunningTaskExecutor<V> implements 
+		LongRunningTaskExecutor<V>,
+		BeanNameAware {
 
 	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(AbstractLongRunningTaskExecutor.class);
 	//
 	@Autowired private IdmLongRunningTaskService longRunningTaskService;
-	@Autowired private LookupService entityLookupService;
+	@Autowired private LookupService lookupService;
 	@Autowired private EntityEventManager entityEventManager;
 	@Autowired private IdmProcessedTaskItemService itemService;
+	@Autowired private ConfigurationService configurationService;
 	//
+	private String beanName; // spring bean name - used as processor id
 	private ParameterConverter parameterConverter;	
 	private UUID longRunningTaskId;
 	protected Long count = null;
@@ -61,6 +63,16 @@ public abstract class AbstractLongRunningTaskExecutor<V> implements LongRunningT
 	@Override
 	public String getName() {
 		return this.getClass().getCanonicalName();
+	}
+	
+	@Override
+	public String getId() {
+		return beanName;
+	}
+	
+	@Override
+	public void setBeanName(String name) {
+		this.beanName = name;
 	}
 	
 	/**
@@ -284,6 +296,42 @@ public abstract class AbstractLongRunningTaskExecutor<V> implements LongRunningT
 		return true;
 	}
 	
+	@Override
+	public UUID getLongRunningTaskId() {
+		return longRunningTaskId;
+	}
+	
+	@Override
+	public void setLongRunningTaskId(UUID longRunningTaskId) {
+		this.longRunningTaskId = longRunningTaskId;
+	}
+	
+	@Override
+	public <DTO extends AbstractDto> IdmProcessedTaskItemDto logItemProcessed(DTO item, OperationResult opResult) {
+		Assert.notNull(item);
+		//
+		if (opResult == null) {
+			// default result - executed
+			opResult = new OperationResult.Builder(OperationState.EXECUTED).build();
+		}
+		//
+		return itemService.createLogItem(item, opResult, this.getLongRunningTaskService().get(this.getLongRunningTaskId()));
+	}
+	
+	@Override
+	public ConfigurationService getConfigurationService() {
+		return configurationService;
+	}
+	
+	/**
+	 * Persist LRT
+	 * 
+	 * @return
+	 */
+	protected IdmLongRunningTaskService getLongRunningTaskService() {
+		return longRunningTaskService;
+	}
+	
 	/**
 	 * Return parameter converter helper
 	 * 
@@ -291,7 +339,7 @@ public abstract class AbstractLongRunningTaskExecutor<V> implements LongRunningT
 	 */
 	protected ParameterConverter getParameterConverter() {
 		if (parameterConverter == null) {
-			parameterConverter = new ParameterConverter(entityLookupService);
+			parameterConverter = new ParameterConverter(lookupService);
 		}
 		return parameterConverter;
 	}
@@ -310,34 +358,4 @@ public abstract class AbstractLongRunningTaskExecutor<V> implements LongRunningT
 		}
 	}
 	
-	@Override
-	public UUID getLongRunningTaskId() {
-		return longRunningTaskId;
-	}
-	
-	@Override
-	public void setLongRunningTaskId(UUID longRunningTaskId) {
-		this.longRunningTaskId = longRunningTaskId;
-	}
-	
-	/**
-	 * Persist LRT
-	 * 
-	 * @return
-	 */
-	protected IdmLongRunningTaskService getLongRunningTaskService() {
-		return longRunningTaskService;
-	}
-	
-	@Override
-	public <DTO extends AbstractDto> IdmProcessedTaskItemDto logItemProcessed(DTO item, OperationResult opResult) {
-		Assert.notNull(item);
-		//
-		if (opResult == null) {
-			// default result - executed
-			opResult = new OperationResult.Builder(OperationState.EXECUTED).build();
-		}
-		//
-		return itemService.createLogItem(item, opResult, this.getLongRunningTaskService().get(this.getLongRunningTaskId()));
-	}
 }

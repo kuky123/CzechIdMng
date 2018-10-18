@@ -45,7 +45,7 @@ class EmailContent extends Basic.AbstractContent {
           {
             !email
             ||
-            <NotificationDetail notification={email}/>
+            <NotificationDetail notification={ email } showTopic={ false }/>
           }
         </Basic.Panel>
 

@@ -48,7 +48,10 @@ public class DefaultIdmNotificationLogService
 	@Override
 	protected IdmNotificationLogDto toDto(IdmNotificationLog entity, IdmNotificationLogDto dto) {
 		dto = super.toDto(entity, dto);
-		if(!entity.getType().equals(IdmNotificationLog.NOTIFICATION_TYPE)) {
+		if (dto == null) {
+			return null;
+		}
+		if (!entity.getType().equals(IdmNotificationLog.NOTIFICATION_TYPE)) {
 			return dto;
 		}
 		// sent state by related notifications

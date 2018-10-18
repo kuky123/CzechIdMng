@@ -10,12 +10,14 @@ import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import eu.bcvsolutions.idm.core.api.domain.DefaultFieldLengths;
+import eu.bcvsolutions.idm.core.api.domain.Disableable;
 import eu.bcvsolutions.idm.core.api.entity.AbstractEntity;
 import eu.bcvsolutions.idm.core.notification.api.domain.NotificationLevel;
 import eu.bcvsolutions.idm.core.notification.api.dto.NotificationConfigurationDto;
@@ -34,7 +36,7 @@ import eu.bcvsolutions.idm.core.notification.api.dto.NotificationConfigurationDt
 		@Index(name = "idx_idm_not_conf_type", columnList = "notification_type"),
 		@Index(name = "idx_idm_not_template", columnList = "template_id")
 		})
-public class IdmNotificationConfiguration extends AbstractEntity {
+public class IdmNotificationConfiguration extends AbstractEntity implements Disableable {
 
 	private static final long serialVersionUID = 3131809487111061022L;
 
@@ -65,6 +67,20 @@ public class IdmNotificationConfiguration extends AbstractEntity {
 	@Size(max = DefaultFieldLengths.DESCRIPTION)
 	@Column(name = "description", length = DefaultFieldLengths.DESCRIPTION)
 	private String description;
+	
+	@Audited
+	@NotNull
+	@Column(name = "disabled", nullable = false)
+	private boolean disabled;
+	
+	@Audited
+	@NotNull
+	@Column(name = "redirect", nullable = false)
+	private boolean redirect;
+	
+	@Audited
+	@Column(name = "recipients", length = DefaultFieldLengths.LOG)
+	private String recipients; // see IdmNotificationTemplateService#PARAMETER_DELIMITIER
 
 	public IdmNotificationConfiguration() {
 	}
@@ -120,5 +136,31 @@ public class IdmNotificationConfiguration extends AbstractEntity {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+	
+	@Override
+	public boolean isDisabled() {
+		return disabled;
+	}
+
+	@Override
+	public void setDisabled(boolean disabled) {
+		this.disabled = disabled;
+	}
+	
+	public void setRedirect(boolean redirect) {
+		this.redirect = redirect;
+	}
+	
+	public boolean isRedirect() {
+		return redirect;
+	}
+	
+	public void setRecipients(String recipients) {
+		this.recipients = recipients;
+	}
+	
+	public String getRecipients() {
+		return recipients;
 	}
 }

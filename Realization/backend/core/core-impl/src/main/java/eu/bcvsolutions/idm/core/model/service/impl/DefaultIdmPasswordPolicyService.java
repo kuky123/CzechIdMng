@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,6 +80,7 @@ public class DefaultIdmPasswordPolicyService
 	private static final String PASSWORD_SIMILAR_LASTNAME_PREVALIDATE = "passwordSimilarLastNamePreValidate";
 	private static final String POLICY_NAME_PREVALIDATION = "policiesNamesPreValidation";
 	private static final String SPECIAL_CHARACTER_BASE = "specialCharacterBase";
+	private static final String FORBIDDEN_CHARACTER_BASE = "forbiddenCharacterBase";
 	private static final String MAX_HISTORY_SIMILAR = "maxHistorySimilar";
 	
 	private PasswordGenerator passwordGenerator;
@@ -192,11 +194,32 @@ public class DefaultIdmPasswordPolicyService
 	public String generatePassword(IdmPasswordPolicyDto passwordPolicy) {
 		Assert.notNull(passwordPolicy);
 		Assert.doesNotContain(passwordPolicy.getType().name(), IdmPasswordPolicyType.VALIDATE.name(), "Bad type.");
+		String generateRandom = null;
+		
+		// generate password with passphrase or random
 		if (passwordPolicy.getGenerateType() == IdmPasswordPolicyGenerateType.PASSPHRASE) {
-			return this.getPasswordGenerator().generatePassphrase(passwordPolicy);
+			generateRandom = this.getPasswordGenerator().generatePassphrase(passwordPolicy);
+		} else {
+			generateRandom = this.getPasswordGenerator().generateRandom(passwordPolicy);
 		}
-		// TODO: use random generate?
-		return this.getPasswordGenerator().generateRandom(passwordPolicy);
+
+		StringBuilder result = new StringBuilder();
+		// prepare prefix and suffix
+		String prefix = passwordPolicy.getPrefix();
+		String suffix = passwordPolicy.getSuffix();
+
+		if (StringUtils.isNotEmpty(prefix)) {
+			result.append(prefix);
+		}
+
+		// append default generated password
+		result.append(generateRandom);
+
+		if (StringUtils.isNotEmpty(suffix)) {
+			result.append(suffix);
+		}
+
+		return result.toString();
 	}
 	
 	@Override
@@ -291,6 +314,7 @@ public class DefaultIdmPasswordPolicyService
 		Set<Character> prohibitedChar = new HashSet<>();
 		List<String> policyNames = new ArrayList<String>();
 		Map<String, Object> specialCharBase = new HashMap<>();
+		Map<String, Object> forbiddenCharBase = new HashMap<>();
 
 		for (IdmPasswordPolicyDto passwordPolicy : passwordPolicyList) {
 			if (passwordPolicy.isDisabled()) {
@@ -399,18 +423,22 @@ public class DefaultIdmPasswordPolicyService
 				}
 				validateNotSuccess = true;
 			}
+			
+			if (passwordPolicy.getProhibitedCharacters() != null) {
+				forbiddenCharBase.put(passwordPolicy.getName(), passwordPolicy.getProhibitedCharacters());
+			}
 
 			if (!notPassRules.isEmpty() && passwordPolicy.isEnchancedControl()) {
 				int notRequiredRules = passwordPolicy.getNotRequiredRules();
 				int missingRules = notRequiredRules - notPassRules.size();
 				if (missingRules - minRulesToFulfill < 0) {
-					errors.put(MIN_RULES_TO_FULFILL_COUNT, minRulesToFulfill - missingRules);
+					errors.put(MIN_RULES_TO_FULFILL_COUNT, minRulesToFulfill - missingRules); 
 					errors.put(MIN_RULES_TO_FULFILL, notPassRules);
 				}
 			}
 
 			// if not success we want password policy name
-			if (validateNotSuccess && !errors.isEmpty()) {
+			if (validateNotSuccess && !errors.isEmpty() && !prevalidation) {
 				policyNames.add(passwordPolicy.getName());
 			}
 
@@ -427,8 +455,12 @@ public class DefaultIdmPasswordPolicyService
 		if (!specialCharBase.isEmpty() && prevalidation) {
 			errors.put(SPECIAL_CHARACTER_BASE, specialCharBase); 
 		}
+		
+		if (!forbiddenCharBase.isEmpty() && prevalidation) {
+			errors.put(FORBIDDEN_CHARACTER_BASE, forbiddenCharBase); 
+		}
 
-		if (!policyNames.isEmpty()) {
+		if (!policyNames.isEmpty() && !prevalidation) {
 			String name = prevalidation ? POLICY_NAME_PREVALIDATION : POLICY_NAME;
 			errors.put(name, String.join(", ", policyNames));
 		}
@@ -450,9 +482,12 @@ public class DefaultIdmPasswordPolicyService
 				}
 			}
 		}
-
+		
 		if (!errors.isEmpty()) {
 			// TODO: password policy audit
+			if(prevalidation) {
+				throw new ResultCodeException(CoreResultCode.PASSWORD_PREVALIDATION, errors);
+			}
 			throw new ResultCodeException(CoreResultCode.PASSWORD_DOES_NOT_MEET_POLICY, errors);
 		}
 	}

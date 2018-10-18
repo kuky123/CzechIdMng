@@ -98,6 +98,7 @@ public class DefaultSchedulerManager implements SchedulerManager {
 					for (String parameterName : taskExecutor.getPropertyNames()) {
 						task.getParameters().put(parameterName, null);
 					}
+					task.setFormDefinition(taskExecutor.getFormDefinition());
 					return task;
 				})
 				.sorted(Comparator.comparing(task -> task.getTaskType().getSimpleName(), Comparator.naturalOrder()))
@@ -163,8 +164,12 @@ public class DefaultSchedulerManager implements SchedulerManager {
 			task.setInstanceId(jobDetail.getJobDataMap().getString(SchedulableTaskExecutor.PARAMETER_INSTANCE_ID));
 			task.setTriggers(new ArrayList<>());
 			// task properties
+			// TODO: deprecated since 9.2.0 - remove in 10.x
 			for(Entry<String, Object> entry : jobDetail.getJobDataMap().entrySet()) {
 				task.getParameters().put(entry.getKey(), entry.getValue() == null ? null : entry.getValue().toString());
+			}
+			if (context != null) { // scheduler is inited before application context
+				task.setFormDefinition(taskExecutor.getFormDefinition());
 			}
 			// scheduled triggers - native
 			for (Trigger trigger : scheduler.getTriggersOfJob(jobKey)) {

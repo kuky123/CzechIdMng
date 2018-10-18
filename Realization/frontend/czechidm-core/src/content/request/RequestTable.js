@@ -137,6 +137,11 @@ export class RequestTable extends Advanced.AbstractTableContent {
           filter={
             <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
               <Basic.AbstractForm ref="filterForm">
+                <Basic.Row>
+                  <Basic.Col lg={ 8 }>
+                    <Advanced.Filter.FilterDate ref="fromTill"/>
+                  </Basic.Col>
+                </Basic.Row>
                 <Basic.Row className="last">
                   <Basic.Col lg={ 4 }>
                     <Advanced.Filter.TextField

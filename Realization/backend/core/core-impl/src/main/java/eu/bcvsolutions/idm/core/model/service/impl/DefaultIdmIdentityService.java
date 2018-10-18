@@ -174,14 +174,16 @@ public class DefaultIdmIdentityService
 		List<Predicate> predicates = super.toPredicates(root, query, builder, filter);
 		//
 		// quick - "fulltext"
-		if (StringUtils.isNotEmpty(filter.getText())) {
+		String text = filter.getText();
+		if (StringUtils.isNotEmpty(text)) {
+			text = text.toLowerCase();
 			predicates.add(builder.or(
-					builder.like(builder.lower(root.get(IdmIdentity_.username)), "%" + filter.getText().toLowerCase() + "%"),
-					builder.like(builder.lower(root.get(IdmIdentity_.firstName)), "%" + filter.getText().toLowerCase() + "%"),
-					builder.like(builder.lower(root.get(IdmIdentity_.lastName)), "%" + filter.getText().toLowerCase() + "%"),
-					builder.like(builder.lower(root.get(IdmIdentity_.email)), "%" + filter.getText().toLowerCase() + "%"),
-					builder.like(builder.lower(root.get(IdmIdentity_.description)), "%" + filter.getText().toLowerCase() + "%"),
-					builder.like(builder.lower(root.get(IdmIdentity_.externalCode)), "%" + filter.getText().toLowerCase() + "%")
+					builder.like(builder.lower(root.get(IdmIdentity_.username)), "%" + text + "%"),
+					builder.like(builder.lower(root.get(IdmIdentity_.firstName)), "%" + text + "%"),
+					builder.like(builder.lower(root.get(IdmIdentity_.lastName)), "%" + text + "%"),
+					builder.like(builder.lower(root.get(IdmIdentity_.email)), "%" + text + "%"),
+					builder.like(builder.lower(root.get(IdmIdentity_.description)), "%" + text + "%"),
+					builder.like(builder.lower(root.get(IdmIdentity_.externalCode)), "%" + text + "%")
 					));
 		}
 		// Identity first name

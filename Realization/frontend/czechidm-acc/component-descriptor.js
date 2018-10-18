@@ -13,7 +13,7 @@ module.exports = {
     {
       'id': 'system-info',
       'type': 'entity-info',
-      'entityType': ['system', 'SysSystem'],
+      'entityType': ['system', 'SysSystem', 'SysSystemDto'],
       'component': require('./src/components/SystemInfo/SystemInfo').default,
       'manager': require('./src/redux').SystemManager
     },

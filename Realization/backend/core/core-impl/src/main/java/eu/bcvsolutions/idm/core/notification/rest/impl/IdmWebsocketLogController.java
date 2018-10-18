@@ -1,12 +1,11 @@
-	package eu.bcvsolutions.idm.core.notification.rest.impl;
+package eu.bcvsolutions.idm.core.notification.rest.impl;
 
-	import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.hateoas.Resources;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
@@ -15,17 +14,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import eu.bcvsolutions.idm.core.api.config.swagger.SwaggerConfig;
 import eu.bcvsolutions.idm.core.api.rest.AbstractReadDtoController;
-import eu.bcvsolutions.idm.core.api.rest.BaseController;
-import eu.bcvsolutions.idm.core.api.rest.BaseDtoController;
 import eu.bcvsolutions.idm.core.notification.api.dto.IdmWebsocketLogDto;
 import eu.bcvsolutions.idm.core.notification.api.dto.filter.IdmNotificationFilter;
 import eu.bcvsolutions.idm.core.notification.api.service.IdmWebsocketLogService;
 import eu.bcvsolutions.idm.core.notification.domain.NotificationGroupPermission;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
@@ -35,16 +30,17 @@ import io.swagger.annotations.AuthorizationScope;
  * Read websocket logs
  * 
  * @author Radek Tomiška
- *
+ * @deprecated @since 9.2.0 websocket notification will be removed
  */
-@RestController
-@RequestMapping(value = BaseDtoController.BASE_PATH + "/notification-websockets")
-@Api(
-		value = IdmWebsocketLogController.TAG, 
-		description = "Websocket history", 
-		tags = { IdmWebsocketLogController.TAG }, 
-		produces = BaseController.APPLICATION_HAL_JSON_VALUE,
-		consumes = MediaType.APPLICATION_JSON_VALUE)
+//@RestController
+//@RequestMapping(value = BaseDtoController.BASE_PATH + "/notification-websockets")
+//@Api(
+//		value = IdmWebsocketLogController.TAG, 
+//		description = "Websocket history", 
+//		tags = { IdmWebsocketLogController.TAG }, 
+//		produces = BaseController.APPLICATION_HAL_JSON_VALUE,
+//		consumes = MediaType.APPLICATION_JSON_VALUE)
+@Deprecated
 public class IdmWebsocketLogController extends AbstractReadDtoController<IdmWebsocketLogDto, IdmNotificationFilter> {
 	
 	protected static final String TAG = "Notification logs - websocket";

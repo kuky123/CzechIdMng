@@ -1,6 +1,5 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import Helmet from 'react-helmet';
 //
 import * as Basic from '../../../components/basic';
 import * as Advanced from '../../../components/advanced';
@@ -102,12 +101,8 @@ export default class NotificationConfigurations extends Advanced.AbstractTableCo
 
     return (
       <div>
-        <Helmet title={this.i18n('title')} />
+        { this.renderPageHeader() }
         <Basic.Confirm ref="confirm-delete" level="danger"/>
-
-        <Basic.ContentHeader>
-          <span dangerouslySetInnerHTML={{ __html: this.i18n('header') }}/>
-        </Basic.ContentHeader>
 
         <Basic.Panel className="last">
           <Advanced.Table
@@ -158,8 +153,8 @@ export default class NotificationConfigurations extends Advanced.AbstractTableCo
                   );
                 }
               }/>
-            <Advanced.Column property="topic" width="200px" header={this.i18n('entity.NotificationConfiguration.topic')} sort face="text" />
-            <Advanced.Column property="level" width="75px" header={this.i18n('entity.NotificationConfiguration.level')} sort face="enum" enumClass={NotificationLevelEnum} />
+            <Advanced.Column property="topic" width={ 200 } header={this.i18n('entity.NotificationConfiguration.topic')} sort face="text" />
+            <Advanced.Column property="level" width={ 75 } header={this.i18n('entity.NotificationConfiguration.level')} sort face="enum" enumClass={NotificationLevelEnum} />
             <Advanced.Column property="notificationType" width="75px" header={this.i18n('entity.NotificationConfiguration.notificationType')} sort face="text" />
             <Advanced.Column property="template" header={this.i18n('entity.NotificationConfiguration.template')} sort
               cell={
@@ -179,6 +174,9 @@ export default class NotificationConfigurations extends Advanced.AbstractTableCo
                 }
                 }
               />
+            <Advanced.Column property="recipients" sort face="text" />
+            <Advanced.Column property="redirect" width={ 75 } sort face="bool" />
+            <Advanced.Column property="disabled" width={ 75 } sort face="bool" />
           </Advanced.Table>
         </Basic.Panel>
 
@@ -216,6 +214,18 @@ export default class NotificationConfigurations extends Advanced.AbstractTableCo
                 <Basic.TextArea
                   ref="description"
                   label={this.i18n('entity.NotificationConfiguration.description')}/>
+                <Basic.TextField
+                  ref="recipients"
+                  label={this.i18n('entity.NotificationConfiguration.recipients.label')}
+                  helpBlock={ this.i18n('entity.NotificationConfiguration.recipients.help') }/>
+                <Basic.Checkbox
+                  ref="redirect"
+                  label={ this.i18n('entity.NotificationConfiguration.redirect.label') }
+                  helpBlock={ this.i18n('entity.NotificationConfiguration.redirect.help') }/>
+                <Basic.Checkbox
+                  ref="disabled"
+                  label={ this.i18n('entity.NotificationConfiguration.disabled.label') }
+                  helpBlock={ this.i18n('entity.NotificationConfiguration.disabled.help') }/>
               </Basic.AbstractForm>
             </Basic.Modal.Body>
 
@@ -285,7 +295,8 @@ class Filter extends Advanced.Filter {
             <Basic.Col lg={ 4 }>
               <Advanced.Filter.TextField
                 ref="text"
-                placeholder={this.i18n('entity.NotificationConfiguration.topic')}/>
+                placeholder={this.i18n('entity.NotificationConfiguration.topic')}
+                help={ Advanced.Filter.getTextHelp() }/>
             </Basic.Col>
             <Basic.Col lg={ 4 }>
               <Advanced.Filter.EnumSelectBox

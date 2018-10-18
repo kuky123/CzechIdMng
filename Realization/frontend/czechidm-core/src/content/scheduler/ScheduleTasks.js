@@ -6,11 +6,14 @@ import _ from 'lodash';
 //
 import * as Basic from '../../components/basic';
 import * as Advanced from '../../components/advanced';
-import { SchedulerManager, DataManager, ConfigurationManager, SecurityManager } from '../../redux';
 import * as Utils from '../../utils';
+import * as Domain from '../../domain';
+//
+import { SchedulerManager, DataManager, ConfigurationManager, SecurityManager, FormAttributeManager } from '../../redux';
 import TriggerTypeEnum from '../../enums/TriggerTypeEnum';
 
 const manager = new SchedulerManager();
+const formAttributeManager = new FormAttributeManager();
 
 /**
  * Scheduler administration
@@ -53,16 +56,20 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
    * Open modal task detail
    */
   showDetail(entity) {
-    // transform parameters to Form
-    if (entity.parameters) {
-      _.keys(entity.parameters).map(parameterName => {
-        entity[`parameter-${parameterName}`] = entity.parameters[parameterName];
-      });
-    }
+    const { supportedTasks } = this.props;
+    //
     if (entity.parameters && entity.parameters.dryRun) {
       entity.dryRun = true;
     }
-    super.showDetail(entity, () => {
+    //
+    this.setState({
+      detail: {
+        show: true,
+        entity
+      },
+      taskType: supportedTasks.has(entity.taskType) ? this._toOption(supportedTasks.get(entity.taskType)) : null
+    }, () => {
+      this.refs.form.setData(entity);
       this.refs.taskType.focus();
     });
   }
@@ -96,33 +103,27 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
     if (!this.refs.form.isFormValid()) {
       return;
     }
-    const { taskType } = this.state;
-    const entity = this.refs.form.getData();
-    const parameters = entity.parameters;
-    // transform parameters
-    if (taskType) {
-      if (taskType.parameters) {
-        entity.parameters = {};
-        _.keys(taskType.parameters).map(parameterName => {
-          entity.parameters[parameterName] = this.refs[`parameter-${parameterName}`].getValue();
-        });
-      }
-    } else {
-      if (parameters) {
-        _.keys(parameters).map(parameterName => {
-          parameters[parameterName] = entity[`parameter-${parameterName}`];
-        });
+    if (this.refs.formInstance) {
+      if (!this.refs.formInstance.isValid()) {
+        return;
       }
     }
-    //
-    if (entity.dryRun) {
-      entity.parameters.dryRun = true;
+    const formEntity = this.refs.form.getData();
+    // transform properties
+    if (this.refs.formInstance) {
+      formEntity.parameters = this.refs.formInstance.getProperties();
     }
     //
-    if (Utils.Entity.isNew(entity)) {
-      this.context.store.dispatch(this.getManager().createEntity(entity, this.getUiKey(), this.afterSave.bind(this)));
+    if (formEntity.dryRun) {
+      formEntity.parameters.dryRun = true;
+    }
+    // remove trigger - they are not saved
+    delete formEntity.triggers;
+    //
+    if (Utils.Entity.isNew(formEntity)) {
+      this.context.store.dispatch(this.getManager().createEntity(formEntity, this.getUiKey(), this.afterSave.bind(this)));
     } else {
-      this.context.store.dispatch(this.getManager().updateEntity(entity, this.getUiKey(), this.afterSave.bind(this)));
+      this.context.store.dispatch(this.getManager().updateEntity(formEntity, this.getUiKey(), this.afterSave.bind(this)));
     }
   }
 
@@ -245,6 +246,16 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
     return 'success';
   }
 
+  _toOption(task) {
+    return {
+      niceLabel: formAttributeManager.getLocalization(task.formDefinition, null, 'label', Utils.Ui.getSimpleJavaType(task.taskType)),
+      value: task.taskType,
+      description: formAttributeManager.getLocalization(task.formDefinition, null, 'help', task.description),
+      parameters: task.parameters,
+      formDefinition: task.formDefinition
+    };
+  }
+
   render() {
     const { supportedTasks, showLoading, showLoadingDetail, instanceId } = this.props;
     const { detail, triggerDetail, triggerType, taskType } = this.state;
@@ -252,12 +263,7 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
     const _supportedTasks = [];
     if (supportedTasks) {
       supportedTasks.forEach(task => {
-        _supportedTasks.push({
-          niceLabel: this.getManager().getSimpleTaskType(task.taskType),
-          value: task.taskType,
-          description: task.description,
-          parameters: task.parameters
-        });
+        _supportedTasks.push(this._toOption(task));
       });
     }
     _supportedTasks.sort((one, two) => {
@@ -271,6 +277,11 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
         }
       });
     }
+    let formInstance = new Domain.FormInstance({});
+    if (taskType && taskType.formDefinition && detail.entity) {
+      formInstance = new Domain.FormInstance(taskType.formDefinition).setProperties(detail.entity.parameters);
+    }
+    const showProperties = formInstance && taskType && taskType.formDefinition && taskType.formDefinition.formAttributes.length > 0;
     //
     return (
       <div>
@@ -323,8 +334,20 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
               /* eslint-disable react/no-multi-comp */
               ({ rowIndex, data, property }) => {
                 const propertyValue = data[rowIndex][property];
+                let _taskType;
+                if (supportedTasks && supportedTasks.has(propertyValue)) {
+                  _taskType = this._toOption(supportedTasks.get(propertyValue));
+                }
                 return (
-                  <span title={propertyValue}>{ this.getManager().getSimpleTaskType(propertyValue) }</span>
+                  <span title={propertyValue}>
+                    {
+                      _taskType
+                      ?
+                      formAttributeManager.getLocalization(_taskType.formDefinition, null, 'label', Utils.Ui.getSimpleJavaType(propertyValue))
+                      :
+                      Utils.Ui.getSimpleJavaType(propertyValue)
+                    }
+                  </span>
                 );
               }
             }/>
@@ -339,14 +362,25 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
                 if (!entity.parameters) {
                   return null;
                 }
+                let _taskType;
+                if (supportedTasks && supportedTasks.has(entity.taskType)) {
+                  _taskType = this._toOption(supportedTasks.get(entity.taskType));
+                }
                 return _.keys(entity.parameters).map(parameterName => {
                   if (parameterName.lastIndexOf('core:', 0) === 0) {
                     return null;
                   }
                   if (Utils.Ui.isEmpty(entity.parameters[parameterName])) {
+                      // not filled (false is needed to render)
                     return null;
                   }
-                  return (<div>{parameterName}: { Utils.Ui.toStringValue(entity.parameters[parameterName]) }</div>);
+                  return (
+                    <div>
+                      { _taskType ? formAttributeManager.getLocalization(_taskType.formDefinition, { code: parameterName }, 'label', parameterName) : parameterName }
+                      :
+                      { Utils.Ui.toStringValue(entity.parameters[parameterName]) }
+                    </div>
+                  );
                 });
               }
             }/>
@@ -453,7 +487,8 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
                   onChange={this.onChangeTaskType.bind(this)}
                   required
                   searchable
-                  readOnly={ !Utils.Entity.isNew(detail.entity) }/>
+                  readOnly={ !Utils.Entity.isNew(detail.entity) }
+                  helpBlock={ taskType ? taskType.description : null }/>
                 <Basic.TextArea
                   ref="description"
                   placeholder={taskType ? taskType.description : null}
@@ -464,44 +499,13 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
                   label={this.i18n('entity.SchedulerTask.instanceId.label')}
                   helpBlock={this.i18n('entity.SchedulerTask.instanceId.help')}
                   required/>
-                {
-                  (Utils.Entity.isNew(detail.entity) && taskType && taskType.parameters && _.keys(taskType.parameters).length > 0)
-                  ?
-                  <div>
-                    <Basic.ContentHeader text={this.i18n('action.task-edit.parameters')} />
-                    {
-                      _.keys(taskType.parameters).map(parameterName => {
-                        return (
-                          <Basic.TextField
-                            label={parameterName}
-                            ref={`parameter-${parameterName}`}
-                            value={taskType.parameters[parameterName]}
-                            max={255}/>
-                        );
-                      })
-                    }
-                  </div>
-                  :
-                  <div>
-                    {
-                      entityParameterNames.length === 0
-                      ||
-                      <div>
-                        <Basic.ContentHeader text={this.i18n('action.task-edit.parameters')} />
-                          {
-                            entityParameterNames.map(parameterName => {
-                              return (
-                                <Basic.TextField
-                                  label={parameterName}
-                                  ref={`parameter-${parameterName}`}
-                                  max={255}/>
-                              );
-                            })
-                          }
-                      </div>
-                    }
-                  </div>
-                }
+                <div style={ showProperties ? {} : { display: 'none' }}>
+                  <Basic.ContentHeader text={ this.i18n('action.task-edit.parameters') }/>
+                  <Advanced.EavForm
+                    ref="formInstance"
+                    formInstance={ formInstance }
+                    useDefaultValue/>
+                </div>
               </Basic.AbstractForm>
             </Basic.Modal.Body>
 

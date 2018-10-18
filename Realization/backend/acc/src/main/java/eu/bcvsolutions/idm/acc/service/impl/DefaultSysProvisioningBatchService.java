@@ -1,7 +1,5 @@
 package eu.bcvsolutions.idm.acc.service.impl;
 
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import eu.bcvsolutions.idm.acc.config.domain.ProvisioningConfiguration;
 import eu.bcvsolutions.idm.acc.dto.SysProvisioningBatchDto;
 import eu.bcvsolutions.idm.acc.dto.SysProvisioningOperationDto;
 import eu.bcvsolutions.idm.acc.entity.SysProvisioningBatch;
@@ -34,7 +33,11 @@ public class DefaultSysProvisioningBatchService
 		extends AbstractReadWriteDtoService<SysProvisioningBatchDto, SysProvisioningBatch, EmptyFilter> 
 		implements SysProvisioningBatchService {
 
+	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DefaultSysProvisioningBatchService.class);
+	//
 	private final SysProvisioningBatchRepository repository;
+	//
+	@Autowired private ProvisioningConfiguration provisioningConfiguration;
 	
 	@Autowired
 	public DefaultSysProvisioningBatchService(
@@ -52,19 +55,27 @@ public class DefaultSysProvisioningBatchService
 	 * @return Date of the next attempt. Null if there should be no next attempt 
 	 */
 	@Override
-	public DateTime calculateNextAttempt(SysProvisioningOperationDto request) {		
-		if (request.getCurrentAttempt() >= request.getMaxAttempts()) return null;
-		if (request.getCurrentAttempt() == 0) return new DateTime();
-		
-		List<Integer> sequence = Arrays.asList(120, 300, 1200, 7200, 43200); // TODO: from configuration
-		int indexToSequence = Math.min(request.getCurrentAttempt() - 1, sequence.size() - 1);
-		
-		Integer secInterval = sequence.get(indexToSequence);
-		
-		Calendar calendar = Calendar.getInstance();
-		calendar.add(Calendar.SECOND, secInterval);
-		
-		return new DateTime(calendar.getTime());
+	public DateTime calculateNextAttempt(SysProvisioningOperationDto operation) {		
+		if (operation.getCurrentAttempt() >= operation.getMaxAttempts()) {
+			LOG.debug("All attemts for retry mechanism for operation [{}] was used current [{}] - max [{}].",
+					operation.getId(), operation.getCurrentAttempt(), operation.getMaxAttempts());
+			return null;
+		}
+		//
+		DateTime nextAttempt;
+		if (operation.getCurrentAttempt() == 0) {
+			nextAttempt = new DateTime();
+		} else {
+			List<Integer> sequence = provisioningConfiguration.getRetrySequence();
+			int indexToSequence = Math.min(operation.getCurrentAttempt() - 1, sequence.size() - 1);
+			Integer secInterval = sequence.get(indexToSequence);
+			//
+			nextAttempt = new DateTime().plusSeconds(secInterval);
+		}
+		//
+		LOG.trace("Next retry attempt for operation [{}] will be executed [{}].", operation.getId(), nextAttempt);
+		//
+		return nextAttempt;
 	}
 	
 	@Override

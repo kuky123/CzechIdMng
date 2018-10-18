@@ -263,6 +263,14 @@ module.exports = {
       'labelKey': 'core:component.advanced.EavForm.faceType.BOOLEAN-SELECT'
     },
     {
+      'id': 'attachment-form-value',
+      'type': 'form-attribute-renderer',
+      'persistentType': 'ATTACHMENT',
+      'faceType': 'ATTACHMENT',
+      'component': require('./src/components/advanced/Form/AttachmentFormAttributeRenderer'),
+      'labelKey': 'core:component.advanced.EavForm.faceType.ATTACHMENT'
+    },
+    {
       'id': 'identity-select-box',
       'type': 'entity-select-box',
       'priority': 0,

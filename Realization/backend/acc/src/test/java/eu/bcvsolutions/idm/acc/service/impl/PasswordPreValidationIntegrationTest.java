@@ -115,10 +115,8 @@ public class PasswordPreValidationIntegrationTest extends AbstractIntegrationTes
 		} catch (ResultCodeException ex) {
 			assertEquals(6, ex.getError().getError().getParameters().get("minLength"));
 			assertEquals(10, ex.getError().getError().getParameters().get("maxLength"));
-			assertEquals(policy.getName() + ", " + policyDefault.getName(),
-					ex.getError().getError().getParameters().get("policiesNamesPreValidation"));
 
-			assertEquals(3, ex.getError().getError().getParameters().size());
+			assertEquals(2, ex.getError().getError().getParameters().size());
 			policyDefault.setDefaultPolicy(false);
 			passwordPolicyService.save(policyDefault);
 
@@ -177,10 +175,8 @@ public class PasswordPreValidationIntegrationTest extends AbstractIntegrationTes
 		} catch (ResultCodeException ex) {
 			assertEquals(6, ex.getError().getError().getParameters().get("minUpperChar"));
 			assertEquals(11, ex.getError().getError().getParameters().get("minLowerChar"));
-			assertEquals(policy.getName() + ", " + policyDefault.getName(),
-					ex.getError().getError().getParameters().get("policiesNamesPreValidation"));
 
-			assertEquals(3, ex.getError().getError().getParameters().size());
+			assertEquals(2, ex.getError().getError().getParameters().size());
 			policyDefault.setDefaultPolicy(false);
 			passwordPolicyService.save(policyDefault);
 		}
@@ -238,11 +234,9 @@ public class PasswordPreValidationIntegrationTest extends AbstractIntegrationTes
 		} catch (ResultCodeException ex) {
 			assertEquals(6, ex.getError().getError().getParameters().get("minNumber"));
 			assertEquals(11, ex.getError().getError().getParameters().get("minSpecialChar"));
-			assertEquals(policy.getName() + ", " + policyDefault.getName(),
-					ex.getError().getError().getParameters().get("policiesNamesPreValidation"));
 
 			assertFalse(ex.getError().getError().getParameters().get("specialCharacterBase") == null);
-			assertEquals(4, ex.getError().getError().getParameters().size());
+			assertEquals(3, ex.getError().getError().getParameters().size());
 			policyDefault.setDefaultPolicy(false);
 			passwordPolicyService.save(policyDefault);
 		}
@@ -308,6 +302,7 @@ public class PasswordPreValidationIntegrationTest extends AbstractIntegrationTes
 		policy.setMinSpecialChar(4);
 		policy.setSpecialCharRequired(false);
 		policy.setIdentityAttributeCheck("");
+		policy.setProhibitedCharacters("Test");
 
 		policyDefault = passwordPolicyService.save(policyDefault);
 		policy = passwordPolicyService.save(policy);
@@ -331,9 +326,8 @@ public class PasswordPreValidationIntegrationTest extends AbstractIntegrationTes
 			assertEquals(4, ex.getError().getError().getParameters().get("minLowerChar"));
 			assertEquals(parametrs.toString(),
 					ex.getError().getError().getParameters().get("minRulesToFulfill").toString());
-			;
-			assertEquals(policy.getName() + ", " + policyDefault.getName(),
-					ex.getError().getError().getParameters().get("policiesNamesPreValidation"));
+			//test forbidden chars
+			assertEquals("Test", ((Map<String, String>)ex.getError().getError().getParameters().get("forbiddenCharacterBase")).get(policy.getName()));
 			// special char base -> 8
 			assertEquals(8, ex.getError().getError().getParameters().size());
 			policyDefault.setDefaultPolicy(false);
@@ -424,12 +418,9 @@ public class PasswordPreValidationIntegrationTest extends AbstractIntegrationTes
 			assertEquals(4, ex.getError().getError().getParameters().get("minLowerChar"));
 			assertEquals(parametrs.toString(),
 					ex.getError().getError().getParameters().get("minRulesToFulfill").toString());
-			assertEquals(policy.getName() + ", " + policyDefault.getName(),
-					ex.getError().getError().getParameters().get("policiesNamesPreValidation"));
-
 			// special char base, passwordSimilarUsername, passwordSimilarLastName,
-			// passwordSimilarEmail -> 11
-			assertEquals(11, ex.getError().getError().getParameters().size());
+			// passwordSimilarEmail -> 11, policy's name erased -> 10
+			assertEquals(10, ex.getError().getError().getParameters().size());
 			policyDefault.setDefaultPolicy(false);
 			passwordPolicyService.save(policyDefault);
 		}

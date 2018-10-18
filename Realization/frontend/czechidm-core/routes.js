@@ -806,6 +806,11 @@ module.exports = {
       access: [ { 'type': 'HAS_ANY_AUTHORITY', 'authorities': ['APP_ADMIN'] } ]
     },
     {
+      path: 'generate-values',
+      component: require('./src/content/generatevalues/GenerateValues'),
+      access: [ { 'type': 'HAS_ANY_AUTHORITY', 'authorities': ['GENERATEVALUE_READ'] } ]
+    },
+    {
       path: 'notification/',
       component: 'div',
       childRoutes: [
@@ -832,12 +837,14 @@ module.exports = {
         {
           path: 'websockets',
           component: require('./src/content/notification/websocket/Websockets'),
-          access: [ { 'type': 'HAS_ANY_AUTHORITY', 'authorities': ['NOTIFICATION_READ'] } ]
+          _deprecated: '@deprecated @since 9.2.0 websocket notification will be removed',
+          access: [ { 'type': 'DENY_ALL' } ]
         },
         {
           path: 'websockets/:entityId',
           component: require('./src/content/notification/websocket/WebsocketContent'),
-          access: [ { 'type': 'HAS_ANY_AUTHORITY', 'authorities': ['NOTIFICATION_READ'] } ]
+          _deprecated: '@deprecated @since 9.2.0 websocket notification will be removed',
+          access: [ { 'type': 'DENY_ALL' } ]
         },
         {
           path: 'sms',

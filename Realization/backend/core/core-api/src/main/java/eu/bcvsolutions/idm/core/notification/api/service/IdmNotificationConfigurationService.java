@@ -7,6 +7,7 @@ import eu.bcvsolutions.idm.core.api.entity.BaseEntity;
 import eu.bcvsolutions.idm.core.api.service.ReadWriteDtoService;
 import eu.bcvsolutions.idm.core.notification.api.domain.NotificationLevel;
 import eu.bcvsolutions.idm.core.notification.api.dto.BaseNotification;
+import eu.bcvsolutions.idm.core.notification.api.dto.IdmNotificationRecipientDto;
 import eu.bcvsolutions.idm.core.notification.api.dto.filter.IdmNotificationConfigurationFilter;
 import eu.bcvsolutions.idm.core.notification.api.dto.NotificationConfigurationDto;
 
@@ -43,7 +44,6 @@ public interface IdmNotificationConfigurationService extends ReadWriteDtoService
 	
 	/**
 	 * Method return {@link NotificationConfigurationDto} by topic, level, notification type.
-	 * All parameters must exits, except notification level. 
 	 * 
 	 * @param topic
 	 * @param level
@@ -51,6 +51,15 @@ public interface IdmNotificationConfigurationService extends ReadWriteDtoService
 	 * @return
 	 */
 	NotificationConfigurationDto getConfigurationByTopicLevelNotificationType(String topic, NotificationLevel level, String notificationType);
+	
+	/**
+	 * Method return {@link NotificationConfigurationDto} by topic and notification type - without level specified (configuration with wildcard level).
+	 * 
+	 * @param topic
+	 * @param notificationType
+	 * @return
+	 */
+	NotificationConfigurationDto getConfigurationByTopicAndNotificationTypeAndLevelIsNull(String topic, String notificationType);
 	
 	/**
 	 * Returns registered senders notification types.
@@ -80,4 +89,20 @@ public interface IdmNotificationConfigurationService extends ReadWriteDtoService
 	 * @return
 	 */
 	List<NotificationConfigurationDto> getConfigurations(String topic, NotificationLevel level);
+	
+	/**
+	 * Method find configurations for topic without level specified (configuration with wildcard level).
+	 * 
+	 * @param topic
+	 * @return
+	 */
+	List<NotificationConfigurationDto> getWildcardConfigurations(String topic);
+	
+	/**
+	 * Returns unique trimmed recipients configured for given configuration.
+	 * 
+	 * @param configuration
+	 * @return 
+	 */
+	List<IdmNotificationRecipientDto> getRecipients(NotificationConfigurationDto configuration);
 }

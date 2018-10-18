@@ -6,10 +6,12 @@ import classnames from 'classnames';
 import * as Basic from '../../basic';
 import { LocalizationService } from '../../../services';
 import { ConfigurationManager } from '../../../redux/data';
-import { SecurityManager } from '../../../redux';
+import { SecurityManager, IdentityManager } from '../../../redux';
 import { getNavigationItems, resolveNavigationParameters, collapseNavigation, i18nChange, selectNavigationItems } from '../../../redux/config/actions';
 import NavigationItem from './NavigationItem';
 import NavigationSeparator from './NavigationSeparator';
+
+const identityManager = new IdentityManager();
 
 /**
  * Top navigation
@@ -100,7 +102,15 @@ export class Navigation extends Basic.AbstractContent {
     if (event) {
       event.preventDefault();
     }
+    // FE change
     this.context.store.dispatch(collapseNavigation(!navigationCollapsed));
+    // BE save navigation is collapsed
+    const { userContext } = this.props;
+    if (SecurityManager.isAuthenticated(userContext)) {
+      this.context.store.dispatch(identityManager.saveCurrentProfile(userContext.id, {
+        navigationCollapsed: !navigationCollapsed
+      }));
+    }
   }
 
   toogleNavigationItem(item, level, isActive, event) {
@@ -240,6 +250,25 @@ export class Navigation extends Basic.AbstractContent {
     return false;
   }
 
+  _i18nChange(lng, event) {
+    if (event) {
+      event.preventDefault();
+    }
+    //
+    this.context.store.dispatch(i18nChange(lng, () => {
+      // RT: reload is not needed anymore, most of component was refectored to listen redux state.
+      // RT: filled form values are not rerendered (e.g. filled filters), when locale is changed, but i think is trivial issue
+      // window.location.reload();
+      //
+      const { userContext } = this.props;
+      if (SecurityManager.isAuthenticated(userContext)) {
+        this.context.store.dispatch(identityManager.saveCurrentProfile(userContext.id, {
+          preferredLanguage: lng
+        }));
+      }
+    }));
+  }
+
   render() {
     const { environment, userContext, navigationCollapsed, rendered, i18nReady } = this.props;
     //
@@ -284,7 +313,7 @@ export class Navigation extends Basic.AbstractContent {
                     <span
                       key={`locale-${lng}`}
                       className={lgnClassName}
-                      onClick={() => { this.context.store.dispatch(i18nChange(lng, () => { window.location.reload(); } )); }}>
+                      onClick={ this._i18nChange.bind(this, lng) }>
                     </span>
                   );
                 })
@@ -388,7 +417,7 @@ Navigation.contextTypes = {
 function select(state) {
   return {
     navigation: state.config.get('navigation'),
-    navigationCollapsed: state.config.get('navigationCollapsed'),
+    navigationCollapsed: state.security.userContext.navigationCollapsed,
     selectedNavigationItems: state.config.get('selectedNavigationItems'),
     environment: ConfigurationManager.getEnvironmentStage(state),
     userContext: state.security.userContext,

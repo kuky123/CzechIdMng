@@ -237,7 +237,7 @@ public class DefaultAuthorizationManager implements AuthorizationManager {
 		for(Entry<String, AuthorizationEvaluator> entry : context.getBeansOfType(AuthorizationEvaluator.class).entrySet()) {
 			AuthorizationEvaluator<?> evaluator = entry.getValue();
 			AuthorizationEvaluatorDto evaluatorDto = new AuthorizationEvaluatorDto();
-			evaluatorDto.setId(entry.getKey());
+			evaluatorDto.setId(evaluator.getId());
 			evaluatorDto.setName(evaluator.getName());
 			evaluatorDto.setEntityType(evaluator.getEntityClass().getCanonicalName());
 			evaluatorDto.setEvaluatorType(evaluator.getClass().getCanonicalName());

@@ -132,5 +132,23 @@
       "title": "Logging - example",
       "description": "Log identity's username after identity is updated."
     }
+  },
+  "eav": {
+    "value-generator": {
+      "example-contract-position-name-value-generator": {
+        "label": "Example generator position name",
+        "help": "Generates name of position. To position name will be added prefix and suffix together with username.",
+        "attributes": {
+          "positionnamesuffix": {
+            "label": "Position name suffix",
+            "help": "Suffix will be added at the end to username. Suffix is not required."
+          },
+          "positionnameprefix": {
+            "label": "Position name prefix",
+            "help": "Prefix will be added at the begin to username. Prefix is not required."
+          }
+        }
+      }
+    }
   }
 }

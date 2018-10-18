@@ -77,6 +77,7 @@ class PasswordPolicyBasic extends Basic.AbstractContent {
     if (entity && this.refs.form) {
       this._changeType(entity.type);
       this._changeDefaultPolicy(entity.defaultPolicy);
+      this._changeGenerateType({value: entity.generateType});
       const loadedEntity = _.merge({}, entity);
       loadedEntity.identityAttributeCheck = this._transformAttributeToCheck(entity.identityAttributeCheck);
 
@@ -187,6 +188,12 @@ class PasswordPolicyBasic extends Basic.AbstractContent {
     }
   }
 
+  _changeGenerateType(value) {
+    this.setState({
+      generateType: PasswordPolicyGenerateTypeEnum.findSymbolByKey(value.value)
+    });
+  }
+
   _changeDefaultPolicy(event) {
     if (event && event.currentTarget) {
       const checked = event.currentTarget.checked;
@@ -198,9 +205,11 @@ class PasswordPolicyBasic extends Basic.AbstractContent {
 
   render() {
     const { uiKey, entity, isNew } = this.props;
-    const { showLoading, validateType, defaultPolicy } = this.state;
+    const { showLoading, validateType, defaultPolicy, generateType } = this.state;
     //
     const showDefaultAdvanced = validateType && defaultPolicy;
+
+    const isPassphrase = generateType === PasswordPolicyGenerateTypeEnum.PASSPHRASE;
     //
     return (
       <form onSubmit={this.save.bind(this, 'SAVE')}>
@@ -219,118 +228,136 @@ class PasswordPolicyBasic extends Basic.AbstractContent {
                 onChange={this._changeType.bind(this)}
                 required
                 enum={PasswordPolicyTypeEnum}
-                label={this.i18n('entity.PasswordPolicy.type')}/>
+                label={this.i18n('entity.PasswordPolicy.type.label')}/>
               <Basic.TextField
                 ref="name"
-                label={this.i18n('entity.PasswordPolicy.name')}
+                label={this.i18n('entity.PasswordPolicy.name.label')}
                 required
                 max={255}/>
               <Basic.EnumSelectBox
                 ref="generateType" required={!validateType} hidden={validateType}
                 enum={PasswordPolicyGenerateTypeEnum}
-                label={this.i18n('entity.PasswordPolicy.generateType')}/>
-
+                  onChange={this._changeGenerateType.bind(this)}
+                label={this.i18n('entity.PasswordPolicy.generateType.label')}/>
               <Basic.TextField
                 ref="passphraseWords"
-                helpBlock={this.i18n('entity.PasswordPolicy.help.passphraseWords')}
-                hidden={validateType}
+                helpBlock={this.i18n('entity.PasswordPolicy.passphraseWords.help')}
+                hidden={!isPassphrase}
                 type="number"
                 validation={Utils.Ui.getIntegerValidation() }
-                label={this.i18n('entity.PasswordPolicy.passphraseWords')} />
+                label={this.i18n('entity.PasswordPolicy.passphraseWords.label')} />
 
-              <Basic.Checkbox ref="disabled" label={this.i18n('entity.PasswordPolicy.disabled')}/>
+              <Basic.Alert
+                className="no-margin"
+                icon="exclamation-sign"
+                key="prefixAndSuffixGenerated"
+                text={this.i18n('prefixAndSuffixGeneratedHelp')}
+                rendered={ !validateType }/>
+
+              <Basic.TextField
+                ref="prefix"
+                helpBlock={this.i18n('entity.PasswordPolicy.prefix.help')}
+                hidden={validateType}
+                label={this.i18n('entity.PasswordPolicy.prefix.label')} />
+              <Basic.TextField
+                ref="suffix"
+                helpBlock={this.i18n('entity.PasswordPolicy.suffix.help')}
+                hidden={validateType}
+                label={this.i18n('entity.PasswordPolicy.suffix.label')} />
+
+              <Basic.Checkbox ref="disabled" label={this.i18n('entity.PasswordPolicy.disabled.label')}/>
 
               <Basic.Checkbox
                 ref="defaultPolicy"
                 onChange={this._changeDefaultPolicy.bind(this)}
-                helpBlock={this.i18n('entity.PasswordPolicy.help.defaultPolicy')}
-                label={this.i18n('entity.PasswordPolicy.defaultPolicy')}/>
+                helpBlock={this.i18n('entity.PasswordPolicy.defaultPolicy.help')}
+                label={this.i18n('entity.PasswordPolicy.defaultPolicy.label')}/>
 
-              <Basic.TextArea ref="description" label={this.i18n('entity.PasswordPolicy.description')}/>
+              <Basic.TextArea ref="description" label={this.i18n('entity.PasswordPolicy.description.label')}/>
 
               <Basic.LabelWrapper label=" ">
                 <Basic.Alert
                   className="no-margin"
                   icon="exclamation-sign"
                   key="situationActionsAndWfInfo"
-                  text={this.i18n('entity.PasswordPolicy.help.emptyValues')} />
+                  text={this.i18n('emptyValues')} />
               </Basic.LabelWrapper>
 
               <Basic.TextField
                 ref="minPasswordLength"
                 type="number"
                 validation={ Utils.Ui.getIntegerValidation() }
-                label={this.i18n('entity.PasswordPolicy.minPasswordLength')} />
+                label={this.i18n('entity.PasswordPolicy.minPasswordLength.label')} />
 
               <Basic.TextField
                 ref="maxPasswordLength"
                 type="number"
                 validation={ Utils.Ui.getIntegerValidation() }
-                label={this.i18n('entity.PasswordPolicy.maxPasswordLength')} />
+                label={this.i18n('entity.PasswordPolicy.maxPasswordLength.label')} />
 
               <Basic.TextField
                 ref="minUpperChar"
                 type="number"
                 validation={ Utils.Ui.getIntegerValidation() }
-                label={this.i18n('entity.PasswordPolicy.minUpperChar')} />
+                label={this.i18n('entity.PasswordPolicy.minUpperChar.label')} />
 
               <Basic.TextField
                 ref="minLowerChar"
                 type="number"
                 validation={ Utils.Ui.getIntegerValidation() }
-                label={this.i18n('entity.PasswordPolicy.minLowerChar')} />
+                label={this.i18n('entity.PasswordPolicy.minLowerChar.label')} />
 
               <Basic.TextField
                 ref="minNumber"
                 type="number"
                 validation={ Utils.Ui.getIntegerValidation() }
-                label={this.i18n('entity.PasswordPolicy.minNumber')} />
+                label={this.i18n('entity.PasswordPolicy.minNumber.label')} />
 
               <Basic.TextField
                 ref="minSpecialChar"
                 type="number"
                 validation={ Utils.Ui.getIntegerValidation() }
-                label={this.i18n('entity.PasswordPolicy.minSpecialChar')} />
+                label={this.i18n('entity.PasswordPolicy.minSpecialChar.label')} />
 
               <Basic.TextField
                 ref="maxPasswordAge"
                 type="number"
                 validation={ Utils.Ui.getIntegerValidation() }
                 hidden={!validateType}
-                helpBlock={this.i18n('entity.PasswordPolicy.help.maxPasswordAge')}
-                label={this.i18n('entity.PasswordPolicy.maxPasswordAge')} />
+                helpBlock={this.i18n('entity.PasswordPolicy.maxPasswordAge.help')}
+                label={this.i18n('entity.PasswordPolicy.maxPasswordAge.label')} />
 
               <Basic.TextField
                 ref="minPasswordAge"
                 type="number"
                 validation={ Utils.Ui.getIntegerValidation() }
                 hidden={!validateType}
-                helpBlock={this.i18n('entity.PasswordPolicy.help.minPasswordAge')}
-                label={this.i18n('entity.PasswordPolicy.minPasswordAge')} />
+                helpBlock={this.i18n('entity.PasswordPolicy.minPasswordAge.help')}
+                label={this.i18n('entity.PasswordPolicy.minPasswordAge.label')} />
 
               <Basic.TextField
                 ref="maxHistorySimilar"
                 type="number"
                 hidden={!showDefaultAdvanced}
                 validation={ Utils.Ui.getIntegerValidation() }
-                helpBlock={this.i18n('entity.PasswordPolicy.help.maxHistorySimilar')}
-                label={this.i18n('entity.PasswordPolicy.maxHistorySimilar')} />
+                helpBlock={this.i18n('entity.PasswordPolicy.maxHistorySimilar.help')}
+                label={this.i18n('entity.PasswordPolicy.maxHistorySimilar.label')} />
 
               <Basic.TextField
                 ref="blockLoginTime"
                 type="number"
                 hidden={!showDefaultAdvanced}
                 validation={ Utils.Ui.getIntegerValidation() }
-                helpBlock={this.i18n('entity.PasswordPolicy.help.blockLoginTime')}
-                label={this.i18n('entity.PasswordPolicy.blockLoginTime')} />
+                helpBlock={this.i18n('entity.PasswordPolicy.blockLoginTime.help')}
+                label={this.i18n('entity.PasswordPolicy.blockLoginTime.label')} />
 
               <Basic.TextField
                 ref="maxUnsuccessfulAttempts"
                 type="number"
                 hidden={!showDefaultAdvanced}
                 validation={ Utils.Ui.getIntegerValidation() }
-                helpBlock={this.i18n('entity.PasswordPolicy.help.maxUnsuccessfulAttempts')}
-                label={this.i18n('entity.PasswordPolicy.maxUnsuccessfulAttempts')} />
+                helpBlock={this.i18n('entity.PasswordPolicy.maxUnsuccessfulAttempts.help')}
+                label={this.i18n('entity.PasswordPolicy.maxUnsuccessfulAttempts.label')} />
             </Basic.AbstractForm>
           </Basic.PanelBody>
           <Basic.PanelFooter showLoading={showLoading} className="noBorder">

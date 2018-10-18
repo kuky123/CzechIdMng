@@ -28,6 +28,7 @@ import eu.bcvsolutions.idm.core.api.dto.IdmRoleDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmRoleGuaranteeDto;
 import eu.bcvsolutions.idm.core.api.dto.filter.IdmRoleGuaranteeFilter;
 import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
+import eu.bcvsolutions.idm.core.api.service.IdmRequestItemService;
 import eu.bcvsolutions.idm.core.api.service.IdmRequestService;
 import eu.bcvsolutions.idm.core.api.service.IdmRoleGuaranteeService;
 import eu.bcvsolutions.idm.core.api.service.IdmRoleService;
@@ -66,6 +67,8 @@ public class RequestManagerTest extends AbstractCoreWorkflowIntegrationTest {
 	private WorkflowProcessInstanceService workflowProcessInstanceService;
 	@Autowired
 	private IdmRequestService requestService;
+	@Autowired
+	private IdmRequestItemService requestItemService;
 	@Autowired
 	private IdmRoleGuaranteeService roleGuaranteeService;
 	@Autowired
@@ -206,6 +209,162 @@ public class RequestManagerTest extends AbstractCoreWorkflowIntegrationTest {
 		// Role have to be deleted
 		IdmRoleDto executedRole = roleService.get(roleFromRequest.getId());
 		Assert.assertNull(executedRole);
+	}
+
+	@Test
+	public void testGetChangesOnCreateRoleByRequest() {
+
+		IdmRoleDto newRole = new IdmRoleDto();
+		newRole.setCode(getHelper().createName());
+		newRole.setName(newRole.getCode());
+		newRole.setPriority(10);
+		newRole.setDescription(getHelper().createName());
+
+		IdmRequestDto request = requestManager.createRequest(newRole);
+		Assert.assertNotNull(request);
+
+		Requestable requestable = requestManager.post(request.getId(), newRole);
+		Assert.assertNotNull(requestable);
+		IdmRequestItemChangesDto changes = requestManager
+				.getChanges(requestItemService.get(requestable.getRequestItem()));
+
+		Assert.assertNotNull(changes);
+		List<IdmRequestItemAttributeDto> attributes = changes.getAttributes();
+		attributes.forEach(attribute -> {
+			Assert.assertEquals(RequestOperationType.ADD, attribute.getValue().getChange());
+		});
+	}
+	
+	@Test
+	public void testThrowExceptionFromRequest() {
+
+		IdmRoleDto newRole = new IdmRoleDto();
+		newRole.setCode(getHelper().createName());
+		newRole.setName(newRole.getCode());
+		newRole.setPriority(10);
+		newRole.setDescription(getHelper().createName());
+
+		IdmRequestDto request = requestManager.createRequest(newRole);
+		Assert.assertNotNull(request);
+
+		Requestable requestable = requestManager.post(request.getId(), newRole);
+		Assert.assertNotNull(requestable);
+		Assert.assertTrue(requestable instanceof IdmRoleDto);
+
+		IdmRoleDto roleFromRequest = (IdmRoleDto) requestable;
+		// Is not same instance
+		Assert.assertTrue(newRole != roleFromRequest);
+		// Has same values as new role
+		Assert.assertEquals(newRole.getCode(), roleFromRequest.getCode());
+		Assert.assertEquals(newRole.getName(), roleFromRequest.getName());
+		Assert.assertEquals(newRole.getPriority(), roleFromRequest.getPriority());
+		Assert.assertEquals(newRole.getDescription(), roleFromRequest.getDescription());
+
+		// Role not exists yet
+		Assert.assertNull(roleService.get(roleFromRequest.getId()));
+		// We break the item (we want throw exception)
+		IdmRequestItemDto requestItem = requestItemService.get(requestable.getRequestItem());
+		requestItem.setOwnerType("TO BREAK IT");
+		requestItemService.save(requestItem);
+		
+		IdmRequestDto executedRequest = requestManager.startRequest(request.getId(), true);
+		Assert.assertNotNull(executedRequest);
+		Assert.assertEquals(RequestState.EXCEPTION, executedRequest.getState());
+
+	}
+
+	@Test
+	public void testDeleteRequestable() {
+
+		// Create role
+		IdmRoleDto changedRole = getHelper().createRole();
+
+		// Create request
+		IdmRequestDto request = requestManager.createRequest(changedRole);
+		Assert.assertNotNull(request);
+		Assert.assertEquals(request.getOwnerType(), changedRole.getClass().getName());
+		Assert.assertEquals(request.getOwnerId(), changedRole.getId());
+
+		// Change role (without save)
+		changedRole.setDescription(getHelper().createName());
+		changedRole.setPriority(1000);
+		// Create request item
+		Requestable requestable = requestManager.post(request.getId(), changedRole);
+		Assert.assertNotNull(requestable);
+		Assert.assertNotNull(requestable.getRequestItem());
+
+		Assert.assertTrue(requestable instanceof IdmRoleDto);
+		IdmRoleDto roleFromRequest = (IdmRoleDto) requestable;
+		// Is not same instance
+		Assert.assertTrue(changedRole != roleFromRequest);
+		// Has same values as new role
+		Assert.assertEquals(changedRole.getPriority(), roleFromRequest.getPriority());
+		Assert.assertEquals(changedRole.getDescription(), roleFromRequest.getDescription());
+
+		IdmRoleDto currentRole = roleService.get(changedRole.getId());
+		Assert.assertNotEquals(changedRole.getPriority(), currentRole.getPriority());
+		Assert.assertNotEquals(changedRole.getDescription(), currentRole.getDescription());
+
+		Assert.assertNotNull(requestItemService.get(requestable.getRequestItem()));
+
+		// Delete the role
+		roleService.delete(changedRole);
+
+		// Request item must be canceled
+		IdmRequestItemDto requestItem = requestItemService.get(requestable.getRequestItem());
+		Assert.assertNotNull(requestItem);
+		Assert.assertEquals(RequestState.CANCELED, requestItem.getState());
+		// Request must be canceled
+		request = requestService.get(request.getId());
+		Assert.assertNotNull(request);
+		Assert.assertEquals(RequestState.CANCELED, request.getState());
+
+	}
+
+	@Test
+	public void testDeleteRequest() {
+
+		// Create role
+		IdmRoleDto changedRole = getHelper().createRole();
+
+		// Create request
+		IdmRequestDto request = requestManager.createRequest(changedRole);
+		Assert.assertNotNull(request);
+		Assert.assertEquals(request.getOwnerType(), changedRole.getClass().getName());
+		Assert.assertEquals(request.getOwnerId(), changedRole.getId());
+
+		// Change role (without save)
+		changedRole.setDescription(getHelper().createName());
+		changedRole.setPriority(1000);
+		// Create request item
+		Requestable requestable = requestManager.post(request.getId(), changedRole);
+		Assert.assertNotNull(requestable);
+		Assert.assertNotNull(requestable.getRequestItem());
+
+		Assert.assertTrue(requestable instanceof IdmRoleDto);
+		IdmRoleDto roleFromRequest = (IdmRoleDto) requestable;
+		// Is not same instance
+		Assert.assertTrue(changedRole != roleFromRequest);
+		// Has same values as new role
+		Assert.assertEquals(changedRole.getPriority(), roleFromRequest.getPriority());
+		Assert.assertEquals(changedRole.getDescription(), roleFromRequest.getDescription());
+
+		IdmRoleDto currentRole = roleService.get(changedRole.getId());
+		Assert.assertNotEquals(changedRole.getPriority(), currentRole.getPriority());
+		Assert.assertNotEquals(changedRole.getDescription(), currentRole.getDescription());
+
+		Assert.assertNotNull(requestItemService.get(requestable.getRequestItem()));
+
+		// Delete the request
+		requestService.delete(request);
+
+		// Request item must be canceled
+		IdmRequestItemDto requestItem = requestItemService.get(requestable.getRequestItem());
+		Assert.assertNull(requestItem);
+		// Request must be canceled
+		request = requestService.get(request.getId());
+		Assert.assertNull(request);
+
 	}
 
 	@Test

@@ -184,6 +184,16 @@ public class IdmPasswordPolicy extends AbstractEntity implements Codeable, Passw
 	@Column(name = "block_login_time")
 	private Integer blockLoginTime;
 
+	@Audited
+	@Size(max = DefaultFieldLengths.NAME)
+	@Column(name = "prefix")
+	private String prefix;
+
+	@Audited
+	@Size(max = DefaultFieldLengths.NAME)
+	@Column(name = "suffix")
+	private String suffix;
+
 	public Integer getMaxUnsuccessfulAttempts() {
 		return maxUnsuccessfulAttempts;
 	}
@@ -455,7 +465,23 @@ public class IdmPasswordPolicy extends AbstractEntity implements Codeable, Passw
 	public String getCode() {
 		return getName();
 	}
-	
+
+	public String getPrefix() {
+		return prefix;
+	}
+
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
+	}
+
+	public String getSuffix() {
+		return suffix;
+	}
+
+	public void setSuffix(String suffix) {
+		this.suffix = suffix;
+	}
+
 	/**
 	 * Get how many rules in password policy isn't required
 	 * 

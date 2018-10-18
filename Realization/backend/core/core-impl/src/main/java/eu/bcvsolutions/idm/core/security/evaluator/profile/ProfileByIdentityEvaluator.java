@@ -41,7 +41,7 @@ import eu.bcvsolutions.idm.core.security.evaluator.AbstractTransitiveEvaluator;
 public class ProfileByIdentityEvaluator extends AbstractTransitiveEvaluator<IdmProfile> {
 
 	public static final String EVALUATOR_NAME = "core-profile-by-identity-evaluator";
-	public static final String PARAMETER_IDENTITY_READ = "identity-read"; // can read identity => can edit form values
+	public static final String PARAMETER_IDENTITY_READ = "identity-read"; // can read identity => can edit profile
 	//
 	@Autowired private AuthorizationManager authorizationManager;
 	@Autowired private SecurityService securityService;

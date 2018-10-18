@@ -58,7 +58,7 @@ export class FlashMessages extends AbstractContextComponent {
   _getAutoDismiss(message) {
     let autoDismiss = 10;
     if (message.level === 'error') {
-      autoDismiss = 0;
+      autoDismiss = 20;
     } else if (message.level === 'success') {
       autoDismiss = 5;
     }

@@ -3,6 +3,7 @@ package eu.bcvsolutions.idm.core.notification.api.service;
 import java.util.List;
 
 import eu.bcvsolutions.idm.core.api.service.CodeableService;
+import eu.bcvsolutions.idm.core.api.service.ConfigurationService;
 import eu.bcvsolutions.idm.core.api.service.ReadWriteDtoService;
 import eu.bcvsolutions.idm.core.api.service.Recoverable;
 import eu.bcvsolutions.idm.core.notification.api.domain.NotificationLevel;
@@ -19,17 +20,16 @@ import eu.bcvsolutions.idm.core.security.api.domain.GuardedString;
  * @author Ondrej Kopr <kopr@xyxy.cz>
  *
  */
-
 public interface IdmNotificationTemplateService extends 
 		ReadWriteDtoService<IdmNotificationTemplateDto, IdmNotificationTemplateFilter>,
 		Recoverable<IdmNotificationTemplateDto>,
 		CodeableService<IdmNotificationTemplateDto> {
 
-	static final String PARAMETER_DELIMITIER = ",";
+	String PARAMETER_DELIMITIER = ConfigurationService.PROPERTY_MULTIVALUED_SEPARATOR;
 	/**
 	 * Folder for scanning / initializing default templates
 	 */
-	static final String TEMPLATE_FOLDER = "idm.sec.core.notification.template.folder";
+	String TEMPLATE_FOLDER = "idm.sec.core.notification.template.folder";
 
 	/**
 	 * Return {@link IdmNotificationTemplateDto} by given code.

@@ -16,12 +16,15 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import eu.bcvsolutions.idm.core.api.domain.DefaultFieldLengths;
 import eu.bcvsolutions.idm.core.api.dto.BaseDto;
+import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormDefinitionDto;
 import eu.bcvsolutions.idm.core.scheduler.api.service.SchedulableTaskExecutor;
 
 /**
  * Scheduled task with unique id 
  * * could be scheduled 
  * * could run manually through long running task service
+ * 
+ * Lookout: task definition and instance is mixed together!
  * 
  * @author Radek Tomiška
  */
@@ -40,6 +43,7 @@ public class Task implements BaseDto {
 	@JsonProperty(access=Access.READ_ONLY)
 	private List<AbstractTaskTrigger> triggers;
 	private Map<String, String> parameters;
+	private IdmFormDefinitionDto formDefinition;
 	private boolean supportsDryRun;
 
 	public Task() {
@@ -139,5 +143,25 @@ public class Task implements BaseDto {
 	 */
 	public boolean isSupportsDryRun() {
 		return supportsDryRun;
+	}
+	
+	/**
+	 * Eav form definition for configuration
+	 * 
+	 * @since 9.2.0
+	 * @param formDefinition
+	 */
+	public void setFormDefinition(IdmFormDefinitionDto formDefinition) {
+		this.formDefinition = formDefinition;
+	}
+	
+	/**
+	 * Eav form definition for configuration
+	 * 
+	 * @since 9.2.0
+	 * @return
+	 */
+	public IdmFormDefinitionDto getFormDefinition() {
+		return formDefinition;
 	}
 }

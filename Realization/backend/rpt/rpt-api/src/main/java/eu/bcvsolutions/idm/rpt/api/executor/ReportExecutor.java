@@ -1,7 +1,5 @@
 package eu.bcvsolutions.idm.rpt.api.executor;
 
-import java.util.List;
-
 import org.springframework.plugin.core.Plugin;
 
 import eu.bcvsolutions.idm.core.api.event.EntityEvent;
@@ -31,22 +29,6 @@ public interface ReportExecutor extends Configurable, Plugin<String>, LongRunnin
 	 * @return
 	 */
 	RptReportDto generate(RptReportDto report);
-
-	@Override
-	default String getModule() {
-		return Configurable.super.getModule();
-	}
-
-	@Override
-	default String getName() {
-		return Configurable.super.getName();
-	}
-
-	@Override
-	default List<String> getPropertyNames() {
-		// TODO: form definition will be used
-		return Configurable.super.getPropertyNames();
-	}
 	
 	/**
 	 * Generate report for given event content
@@ -54,9 +36,4 @@ public interface ReportExecutor extends Configurable, Plugin<String>, LongRunnin
 	 * @param event
 	 */
 	void setEvent(EntityEvent<RptReportDto> event);
-
-	@Override
-	default String getDescription() {
-		return Configurable.super.getDescription();
-	}
 }

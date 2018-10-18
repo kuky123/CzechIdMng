@@ -31,3 +31,4 @@ PersistentTypeEnum.DATE = Symbol('DATE');
 PersistentTypeEnum.DATETIME = Symbol('DATETIME');
 PersistentTypeEnum.BYTEARRAY = Symbol('BYTEARRAY');
 PersistentTypeEnum.UUID = Symbol('UUID');
+PersistentTypeEnum.ATTACHMENT = Symbol('ATTACHMENT');

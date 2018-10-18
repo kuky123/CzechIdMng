@@ -12,12 +12,16 @@ import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
+
+import com.google.common.collect.Lists;
 
 import eu.bcvsolutions.idm.core.api.domain.OperationState;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto;
 import eu.bcvsolutions.idm.core.api.entity.OperationResult;
 import eu.bcvsolutions.idm.core.api.exception.CoreException;
+import eu.bcvsolutions.idm.core.eav.api.domain.PersistentType;
+import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormAttributeDto;
 import eu.bcvsolutions.idm.core.scheduler.api.service.AbstractSchedulableStatefulExecutor;
 
 /**
@@ -26,14 +30,21 @@ import eu.bcvsolutions.idm.core.scheduler.api.service.AbstractSchedulableStatefu
  * @author Radek Tomiška
  *
  */
-@Service
+@Component(TestTaskExecutor.TASK_NAME)
 @DisallowConcurrentExecution
 @Description("Test long running task")
 @ConditionalOnProperty(prefix = "idm.pub.app", name = "stage", havingValue = "development")
 public class TestTaskExecutor extends AbstractSchedulableStatefulExecutor<IdmIdentityDto> {
 	
+	public static final String TASK_NAME = "core-test-long-running-task";
 	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(TestTaskExecutor.class);
 	private static final String PARAMETER_COUNT = "count";
+	private static final long DEFAULT_COUNT = 100L;
+	
+	@Override
+	public String getName() {
+		return TASK_NAME;
+	}
 	
 	@Override
 	public void init(Map<String, Object> properties) {
@@ -41,7 +52,7 @@ public class TestTaskExecutor extends AbstractSchedulableStatefulExecutor<IdmIde
 		//
 		count = getParameterConverter().toLong(properties, PARAMETER_COUNT);
 		if (count == null) {
-			count = 100L;
+			count = DEFAULT_COUNT;
 		}
 		counter = 0L;
 	}
@@ -78,6 +89,15 @@ public class TestTaskExecutor extends AbstractSchedulableStatefulExecutor<IdmIde
 		Map<String, Object> properties = super.getProperties();
 		properties.put(PARAMETER_COUNT, count);
 		return properties;
+	}
+	
+	@Override
+	public List<IdmFormAttributeDto> getFormAttributes() {
+		IdmFormAttributeDto countAttribute = new IdmFormAttributeDto(PARAMETER_COUNT, PARAMETER_COUNT, PersistentType.INT);
+		countAttribute.setDefaultValue(String.valueOf(DEFAULT_COUNT));
+		countAttribute.setRequired(true);
+		//
+		return Lists.newArrayList(countAttribute);
 	}
 	
     @Override

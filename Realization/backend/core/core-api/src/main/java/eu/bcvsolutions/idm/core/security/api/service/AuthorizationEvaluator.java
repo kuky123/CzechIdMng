@@ -32,6 +32,13 @@ public interface AuthorizationEvaluator<E extends Identifiable> extends Ordered,
 	}
 	
 	/**
+	 *  bean name / unique identifier (spring bean name)
+	 *  
+	 * @return
+	 */
+	String getId();
+	
+	/**
 	 * Returns entity class, which supports this processor
 	 * 
 	 * @return

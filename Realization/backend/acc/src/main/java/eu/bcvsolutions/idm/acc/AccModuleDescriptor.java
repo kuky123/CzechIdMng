@@ -13,8 +13,8 @@ import eu.bcvsolutions.idm.acc.domain.AccResultCode;
 import eu.bcvsolutions.idm.core.api.domain.PropertyModuleDescriptor;
 import eu.bcvsolutions.idm.core.api.domain.ResultCode;
 import eu.bcvsolutions.idm.core.notification.api.dto.NotificationConfigurationDto;
+import eu.bcvsolutions.idm.core.notification.entity.IdmConsoleLog;
 import eu.bcvsolutions.idm.core.notification.entity.IdmEmailLog;
-import eu.bcvsolutions.idm.core.notification.entity.IdmWebsocketLog;
 import eu.bcvsolutions.idm.core.security.api.domain.GroupPermission;
 
 /**
@@ -54,7 +54,8 @@ public class AccModuleDescriptor extends PropertyModuleDescriptor {
 		//
 		configs.add(new NotificationConfigurationDto(
 				TOPIC_PROVISIONING,
-				null, IdmWebsocketLog.NOTIFICATION_TYPE, 
+				null,
+				IdmConsoleLog.NOTIFICATION_TYPE, 
 				"Notification with new provisioning", 
 				getNotificationTemplateId("provisioningSuccess"))
 				);

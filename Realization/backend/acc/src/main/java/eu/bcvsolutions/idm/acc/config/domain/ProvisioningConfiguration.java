@@ -1,6 +1,7 @@
 package eu.bcvsolutions.idm.acc.config.domain;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import eu.bcvsolutions.idm.core.api.service.Configurable;
@@ -20,13 +21,13 @@ public interface ProvisioningConfiguration extends Configurable {
 	 * together with password - false: additional password attributes will be send
 	 * in new provisioning operation, after password change operation
 	 */
-	static final String PROPERTY_SEND_PASSWORD_ATTRIBUTES_TOGETHER = ConfigurationService.IDM_PRIVATE_PROPERTY_PREFIX
+	String PROPERTY_SEND_PASSWORD_ATTRIBUTES_TOGETHER = ConfigurationService.IDM_PRIVATE_PROPERTY_PREFIX
 			+ "acc.provisioning.sendPasswordAttributesTogether";
-	static final boolean DEFAULT_SEND_PASSWORD_ATTRIBUTES_TOGETHER = true;
+	boolean DEFAULT_SEND_PASSWORD_ATTRIBUTES_TOGETHER = true;
 	
-	static final String PROPERTY_ALLOW_AUTO_MAPPING_ON_EXISTING_ACCOUNT = ConfigurationService.IDM_PRIVATE_PROPERTY_PREFIX
+	String PROPERTY_ALLOW_AUTO_MAPPING_ON_EXISTING_ACCOUNT = ConfigurationService.IDM_PRIVATE_PROPERTY_PREFIX
 			+ "acc.provisioning.allowedAutoMappingOnExistingAccount";
-	static final boolean DEFAULT_ALLOW_AUTO_MAPPING_ON_EXISTING_ACCOUNT = true;
+	boolean DEFAULT_ALLOW_AUTO_MAPPING_ON_EXISTING_ACCOUNT = true;
 
 	@Override
 	default String getConfigurableType() {
@@ -71,4 +72,22 @@ public interface ProvisioningConfiguration extends Configurable {
 	 * @return
 	 */
 	boolean isAllowedAutoMappingOnExistingAccount();
+	
+	/***
+	 * Maximum retry provisioning attempts
+	 * 
+	 * @return
+	 */
+	default int getRetryMaxAttempts() {
+		return 6; // TODO: configurable
+	}
+	
+	/***
+	 * Seconds between next retry provisioning attempts
+	 * 
+	 * @return
+	 */
+	default List<Integer> getRetrySequence() {
+		return Arrays.asList(120, 300, 1200, 7200, 43200); // TODO: configurable
+	}
 }

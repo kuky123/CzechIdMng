@@ -33,7 +33,6 @@ import eu.bcvsolutions.idm.core.api.rest.BaseDtoController;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormAttributeDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.filter.IdmFormAttributeFilter;
 import eu.bcvsolutions.idm.core.eav.api.service.IdmFormAttributeService;
-import eu.bcvsolutions.idm.core.eav.entity.IdmFormAttribute;
 import eu.bcvsolutions.idm.core.model.domain.CoreGroupPermission;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -124,6 +123,24 @@ public class IdmFormAttributeController extends AbstractReadWriteDtoController<I
 	
 	@Override
 	@ResponseBody
+	@RequestMapping(value = "/search/count", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('" + CoreGroupPermission.FORM_ATTRIBUTE_COUNT + "')")
+	@ApiOperation(
+			value = "The number of entities that match the filter", 
+			nickname = "countFormAttributes", 
+			tags = { IdmFormAttributeController.TAG },
+			authorizations = { 
+				@Authorization(value = SwaggerConfig.AUTHENTICATION_BASIC, scopes = { 
+						@AuthorizationScope(scope = CoreGroupPermission.FORM_ATTRIBUTE_COUNT, description = "") }),
+				@Authorization(value = SwaggerConfig.AUTHENTICATION_CIDMST, scopes = { 
+						@AuthorizationScope(scope = CoreGroupPermission.FORM_ATTRIBUTE_COUNT, description = "") })
+				})
+	public long count(@RequestParam(required = false) MultiValueMap<String, Object> parameters) {
+		return super.count(parameters);
+	}
+	
+	@Override
+	@ResponseBody
 	@RequestMapping(value = "/{backendId}", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + CoreGroupPermission.FORM_ATTRIBUTE_READ + "')")
 	@ApiOperation(
@@ -151,7 +168,7 @@ public class IdmFormAttributeController extends AbstractReadWriteDtoController<I
 	@ApiOperation(
 			value = "Create / update form attribute", 
 			nickname = "postFormAttribute", 
-			response = IdmFormAttribute.class, 
+			response = IdmFormAttributeDto.class, 
 			tags = { IdmFormAttributeController.TAG }, 
 			authorizations = { 
 				@Authorization(value = SwaggerConfig.AUTHENTICATION_BASIC, scopes = { 
@@ -260,39 +277,39 @@ public class IdmFormAttributeController extends AbstractReadWriteDtoController<I
 	}
 	
 	@Override
-	protected IdmFormAttributeDto validateDto(IdmFormAttributeDto entity) {
+	protected IdmFormAttributeDto validateDto(IdmFormAttributeDto dto) {
 		// check if exist id = create entity, then check if exist old entity = create entity with id
-		if (entity.getId() == null) {
-			return super.validateDto(entity);
+		if (dto.getId() == null || getService().isNew(dto)) {
+			return super.validateDto(dto);
 		}
-		IdmFormAttributeDto previousDto = getDto(entity.getId());
+		IdmFormAttributeDto previousDto = getDto(dto.getId());
 		if (previousDto != null && previousDto.isUnmodifiable()) {
 			// check explicit attributes that can't be changed
-			if (!previousDto.getCode().equals(entity.getCode())) {
-				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "name", "class", entity.getClass().getSimpleName()));
+			if (!previousDto.getCode().equals(dto.getCode())) {
+				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "name", "class", dto.getClass().getSimpleName()));
 			}
-			if (previousDto.getPersistentType() != entity.getPersistentType()) {
-				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "persistentType", "class", entity.getClass().getSimpleName()));
+			if (previousDto.getPersistentType() != dto.getPersistentType()) {
+				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "persistentType", "class", dto.getClass().getSimpleName()));
 			}
-			if (previousDto.isConfidential() != entity.isConfidential()) {
-				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "confidential", "class", entity.getClass().getSimpleName()));
+			if (previousDto.isConfidential() != dto.isConfidential()) {
+				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "confidential", "class", dto.getClass().getSimpleName()));
 			}
-			if (previousDto.isRequired() != entity.isRequired()) {
-				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "required", "class", entity.getClass().getSimpleName()));
+			if (previousDto.isRequired() != dto.isRequired()) {
+				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "required", "class", dto.getClass().getSimpleName()));
 			}
-			if (previousDto.isReadonly() != entity.isReadonly()) {
-				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "readonly", "class", entity.getClass().getSimpleName()));
+			if (previousDto.isReadonly() != dto.isReadonly()) {
+				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "readonly", "class", dto.getClass().getSimpleName()));
 			}
-			if (previousDto.isMultiple() != entity.isMultiple()) {
-				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "multiple", "class", entity.getClass().getSimpleName()));
+			if (previousDto.isMultiple() != dto.isMultiple()) {
+				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "multiple", "class", dto.getClass().getSimpleName()));
 			}
-			if (previousDto.isRequired() != entity.isRequired()) {
-				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "required", "class", entity.getClass().getSimpleName()));
+			if (previousDto.isRequired() != dto.isRequired()) {
+				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "required", "class", dto.getClass().getSimpleName()));
 			}
-			if (previousDto.isUnmodifiable() != entity.isUnmodifiable()) {
-				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "unmodifiable", "class", entity.getClass().getSimpleName()));
+			if (previousDto.isUnmodifiable() != dto.isUnmodifiable()) {
+				throw new ResultCodeException(CoreResultCode.UNMODIFIABLE_ATTRIBUTE_CHANGE, ImmutableMap.of("name", "unmodifiable", "class", dto.getClass().getSimpleName()));
 			}
 		}
-		return super.validateDto(entity);
+		return super.validateDto(dto);
 	}
 }

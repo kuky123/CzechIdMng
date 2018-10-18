@@ -3,19 +3,19 @@ package eu.bcvsolutions.idm.core.model.service.impl;
 import java.util.List;
 import java.util.UUID;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import eu.bcvsolutions.forest.index.service.api.ForestIndexService;
+import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmTreeNodeDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmTreeTypeDto;
 import eu.bcvsolutions.idm.core.api.dto.filter.IdmTreeNodeFilter;
-import eu.bcvsolutions.idm.core.api.service.IdmTreeNodeService;
 import eu.bcvsolutions.idm.core.exception.TreeNodeException;
 import eu.bcvsolutions.idm.core.model.entity.IdmForestIndexEntity;
 import eu.bcvsolutions.idm.core.model.entity.IdmTreeNode;
@@ -31,20 +31,17 @@ import eu.bcvsolutions.idm.test.api.AbstractIntegrationTest;
  * 
  * @author Radek Tomiška
  */
-public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
+public class DefaultIdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 	
-	@Autowired private IdmTreeNodeService treeNodeService;
+	@Autowired private ApplicationContext context;
 	@Autowired private IdmTreeNodeForestContentService treeNodeForestContentService;
 	@Autowired private ForestIndexService<IdmForestIndexEntity, UUID> forestIndexService;
+	//
+	private DefaultIdmTreeNodeService service;
 	
 	@Before
 	public void init() {
-		getHelper().loginAdmin();
-	}
-
-	@After
-	public void logout() {
-		super.logout();
+		service = context.getAutowireCapableBeanFactory().createBean(DefaultIdmTreeNodeService.class);
 	}
 	
 	@Transactional
@@ -54,7 +51,7 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 		IdmTreeNodeDto treeNode = getHelper().createTreeNode();
 		getHelper().createIdentityContact(identity, treeNode);
 	    // tree node cannot be deleted, when some contract are defined on this node
-	    treeNodeService.delete(treeNode);
+	    service.delete(treeNode);
 	}
 	
 	@Transactional
@@ -64,7 +61,18 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 		IdmTreeNodeDto treeNode = getHelper().createTreeNode(treeType, null);
 		getHelper().createTreeNode(treeType, treeNode);
 	    // tree node cannot be deleted, when some contract are defined on this node
-	    treeNodeService.delete(treeNode);
+	    service.delete(treeNode);
+	}
+	
+	@Transactional
+	@Test(expected = TreeNodeException.class)
+	public void testReferentialIntegrityDeleteNodeWithContractPositions() {
+		IdmIdentityDto identity = getHelper().createIdentity((GuardedString) null);
+		IdmTreeNodeDto treeNode = getHelper().createTreeNode();
+		IdmIdentityContractDto contract = getHelper().createIdentityContact(identity);
+		getHelper().createContractPosition(contract, treeNode);
+	    // tree node cannot be deleted, when some contract are defined on this node
+	    service.delete(treeNode);
 	}
 	
 	@Test
@@ -80,7 +88,7 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 		// move nodes to the first node
 		IdmTreeNodeFilter filter = new IdmTreeNodeFilter();
 		filter.setTreeTypeId(treeType.getId());
-		List<IdmTreeNodeDto> nodes = treeNodeService.find(filter, null).getContent();
+		List<IdmTreeNodeDto> nodes = service.find(filter, null).getContent();
 		IdmTreeNodeDto root = nodes.get(0);
 		for (int i = 0; i < nodes.size(); i++) {
 			IdmTreeNodeDto node = nodes.get(i);
@@ -88,11 +96,11 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 				continue;
 			}
 			node.setParent(root.getId());
-			node = treeNodeService.save(node);
+			node = service.save(node);
 		}		
 		// check
-		Assert.assertEquals(1L, treeNodeService.findRoots(treeType.getId(), null).getTotalElements());
-		Assert.assertEquals(rootCount - 1, treeNodeService.findChildrenByParent(root.getId(), null).getTotalElements());
+		Assert.assertEquals(1L, service.findRoots(treeType.getId(), null).getTotalElements());
+		Assert.assertEquals(rootCount - 1, service.findChildrenByParent(root.getId(), null).getTotalElements());
 		Assert.assertEquals(rootCount - 1, treeNodeForestContentService.findDirectChildren(root.getId(), null).getTotalElements());
 		Assert.assertEquals(rootCount - 1, treeNodeForestContentService.findAllChildren(root.getId(), null).getTotalElements());
 	}
@@ -110,7 +118,7 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 		// move nodes to the first node
 		IdmTreeNodeFilter filter = new IdmTreeNodeFilter();
 		filter.setTreeTypeId(treeType.getId());
-		List<IdmTreeNodeDto> nodes = treeNodeService.find(filter, null).getContent();
+		List<IdmTreeNodeDto> nodes = service.find(filter, null).getContent();
 		IdmTreeNodeDto root = nodes.get(0);
 		for (int i = 0; i < nodes.size(); i++) {
 			IdmTreeNodeDto node = nodes.get(i);
@@ -118,11 +126,11 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 				continue;
 			}
 			node.setParent(root.getId());
-			node = treeNodeService.save(node);
+			node = service.save(node);
 		}		
 		// check
-		Assert.assertEquals(1L, treeNodeService.findRoots(treeType.getId(), null).getTotalElements());
-		Assert.assertEquals(rootCount - 1, treeNodeService.findChildrenByParent(root.getId(), null).getTotalElements());
+		Assert.assertEquals(1L, service.findRoots(treeType.getId(), null).getTotalElements());
+		Assert.assertEquals(rootCount - 1, service.findChildrenByParent(root.getId(), null).getTotalElements());
 		Assert.assertEquals(rootCount - 1, treeNodeForestContentService.findDirectChildren(root.getId(), null).getTotalElements());
 		Assert.assertEquals(rootCount - 1, treeNodeForestContentService.findAllChildren(root.getId(), null).getTotalElements());
 	}
@@ -149,14 +157,14 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 		// move children to other parent
 		IdmTreeNodeDto subRootTwo = getHelper().createTreeNode(treeType, root);
 		nodeOne.setParent(subRootTwo.getId());
-		nodeOne = treeNodeService.save(nodeOne);
+		nodeOne = service.save(nodeOne);
 		nodeTwo.setParent(subRootTwo.getId());
-		nodeTwo = treeNodeService.save(nodeTwo);
+		nodeTwo = service.save(nodeTwo);
 		nodeThree.setParent(subRootTwo.getId());
-		nodeThree = treeNodeService.save(nodeThree);
+		nodeThree = service.save(nodeThree);
 		//
 		// delete previous parent
-		treeNodeService.delete(subRoot);
+		service.delete(subRoot);
 		//
 		Assert.assertEquals(4, treeNodeForestContentService.findAllChildren(root.getId(), null).getTotalElements());
 		Assert.assertEquals(3, treeNodeForestContentService.findAllChildren(subRootTwo.getId(), null).getTotalElements());
@@ -174,7 +182,7 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 		//
 		node3.setTreeType(parent2.getId());
 		try {
-			node3 = treeNodeService.save(node3);
+			node3 = service.save(node3);
 			Assert.fail();
 		} catch (TreeNodeException ex) { 
 			Assert.assertTrue(ex.getMessage().contains("bad type"));
@@ -184,7 +192,7 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 		//
 		node1.setTreeType(parent2.getId());
 		try {
-			node1 = treeNodeService.save(node1);
+			node1 = service.save(node1);
 			Assert.fail();
 		} catch (TreeNodeException ex) { 
 			Assert.assertTrue(ex.getMessage().contains("bad type"));
@@ -233,7 +241,7 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 		IdmTreeNodeDto node3 = getHelper().createTreeNode(treeType, node2);
 		getHelper().createTreeNode(treeType, node3);
 		//
-		List<IdmTreeNodeDto> parents = treeNodeService.findAllParents(node3.getId(), null);
+		List<IdmTreeNodeDto> parents = service.findAllParents(node3.getId(), null);
 		//
 		Assert.assertEquals(2, parents.size());
 		Assert.assertTrue(parents.stream().anyMatch(n -> n.equals(node1)));
@@ -252,7 +260,7 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 		filter.setTreeNode(node2.getId());
 		filter.setRecursively(true);
 		//
-		List<IdmTreeNodeDto> results = treeNodeService.find(filter, null).getContent();
+		List<IdmTreeNodeDto> results = service.find(filter, null).getContent();
 		//
 		Assert.assertEquals(2, results.size());
 		Assert.assertTrue(results.stream().anyMatch(n -> n.equals(node3)));
@@ -261,13 +269,13 @@ public class IdmTreeNodeServiceIntegrationTest extends AbstractIntegrationTest {
 		// drop indexes
 		forestIndexService.dropIndexes(IdmTreeNode.toForestTreeType(treeType.getId()));
 		//
-		results = treeNodeService.find(filter, null).getContent();
+		results = service.find(filter, null).getContent();
 		Assert.assertEquals(0, results.size());
 		//
 		// reindex tree type
-		treeNodeService.rebuildIndexes(treeType.getId());
+		service.rebuildIndexes(treeType.getId());
 		//
-		results = treeNodeService.find(filter, null).getContent();
+		results = service.find(filter, null).getContent();
 		Assert.assertEquals(2, results.size());
 		Assert.assertTrue(results.stream().anyMatch(n -> n.equals(node3)));
 		Assert.assertTrue(results.stream().anyMatch(n -> n.equals(node4)));

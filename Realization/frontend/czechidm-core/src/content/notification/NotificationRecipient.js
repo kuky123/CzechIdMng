@@ -1,10 +1,14 @@
 import React, { PropTypes } from 'react';
 //
 import * as Basic from '../../components/basic';
+import * as Advanced from '../../components/advanced';
 import { IdentityManager } from '../../redux';
 
 /**
  * Notification recipient
+ *
+ * @author Peter Šourek
+ * @author Radek Tomiška
  */
 export default class NotificationRecipient extends Basic.AbstractComponent {
 
@@ -13,25 +17,34 @@ export default class NotificationRecipient extends Basic.AbstractComponent {
     this.identityManager = new IdentityManager();
   }
 
+  renderIdentity(identity) {
+    if (!identity) {
+      return null;
+    }
+    //
+    return (
+      <Advanced.IdentityInfo entity={ identity } entityIdentifier={ identity.id } face="popover"/>
+    );
+  }
+
   render() {
-    const { rendered, recipient, identityOnly, ...others } = this.props;
+    const { rendered, recipient, identityOnly, className } = this.props;
     //
     if (!recipient || !rendered) {
       return null;
     }
+    let content = null;
+    if (identityOnly && recipient._embedded && recipient._embedded.identityRecipient) {
+      content = this.renderIdentity(recipient._embedded.identityRecipient);
+    } else if (recipient.realRecipient) {
+      content = recipient.realRecipient;
+    } else if (recipient._embedded && recipient._embedded.identityRecipient) {
+      content = this.renderIdentity(recipient._embedded.identityRecipient);
+    }
+    //
     return (
-      <div {...others}>
-        {
-          identityOnly
-          ?
-          this.identityManager.getNiceLabel(!recipient._embedded ? null : recipient._embedded.identityRecipient)
-          :
-          recipient.realRecipient
-          ||
-          !recipient._embedded
-          ||
-          this.identityManager.getNiceLabel(!recipient._embedded ? null : recipient._embedded.identityRecipient)
-        }
+      <div className={ className }>
+        { content }
       </div>
     );
   }
@@ -40,6 +53,9 @@ export default class NotificationRecipient extends Basic.AbstractComponent {
 NotificationRecipient.propTypes = {
   ...Basic.AbstractComponent.propTypes,
   recipient: PropTypes.object,
+  /**
+   * Shows identity only, if its filled. If identity is not fillef, then realRecipient is shown instead.
+   */
   identityOnly: PropTypes.bool
 };
 NotificationRecipient.defaultProps = {

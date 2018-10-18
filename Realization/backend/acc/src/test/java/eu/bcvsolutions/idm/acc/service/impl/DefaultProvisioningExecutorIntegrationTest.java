@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -33,6 +34,7 @@ import eu.bcvsolutions.idm.acc.dto.SysSystemEntityDto;
 import eu.bcvsolutions.idm.acc.dto.SysSystemMappingDto;
 import eu.bcvsolutions.idm.acc.dto.filter.SysProvisioningOperationFilter;
 import eu.bcvsolutions.idm.acc.entity.SysProvisioningOperation;
+import eu.bcvsolutions.idm.acc.entity.SysProvisioningOperation_;
 import eu.bcvsolutions.idm.acc.entity.TestResource;
 import eu.bcvsolutions.idm.acc.scheduler.task.impl.ProvisioningQueueTaskExecutor;
 import eu.bcvsolutions.idm.acc.scheduler.task.impl.RetryProvisioningTaskExecutor;
@@ -45,6 +47,7 @@ import eu.bcvsolutions.idm.acc.service.api.SysSystemService;
 import eu.bcvsolutions.idm.core.api.domain.OperationState;
 import eu.bcvsolutions.idm.core.api.entity.OperationResult;
 import eu.bcvsolutions.idm.core.api.service.ConfidentialStorage;
+import eu.bcvsolutions.idm.core.api.utils.DtoUtils;
 import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmLongRunningTaskDto;
 import eu.bcvsolutions.idm.core.scheduler.api.service.LongRunningTaskManager;
 import eu.bcvsolutions.idm.core.security.api.domain.GuardedString;
@@ -457,6 +460,86 @@ public class DefaultProvisioningExecutorIntegrationTest extends AbstractIntegrat
 		} finally {
 			testProvisioningExceptionProcessor.setDisabled(true);
 		}
+	}
+	
+	@Test
+	public void testRunningOperationInQueue() {
+		SysSystemDto system = getHelper().createTestResourceSystem(true);
+		system.setQueue(true);
+		system = systemService.save(system);
+		//
+		// create test provisioning context
+		SysProvisioningOperationDto provisioningOperation = createProvisioningOperation(system, "firstname");
+		Map<ProvisioningAttributeDto, Object> accoutObject = provisioningOperation.getProvisioningContext().getAccountObject();
+		String uid = (String) accoutObject.get(getProvisioningAttribute(TestHelper.ATTRIBUTE_MAPPING_NAME));
+		//
+		// publish event
+		provisioningExecutor.execute(provisioningOperation);
+		// is necessary to get again operation from service
+		SysProvisioningOperationFilter filter = new SysProvisioningOperationFilter();
+		filter.setSystemEntity(provisioningOperation.getSystemEntity());
+		filter.setSystemId(system.getId());
+		SysProvisioningOperationDto operation = provisioningOperationService.find(filter, null).getContent().get(0);
+		assertEquals(OperationState.CREATED, operation.getResultState());
+		SysSystemEntityDto systemEntity = systemEntityService.getBySystemAndEntityTypeAndUid(system, SystemEntityType.IDENTITY, uid);
+		assertTrue(systemEntity.isWish());
+		assertNull(getHelper().findResource(uid));
+		SysProvisioningBatchDto batch = DtoUtils.getEmbedded(operation, SysProvisioningOperation_.batch);
+		Assert.assertNull(batch.getNextAttempt());
+		//
+		// set operation state to running manually
+		operation.getResult().setState(OperationState.RUNNING);
+		operation = provisioningOperationService.save(operation);
+		//
+		// created the second operation
+		ProvisioningContext context = new ProvisioningContext();
+		String firstname = "firstname2";
+		accoutObject = createAccountObject(systemEntity, firstname);
+		context.setAccountObject(accoutObject);
+		//
+		// prepare provisioning operation
+		SysSystemMappingDto systemMapping = getHelper().getDefaultMapping(system);
+		IcObjectClass objectClass = new IcObjectClassImpl(schemaObjectClassService.get(systemMapping.getObjectClass()).getObjectClassName());
+		IcConnectorObject connectorObject = new IcConnectorObjectImpl(null, objectClass, null);
+		SysProvisioningOperationDto.Builder operationBuilder = new SysProvisioningOperationDto.Builder()
+				.setOperationType(ProvisioningOperationType.CREATE)
+				.setSystemEntity(systemEntity)
+				.setProvisioningContext(new ProvisioningContext(accoutObject, connectorObject));
+		SysProvisioningOperationDto secondOperation = operationBuilder.build();
+		secondOperation.setId(UUID.randomUUID()); // for quick search
+		//
+		// publish event
+		provisioningExecutor.execute(secondOperation);
+		//
+		secondOperation = provisioningOperationService.get(secondOperation);
+		batch = provisioningBatchService.get(batch);
+		Assert.assertNotNull(batch.getNextAttempt());
+		//
+		// retry - the operation is still running
+		RetryProvisioningTaskExecutor retryProvisioningTaskExecutor = new RetryProvisioningTaskExecutor();
+		Boolean result = longRunningTaskManager.executeSync(retryProvisioningTaskExecutor);
+		Assert.assertTrue(result);
+		operation = provisioningOperationService.get(operation);
+		secondOperation = provisioningOperationService.get(secondOperation);
+		//
+		Assert.assertEquals(OperationState.RUNNING, operation.getResultState());
+		Assert.assertEquals(OperationState.NOT_EXECUTED, secondOperation.getResultState());
+		//
+		operation.getResult().setState(OperationState.EXECUTED);
+		operation = provisioningOperationService.save(operation);
+		//
+		// retry - expected success now
+		retryProvisioningTaskExecutor = new RetryProvisioningTaskExecutor();
+		result = longRunningTaskManager.executeSync(retryProvisioningTaskExecutor);
+		Assert.assertTrue(result);
+		//
+		systemEntity = systemEntityService.getBySystemAndEntityTypeAndUid(system, SystemEntityType.IDENTITY, uid);
+		Assert.assertFalse(systemEntity.isWish());
+		TestResource resource = getHelper().findResource(uid);
+		Assert.assertNotNull(resource);
+		Assert.assertEquals(firstname, resource.getFirstname());
+		batch = provisioningBatchService.get(batch.getId());
+		Assert.assertNull(batch.getNextAttempt());
 	}
 	
 	@Test

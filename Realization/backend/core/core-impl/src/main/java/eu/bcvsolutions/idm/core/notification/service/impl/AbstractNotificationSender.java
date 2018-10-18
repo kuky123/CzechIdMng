@@ -41,7 +41,7 @@ public abstract class AbstractNotificationSender<N extends IdmNotificationDto> i
 	@Autowired
 	private IdmNotificationTemplateService notificationTemplateService;
 	@Autowired(required = false)
-	private ConfigurationService configurationService; // optional internal dependency - checks for processor is enabled
+	private ConfigurationService configurationService; // optional internal dependency - e.g. checks for sender is enabled
 	
 	/**
 	 * Returns true, if given delimiter equals this managers {@link IdmNotification} type.
@@ -112,13 +112,14 @@ public abstract class AbstractNotificationSender<N extends IdmNotificationDto> i
 		List<IdmNotificationLogDto> notifications = notificationTemplateService.prepareNotifications(topic, message);
 		//
 		if (notifications.isEmpty()) {
-			LOG.info("Notification for [topic:{}] not found. Any message will not be sent.", topic);
+			LOG.info("Notification for topic [{}] level [{}] not found or is disabled. Message will not be sent.", topic, message.getLevel());
 			// no notifications found
 			return sendMessages;
 		}
 		//
 		// iterate over all prepared notifications, set recipients and send them
 		for (IdmNotificationLogDto notification : notifications) {
+			//
 			final IdmMessageDto notificationMessage = notification.getMessage();
 			if (notificationMessage.getHtmlMessage() == null 
 					&& notificationMessage.getSubject() == null 
@@ -127,7 +128,10 @@ public abstract class AbstractNotificationSender<N extends IdmNotificationDto> i
 				LOG.error("Notification has empty template and message. Message will not be sent! [topic:{}]", topic);
 				continue;
 			}
-			notification.setRecipients(notificationRecipients);
+			// recipient can be prepared by configuration (sending message to some alias)
+			if (notification.getRecipients().isEmpty()) {
+				notification.setRecipients(notificationRecipients);
+			}
 			notification.setIdentitySender(identitySender == null ? null : identitySender.getId());
 			//
 			sendMessages.add(send(notification));

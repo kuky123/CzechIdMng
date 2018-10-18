@@ -518,13 +518,32 @@ public abstract class AbstractProvisioningExecutor<DTO extends AbstractDto> impl
 									|| att.getStrategyType() == AttributeMappingStrategyType.WRITE_IF_NULL);
 				}).findFirst();
 				if (conflictAttributeOptional.isPresent()) {
+					AttributeMapping conflictAttribute = conflictAttributeOptional.get();
+					
 					throw new ProvisioningException(AccResultCode.PROVISIONING_ATTRIBUTE_STRATEGY_CONFLICT,
-							ImmutableMap.of("strategyParent", parentAttribute.getStrategyType(), "strategyConflict",
-									conflictAttributeOptional.get().getStrategyType(), "attribute",
-									conflictAttributeOptional.get().getName()));
+							ImmutableMap.of("strategyParent", parentAttribute.getStrategyType(), //
+									"strategyConflict",	conflictAttribute.getStrategyType(), //
+									"attribute", conflictAttribute.getName(), //
+					"roleParent",	this.getRole(parentAttribute) != null ? getRole(parentAttribute).getCode() : "-", //
+					"roleConflict",	this.getRole(conflictAttribute) != null ? getRole(conflictAttribute).getCode() : "-")); //
 				}
 			}
 		});
+	}
+
+	private IdmRoleDto getRole(AttributeMapping attribute) {
+		if (attribute instanceof SysRoleSystemAttributeDto) {
+			SysRoleSystemAttributeDto conflictRoleAttribute = (SysRoleSystemAttributeDto) attribute;
+			if (conflictRoleAttribute.getRoleSystem() == null) {
+				return null;
+			}
+			SysRoleSystemDto roleSystem = roleSystemService.get(conflictRoleAttribute.getRoleSystem());
+			if (roleSystem == null) {
+				return null;
+			}
+			return roleService.get(roleSystem.getRole());
+		}
+		return null;
 	}
 
 	private SysProvisioningOperationDto prepareProvisioning(SysSystemEntityDto systemEntity, DTO dto, UUID entityId,

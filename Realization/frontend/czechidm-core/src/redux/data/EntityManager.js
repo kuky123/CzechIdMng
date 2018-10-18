@@ -855,12 +855,26 @@ export default class EntityManager {
   receiveError(entity, uiKey = null, error = null, cb = null) {
     uiKey = this.resolveUiKey(uiKey, entity ? entity.id : null);
     return (dispatch) => {
-      if (cb) {
-        cb(null, error);
+      if (error && error.name === 'SyntaxError' && error.message && error.message.indexOf('JSON.parse') === 0) {
+        const syntaxError = {
+          key: 'syntax-error',
+          level: 'warning',
+          message: LocalizationService.i18n('content.error.syntax-error.message')
+        };
+
+        if (cb) {
+          cb(null, syntaxError);
+        } else {
+          dispatch(this.flashMessagesManager.addMessage(syntaxError));
+        }
       } else {
-        dispatch(this.flashMessagesManager.addErrorMessage({
-          key: 'error-' + this.getEntityType()
-        }, error));
+        if (cb) {
+          cb(null, error);
+        } else {
+          dispatch(this.flashMessagesManager.addErrorMessage({
+            key: 'error-' + this.getEntityType()
+          }, error));
+        }
       }
       dispatch({
         type: RECEIVE_ERROR,

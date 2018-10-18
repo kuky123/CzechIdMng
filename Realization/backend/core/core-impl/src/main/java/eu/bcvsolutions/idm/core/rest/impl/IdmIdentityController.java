@@ -774,6 +774,7 @@ public class IdmIdentityController extends AbstractEventableDtoController<IdmIde
 			nickname = "getProfile",
 			tags = { IdmIdentityController.TAG },
 			notes = "Returns identity profile.",
+			response = IdmProfileDto.class, 
 			authorizations = {
 					@Authorization(value = SwaggerConfig.AUTHENTICATION_BASIC, scopes = { 
 							@AuthorizationScope(scope = CoreGroupPermission.PROFILE_READ, description = "") }),
@@ -788,6 +789,36 @@ public class IdmIdentityController extends AbstractEventableDtoController<IdmIde
 			throw new ResultCodeException(CoreResultCode.NOT_FOUND, ImmutableMap.of("entity", backendId));
 		}
 		return profileController.get(profile.getId().toString());
+	}
+	
+	/**
+	 * Returns profile image attachment from identity
+	 * 
+	 * @return 
+	 * @since 9.0.0
+	 */
+	@RequestMapping(value = "/{backendId}/profile", method = RequestMethod.PATCH)
+	@ResponseBody
+	@PreAuthorize("hasAuthority('" + CoreGroupPermission.PROFILE_UPDATE + "')")
+	@ApiOperation(
+			value = "Save profile (create + patch)", 
+			nickname = "patchProfile",
+			tags = { IdmIdentityController.TAG },
+			notes = "Save identity profile. Profile is created, when no profile is found, then is updated (patch).",
+			response = IdmProfileDto.class, 
+			authorizations = {
+					@Authorization(value = SwaggerConfig.AUTHENTICATION_BASIC, scopes = { 
+							@AuthorizationScope(scope = CoreGroupPermission.PROFILE_UPDATE, description = "") }),
+					@Authorization(value = SwaggerConfig.AUTHENTICATION_CIDMST, scopes = { 
+							@AuthorizationScope(scope = CoreGroupPermission.PROFILE_UPDATE, description = "") })
+					})
+	public ResponseEntity<?> patchProfile(
+			@ApiParam(value = "Identity's uuid identifier or username.", required = true)
+			@PathVariable String backendId,
+			HttpServletRequest nativeRequest) throws HttpMessageNotReadableException {
+		IdmProfileDto profile = profileService.findOrCreateByIdentity(backendId, IdmBasePermission.UPDATE);
+		//
+		return profileController.patch(profile.getId().toString(), nativeRequest);
 	}
 	
 	/**

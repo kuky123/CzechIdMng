@@ -9,9 +9,6 @@ import javax.validation.constraints.Size;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.hateoas.core.Relation;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonProperty.Access;
-
 import eu.bcvsolutions.idm.core.api.domain.DefaultFieldLengths;
 import eu.bcvsolutions.idm.core.api.domain.Embedded;
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
@@ -48,9 +45,7 @@ public class IdmAttachmentDto extends AbstractDto {
 	private String attachmentType;
 	@Size(max = 50)
 	private String ownerState;
-	@JsonProperty(access = Access.READ_ONLY)
 	private Integer versionNumber;
-	@JsonProperty(access = Access.READ_ONLY)
 	private String versionLabel;
 	@Embedded(dtoClass = IdmAttachmentDto.class, enabled = false)
 	private UUID parent;

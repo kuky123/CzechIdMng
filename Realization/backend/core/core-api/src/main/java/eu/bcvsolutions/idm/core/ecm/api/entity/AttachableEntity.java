@@ -3,6 +3,8 @@ package eu.bcvsolutions.idm.core.ecm.api.entity;
 import java.nio.charset.Charset;
 import java.util.UUID;
 
+import org.springframework.http.MediaType;
+
 import eu.bcvsolutions.idm.core.api.entity.BaseEntity;
 
 /**
@@ -13,8 +15,9 @@ import eu.bcvsolutions.idm.core.api.entity.BaseEntity;
  */
 public interface AttachableEntity extends BaseEntity {
 
-	static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
-	static final String DEFAULT_ENCODING = DEFAULT_CHARSET.name();
+	Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+	String DEFAULT_ENCODING = DEFAULT_CHARSET.name();
+	String DEFAULT_MIMETYPE = MediaType.APPLICATION_OCTET_STREAM_VALUE;
 	
 	/**
 	 * Entity with {@link UUID} identifier only

@@ -49,7 +49,6 @@ public class IdmProfileControllerRestTest extends AbstractReadWriteDtoController
 		createDto(); // other
 		createDto(); // other
 		
-		
 		IdmProfileFilter filter = new IdmProfileFilter();
 		filter.setIdentityId(owner.getId());
 		

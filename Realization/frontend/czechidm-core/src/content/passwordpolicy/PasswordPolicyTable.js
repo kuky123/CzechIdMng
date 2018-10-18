@@ -10,6 +10,8 @@ import * as Advanced from '../../components/advanced';
 
 /**
  * Table with definitions of password policies
+ *
+ * @author Ondřej Kopr
  */
 export class PasswordPolicyTable extends Basic.AbstractContent {
 
@@ -165,18 +167,22 @@ export class PasswordPolicyTable extends Basic.AbstractContent {
                 ({ rowIndex, data }) => {
                   let name = data[rowIndex].name;
                   if (data[rowIndex].defaultPolicy) {
-                    name += '<small> (' + this.i18n('entity.PasswordPolicy.defaultPolicy') + ') </small>';
+                    name = (
+                      <span>
+                        { name }
+                        <small> ({ this.i18n('entity.PasswordPolicy.defaultPolicy.label') })</small>
+                      </span>
+                    );
                   }
-                  return (
-                    <span dangerouslySetInnerHTML={{
-                      __html: name}}
-                    />
-                  );
+                  return name;
                 }
               }/>
-            <Advanced.Column property="generateType" sort
-              face="enum" width="75px"
-              enumClass={PasswordPolicyGenerateTypeEnum}/>
+            <Advanced.Column
+              property="generateType"
+              sort
+              face="enum"
+              width={ 75 }
+              enumClass={ PasswordPolicyGenerateTypeEnum }/>
             <Advanced.Column property="enchancedControl" face="bool" sort />
             <Advanced.Column property="minPasswordLength" sort />
             <Advanced.Column property="maxPasswordLength" sort />

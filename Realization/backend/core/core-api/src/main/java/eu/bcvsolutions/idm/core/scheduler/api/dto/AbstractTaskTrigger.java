@@ -12,6 +12,7 @@ import org.quartz.Trigger;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import eu.bcvsolutions.idm.core.api.domain.DefaultFieldLengths;
 import eu.bcvsolutions.idm.core.api.dto.BaseDto;
@@ -31,6 +32,7 @@ public abstract class AbstractTaskTrigger implements BaseDto {
 
 	private static final long serialVersionUID = 1L;
 	//
+	@JsonDeserialize(as = String.class)
 	private String id;
 	@NotNull
 	private String taskId;

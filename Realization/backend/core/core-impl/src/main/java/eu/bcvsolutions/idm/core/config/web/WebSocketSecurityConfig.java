@@ -10,8 +10,9 @@ import eu.bcvsolutions.idm.core.security.domain.CustomMessageSecurityExpressionH
  * Websocket security configuration
  * 
  * @author Radek Tomiška
- *
+ * @deprecated @since 9.2.0 websocket notification will be removed
  */
+@Deprecated
 @Configuration
 public class WebSocketSecurityConfig extends AbstractSecurityWebSocketMessageBrokerConfigurer {
 	

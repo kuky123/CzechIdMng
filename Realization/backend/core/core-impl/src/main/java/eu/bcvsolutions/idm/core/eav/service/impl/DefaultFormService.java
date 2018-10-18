@@ -63,6 +63,8 @@ import eu.bcvsolutions.idm.core.eav.api.service.IdmFormAttributeService;
 import eu.bcvsolutions.idm.core.eav.api.service.IdmFormDefinitionService;
 import eu.bcvsolutions.idm.core.eav.entity.IdmFormAttribute_;
 import eu.bcvsolutions.idm.core.eav.entity.IdmFormDefinition_;
+import eu.bcvsolutions.idm.core.ecm.api.dto.IdmAttachmentDto;
+import eu.bcvsolutions.idm.core.ecm.api.service.AttachmentManager;
 import eu.bcvsolutions.idm.core.security.api.domain.BasePermission;
 import eu.bcvsolutions.idm.core.security.api.domain.IdmBasePermission;
 import eu.bcvsolutions.idm.core.security.api.utils.PermissionUtils;
@@ -82,6 +84,8 @@ public class DefaultFormService implements FormService {
 	private final PluginRegistry<FormValueService<?>, Class<?>> formValueServices;
 	private final EntityEventManager entityEventManager;
 	private final LookupService lookupService;
+	//
+	@Autowired private AttachmentManager attachmentManager;
 
 	@Autowired
 	public DefaultFormService(
@@ -507,6 +511,10 @@ public class DefaultFormService implements FormService {
 				// delete previous attributes
 				unprocessedPreviousValues.values().forEach(value -> {
 					formValueService.delete(value, permission);
+					if (value.getPersistentType() == PersistentType.ATTACHMENT) {
+						// delete attachment - permissions are evaluated before
+						attachmentManager.deleteAttachments(value.getId(), attachmentManager.getOwnerType(formValueService.getEntityClass()));
+					}
 					LOG.trace("FormValue [{}:{}] for owner [{}] was deleted", value.getFormAttribute(), value.getId(), ownerEntity);
 				});
 			}
@@ -529,7 +537,18 @@ public class DefaultFormService implements FormService {
 			//
 			if (previousValue == null) {
 				if (!newValue.isNull()) { // null values are not saved
-					results.add(formValueService.save(newValue, permission));
+					newValue = formValueService.save(newValue, permission);
+					//
+					if (newValue.getPersistentType() == PersistentType.ATTACHMENT) {
+						// update attachment - set current owner, if temporary owner is given
+						IdmAttachmentDto attachment = attachmentManager.get(newValue.getUuidValue());
+						if (attachment != null && attachment.getOwnerType().equals(AttachmentManager.TEMPORARY_ATTACHMENT_OWNER_TYPE)) {
+							attachment.setOwnerType(attachmentManager.getOwnerType(formValueService.getEntityClass()));
+							attachment.setOwnerId(newValue.getId());
+							attachmentManager.save(attachment); // permissions are evaluated above
+						}
+					}
+					results.add(newValue);
 					LOG.trace("FormValue [{}:{}] for owner [{}] was created", attribute.getCode(), newValue.getId(), ownerEntity);
 				}
 			} else {
@@ -538,16 +557,47 @@ public class DefaultFormService implements FormService {
 				// the same value should not be updated
 				// confidential value is always updated - only new values are sent from client
 				if (newValue.isConfidential() || !previousValue.isEquals(newValue)) {
+					UUID previousUuidValue = previousValue.getUuidValue();
 					// set value for the previous value
-					previousValue.setValue(newValue.getValue());
+					previousValue.setValues(newValue);
 					// attribute persistent type could be changed
 					previousValue.setOwnerAndAttribute(ownerEntity, attribute);
 					previousValue.setSeq(index);
 					if (!previousValue.isNull()) { // null values are not saved
-						results.add(formValueService.save(previousValue, permission));
+						previousValue = formValueService.save(previousValue, permission);
+						//
+						if (previousValue.getPersistentType() == PersistentType.ATTACHMENT) {
+							// fill attachments version and owners
+							IdmAttachmentDto previousAttachment = previousUuidValue == null ? null : attachmentManager.get(previousUuidValue);
+							// update attachment - set current owner, if temporary owner is given
+							IdmAttachmentDto attachment = attachmentManager.get(previousValue.getUuidValue());
+							if (attachment != null && attachment.getOwnerType().equals(AttachmentManager.TEMPORARY_ATTACHMENT_OWNER_TYPE)) {
+								attachment.setOwnerType(attachmentManager.getOwnerType(formValueService.getEntityClass()));
+								attachment.setOwnerId(previousValue.getId());
+								if (previousAttachment != null) {
+									if (previousAttachment.getParent() != null) {
+										attachment.setParent(previousAttachment.getParent());
+									} else {
+										attachment.setParent(previousAttachment.getId());
+									}
+									attachment.setVersionNumber(previousAttachment.getVersionNumber() + 1);
+									attachment.setVersionLabel(attachment.getVersionNumber() + ".0");
+								}
+								attachment = attachmentManager.save(attachment); // permissions are evaluated above
+								if (previousAttachment != null) {
+									previousAttachment.setNextVersion(attachment.getId());
+									attachmentManager.save(previousAttachment);
+								}
+							}
+						}
+						results.add(previousValue);
 						LOG.trace("FormValue [{}:{}] for owner [{}] was updated", attribute.getCode(), previousValue.getId(), ownerEntity);
 					} else {
 						formValueService.delete(previousValue, permission);
+						if (previousValue.getPersistentType() == PersistentType.ATTACHMENT) {
+							// delete attachment - permissions are evaluated before
+							attachmentManager.deleteAttachments(previousValue.getId(), attachmentManager.getOwnerType(formValueService.getEntityClass()));
+						}
 						LOG.trace("FormValue [{}:{}] for owner [{}] was deleted", attribute.getCode(), previousValue.getId(), ownerEntity);
 					}
 				}
@@ -557,9 +607,13 @@ public class DefaultFormService implements FormService {
 		// confidential property will be removed too => none or all confidential values have to be given for multiple attributes
 		unprocessedPreviousValues
 			.values()
-			.forEach(previousValue -> {
-				formValueService.delete(previousValue, permission);
-				LOG.trace("FormValue [{}:{}] for owner [{}] was deleted", attribute.getCode(), previousValue.getId(), ownerEntity);
+			.forEach(value -> {
+				formValueService.delete(value, permission);
+				if (value.getPersistentType() == PersistentType.ATTACHMENT) {
+					// delete attachment - permissions are evaluated before
+					attachmentManager.deleteAttachments(value.getId(), attachmentManager.getOwnerType(formValueService.getEntityClass()));
+				}
+				LOG.trace("FormValue [{}:{}] for owner [{}] was deleted", value.getFormAttribute(), value.getId(), ownerEntity);
 			});
 
 		return results;

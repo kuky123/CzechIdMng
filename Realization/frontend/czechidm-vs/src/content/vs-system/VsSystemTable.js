@@ -18,6 +18,15 @@ const vsSystemService = new VsSystemService();
  */
 export default class VsSystemTable extends SystemTable {
 
+  constructor(props, context) {
+    super(props, context);
+    this.state = {
+      detail: {
+        createDefaultRole: true
+      }
+    };
+  }
+
   _createNewSystem(event) {
     if (event) {
       event.preventDefault();
@@ -79,8 +88,29 @@ export default class VsSystemTable extends SystemTable {
     );
   }
 
+  _onChangeName(event) {
+    const roleName = this.refs.roleName.getValue();
+    const oldName = this.refs.name.getValue();
+    const name = event.currentTarget.value;
+    const newRoleName = name + '-users';
+
+    if (!oldName || oldName + '-users' === roleName) {
+      this.refs.roleName.setValue(newRoleName);
+    }
+  }
+
+  _onChangeDefaultRole(event) {
+    const checked = event.currentTarget.checked;
+    const formData = this.refs['create-form'].getData();
+    formData.createDefaultRole = checked;
+
+    this.setState({
+      detail: formData
+    });
+  }
+
   render() {
-    const {show, showLoading} = this.state;
+    const {show, showLoading, detail} = this.state;
     const parentRender = super.render();
     const title = this.i18n(`vs:content.vs-system.action.create.header`);
     return (
@@ -93,11 +123,12 @@ export default class VsSystemTable extends SystemTable {
               <Basic.Modal.Body>
                 <span dangerouslySetInnerHTML={{ __html: this.i18n(`vs:content.vs-system.action.create.message`) }}/>
                 <div style={{marginTop: '20px'}}>
-                  <Basic.AbstractForm ref="create-form">
+                  <Basic.AbstractForm data={detail} ref="create-form">
                     <Basic.TextField
                       ref="name"
                       label={this.i18n('vs:content.vs-system.name.label')}
                       placeholder={this.i18n('vs:content.vs-system.name.placeholder')}
+                      onChange={ this._onChangeName.bind(this) }
                       required/>
                     <Basic.SelectBox
                       ref="implementers"
@@ -113,6 +144,17 @@ export default class VsSystemTable extends SystemTable {
                       manager={roleManager }
                       value={null}
                       multiSelect/>
+                    <Basic.Checkbox
+                      ref="createDefaultRole"
+                      label={this.i18n('vs:content.vs-system.createDefaultRole.label')}
+                      onChange={ this._onChangeDefaultRole.bind(this) }
+                      helpBlock={this.i18n('vs:content.vs-system.createDefaultRole.placeholder')}/>
+                    <Basic.TextField
+                      ref="roleName"
+                      label={this.i18n('vs:content.vs-system.roleName.label')}
+                      helpBlock={this.i18n('vs:content.vs-system.roleName.placeholder')}
+                      rendered={detail.createDefaultRole}
+                      required={detail.createDefaultRole}/>
                   </Basic.AbstractForm>
                   {/* onEnter action - is needed because SplitButton is used instead standard submit button */}
                   <input type="submit" className="hidden"/>

@@ -16,6 +16,24 @@ public class IdmNotificationConfigurationFilter extends QuickFilter {
 	private NotificationLevel level;
 	private String notificationType;
 	private UUID template;
+	private Boolean disabled;
+	private String topic; // this is for equals, use getText for like
+
+	public String getTopic() {
+		return topic;
+	}
+
+	public void setTopic(String topic) {
+		this.topic = topic;
+	}
+
+	public Boolean getDisabled() {
+		return disabled;
+	}
+
+	public void setDisabled(Boolean disabled) {
+		this.disabled = disabled;
+	}
 
 	public String getNotificationType() {
 		return notificationType;

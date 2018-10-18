@@ -29,7 +29,8 @@
       "common": "Operace úspěšně proběhla",
       "create": "Vytvoření proběhlo úspěšně",
       "update": "Uložení proběhlo úspěšně",
-      "delete": "Smazání proběhlo úspěšně"
+      "delete": "Smazání proběhlo úspěšně",
+      "upload": "Soubor byl úspěšně nahrán"
     },
     "task": {
       "detailNotFound":"Tento typ úkolu není podporován!",
@@ -54,7 +55,8 @@
     "property": "Atribut",
     "value": "Hodnota",
     "yes": "Ano",
-    "no": "Ne"
+    "no": "Ne",
+    "readOnly": "Pouze pro čtení"
   },
   "button": {
     "activate": "Aktivovat",
@@ -477,7 +479,8 @@
           "IDENTITY-SELECT": "Výběr identit (SelectBox)",
           "ROLE-SELECT": "Výběr rolí (SelectBox)",
           "FORM-DEFINITION-SELECT": "Výběr definice formuláře (SelectBox)",
-          "BOOLEAN-SELECT": "$t(enums.PersistentTypeEnum.BOOLEAN) (SelectBox)"
+          "BOOLEAN-SELECT": "$t(enums.PersistentTypeEnum.BOOLEAN) (SelectBox)",
+          "ATTACHMENT": "$t(enums.PersistentTypeEnum.ATTACHMENT)"
         },
         "attributes": {
           "empty": "Definice dalších atributů byla nalezena, ale neobsahuje žádné položky, které by bylo možné číst či editovat."
@@ -585,7 +588,8 @@
       "DATE": "Datum",
       "DATETIME": "Datum + čas",
       "BYTEARRAY": "Bitové pole",
-      "UUID": "Uuid identifikátor"
+      "UUID": "Uuid identifikátor",
+      "ATTACHMENT": "Příloha"
     },
     "ObjectClassEnum": {
       "Identity": "Identity",
@@ -636,7 +640,8 @@
     },
     "PasswordPolicyGenerateTypeEnum": {
       "RANDOM": "Náhodné",
-      "PASSPHRASE": "Passphrase"
+      "PASSPHRASE": "Passphrase",
+      "PREFIX_AND_SUFFIX": "Prefix a suffix"
     },
     "PasswordPolicyIdentityAttributeEnum": {
       "USERNAME": "Uživatelské jméno",
@@ -835,7 +840,8 @@
       "AUTOMATICROLEATTRIBUTERULE": "Pravidla automatických rolí (atributy)",
       "AUTOMATICROLEREQUEST": "Žádosti o automatické role",
       "AUTOMATICROLEATTRIBUTERULEREQUEST": "Žádosti o automatické role (pravidla atributů)",
-      "TOKEN": "Token"
+      "TOKEN": "Token",
+      "GENERATEVALUE": "Generování hodnot"
     }
   },
   "content": {
@@ -860,6 +866,9 @@
         "title": "503",
         "description": "Služba není momentálně dostupná.",
         "note": "Zkuste to prosím později."
+      },
+      "syntax-error": {
+        "message": "Chyba komunikace se serverem, zkuste operaci opakovat. Pokud potíže přetrvají, kontaktujte prosím správce aplikace."
       }
     },
     "about": {
@@ -991,11 +1000,35 @@
         "passwordSimilarEmailPreValidate": "Heslo nesmí být podobné emailu.",
         "passwordSimilarFirstNamePreValidate": "Heslo nesmí být podobné jménu.",
         "passwordSimilarLastNamePreValidate": "Heslo nesmí být podobné příjmení.",
-        "maxHistorySimilar": "Heslo se musí lišit od posledních {{0}} hesel."
+        "maxHistorySimilar": "Heslo se musí lišit od posledních {{0}} hesel.",
+        "advancedControlValidateType": "Rozšířená kontrola hesel je dostupná pouze pro validační politku.",
+        "specialCharacterBase":{
+          "list": "Seznam speciálních znaků pro politiky hesel: {{0}}",
+          "text": "Speciální znaky: {{0}}"
+          },
+        "forbiddenCharacterBase": {
+          "list": "Seznam zakázaných znaků pro politiky hesel: {{0}}",
+          "text": "Zakázané znaky: {{0}}"
+          },
+        "passwordSimilarUsernamePreValidate": "uživatelskému jménu",
+        "passwordSimilarEmailPreValidate": "emailu",
+        "passwordSimilarFirstNamePreValidate": "jménu",
+        "passwordSimilarLastNamePreValidate": "příjmení",
+        "passwordSimilarPreValidate": "Heslo nesmí být podobné",
+        "passwordHintPreValidate": "Nápověda pro ",
+        "passwordHintPreValidatePwd": "nové heslo",
+        "passwordHintPreValidateHeader": "Heslo musí splňovat:",
+        "maxHistorySimilar": "Heslo se musí lišit od posledních {{0}} hesel.",
+        "prevalidationLink": {
+          "title": "Pravidla pro nové heslo"
+        }
       },
       "save": {
         "success": "Politika [{{name}}] byla úspěšně uložena."
-      }
+      },
+      "rulesHelp": "Pravidla označená jako nepovinná budou kontrolovány v závislosti na minimálním počtu pravidel pro splnění politiky. Aby heslo prošlo validací politiky, musí projít minimálním počtem z nepovinných pravidel.",
+      "emptyValues": "Pro vynechání jednotlivých validací nechte pole prázdné.",
+      "prefixAndSuffixGeneratedHelp": "Prefix ani suffix není započítáván do celkové délky hesla a do dalších validací při generování. Při použití prefixu a suffixu může například dojít k vygenerování hesla delšího než maximální délka."
     },
     "configuration": {
       "header": "Konfigurace aplikace",
@@ -1018,7 +1051,7 @@
         }
       },
       "configurable": "Konfigurovatelné položky <small>měnitelné, mohou přetěžovat statické položky</small>",
-      "environment": "Statické konfigurační položky prostředí <small>pouze pro čtení</small>",
+      "environment": "Statické konfigurační položky prostředí <small>$t(label.readOnly)</small>",
       "fromFile": "Konfigurace aplikace z konfiguračních souborů <small>application.properties</small>",
       "fromEnvironment": "Konfigurace prostředí <small>backendového serveru</small>",
       "guarded": "Hodnoty položky konfigurace obsahující klíč [<strong>{{guarded}}</strong>] budou automaticky nastaveny tajnými a neveřejnými. Hodnoty začínající prefixem [<strong>idm.sec.</strong>] nemohou býti veřejnými.",
@@ -2868,6 +2901,25 @@
           "success": "Události byly smazány"
         }
       }
+    },
+    "generateValues": {
+      "header": "Generování hodnot",
+      "title": "Generování hodnot",
+      "create": {
+        "header": "Vytvořit nový generátor"
+      },
+      "edit": {
+        "header": "Editace generátoru"
+      },
+      "noGenerators": "Vybraný typ entity neobsahuje žádné generátory",
+      "noProperties": "Vybraný generátor neobsahuje žádné nastavení.",
+      "selectGenerator": "Pro zobrazení nastavení, je nutné vybrat nějdříve generátor.",
+      "generatorProperties": {
+        "title": "Nastavení generátoru"
+      },
+      "filter": {
+        "dtoType": "Typ entity"
+      }
     }
   },
   "entity": {
@@ -3036,7 +3088,7 @@
       },
       "description": "Popis",
       "required": "Povinný",
-      "readonly": "Pouze pro čtení",
+      "readonly": "$t(label.readOnly)",
       "confidential": "Tajné",
       "multiple": "Více hodnotový",
       "placeholder": {
@@ -3399,7 +3451,19 @@
       "level": "Typ notifikace",
       "notificationType": "Kanál",
       "template": "Šablona",
-      "description": "Popis"
+      "description": "Popis",
+      "disabled": {
+        "label": "$t(label.disabled)",
+        "help": "Notifikace nebudou odesílány."
+      },
+      "redirect": {
+        "label": "Přesměrování",
+        "help": "Notifikace bude zaslána pouze na zde nakonfigurované příjemce. Původnímu příjemci nebude notifikace odeslána."
+      },
+      "recipients": {
+        "label": "Příjemci",
+        "help": "Notifikace bude zaslána i na tyto příjemce. Vylnění příjemců je povinné, pokud je zapnuto přesměrování."
+      }
     },
     "Email": {
       "topic": "$t(entity.Notification.topic)",
@@ -3500,56 +3564,130 @@
       "traceLine": "Záznam"
     },
     "PasswordPolicy": {
-      "type": "Typ",
-      "name": "Název",
-      "basic": "Základní údaje",
-      "bases": "Znaky",
-      "generateType": "Typ generování",
-      "disabled": "Neaktivní",
-      "description": "Popis",
-      "defaultPolicy": "Standardní politika",
-      "passwordLengthRequired": "Povinná délka hesla",
-      "minPasswordLength": "Minimální délka",
-      "maxPasswordLength": "Maximální délka",
-      "upperCharRequired": "Povinné velké znaky",
-      "minUpperChar": "Minimum velkých znaků",
-      "lowerCharRequired": "Povinné malé znaky",
-      "minLowerChar": "Minimum malých znaků",
-      "numberRequired": "Povinná čísla",
-      "minNumber": "Minimum čísel",
-      "specialCharRequired": "Povinné speciální znaky",
-      "minSpecialChar": "Minimum speciálních znaků",
-      "prohibitedCharacters": "Zakázané znaky",
-      "weakPassRequired": "Povinné slabé hesla",
-      "weakPass": "Slabé hesla",
-      "passphraseWords": "Počet slov pro passphrase",
-      "maxPasswordAge": "Maximální stáří hesla",
-      "minPasswordAge": "Minimální doba pro změnu hesla",
-      "enchancedControl": "Rozšířená kontrola",
-      "minRulesToFulfill": "Minimum pravidel pro splnění politiky",
-      "maxHistorySimilar": "Počet zpětně kontrolovaných hesel na shodu",
-      "blockLoginTime": "Doba blokace přihlášení (vteřiny)",
-      "maxUnsuccessfulAttempts": "Maximální počet neúspěšných pokusů o přihlášení",
-      "lowerCharBase": "Povolené malé znaky",
-      "upperCharBase": "Povolené velké znaky",
-      "numberBase": "Povolené číslice",
-      "specialCharBase": "Povolené speciální znaky",
-      "identityAttributeCheck": "Atributy identity pro kontrolu",
-      "help": {
-        "defaultPolicy": "Standardní politika je použita pro CzechIdM a všechny systémy, kde není určena jiná politika.",
-        "maxPasswordAge": "Maximální počet dnů platnosti hesla.",
-        "minPasswordAge": "Minimální počet dnů platnost hesla, po tuto dobu není možné heslo změnit.",
-        "enchancedControl": "Rozšířená kontrola hesla zkvalitňuje základní validaci hesla a to o kontrolu podobnosti na minulé hesla a kontrolu podobnosti s uživatelskými atributy. Také je možnost nastavit povinná pouze některá pravidla.",
-        "rules": "Pravidla označená jako nepovinná budou kontrolovány v závislosti na minimálním počtu pravidel pro splnění politiky. Aby heslo prošlo validací politiky, musí projít minimálním počtem z nepovinných pravidel.",
-        "minRulesToFulfill": "Minimální počet pravidel pro splnění politiky, pokud heslo splní minimální počet je označeno jako validní.",
-        "maxHistorySimilar": "Počet zpětně kontrolovaných hesel na podobnost.",
-        "blockLoginTime": "Po zadaní X neúspěšných pokusů bude uživateli blokováno přihlášení.",
-        "maxUnsuccessfulAttempts": "Počet neúspěšných pokusů o přihlášení. Po překročení bude uživateli blokováno přihlášení do aplikace.",
-        "prohibitedCharacters": "Zakázané znaky budou kontrolovány při validaci a při generování hesla budou zcela vypuštěny. Vkládejte bez mezer jednotlivé znaky přímo za sebou, například: 1LliIo0!",
-        "bases": "Znakové sady pro generování hesel, ze sad jsou odstraněny zakázané znaky.",
-        "identityAttributeCheck": "Atributy uživatele, které budou kontrolovány na podobnost s heslem.",
-        "emptyValues": "Pro vynechání jednotlivých validací nechte pole prázdné.",
-        "passphraseWords": "Počet slov které bude obsahovat nově vygenerované passphrase."
+      "type": {
+        "label": "Typ"
+      },
+      "name": {
+        "label": "Název"
+      },
+      "basic": {
+        "label": "Základní údaje"
+      },
+      "bases": {
+        "label": "Znaky",
+        "help": "Znakové sady pro generování hesel, ze sad jsou odstraněny zakázané znaky."
+      },
+      "generateType": {
+        "label": "Typ generování"
+      },
+      "disabled": {
+        "label": "Neaktivní"
+      },
+      "description": {
+        "label": "Popis"
+      },
+      "defaultPolicy": {
+        "label": "Standardní politika",
+        "help": "Standardní politika je použita pro CzechIdM a všechny systémy, kde není určena jiná politika."
+      },
+      "passwordLengthRequired": {
+        "label": "Povinná délka hesla"
+      },
+      "minPasswordLength": {
+        "label": "Minimální délka"
+      },
+      "maxPasswordLength": {
+        "label": "Maximální délka"
+      },
+      "upperCharRequired": {
+        "label": "Povinné velké znaky"
+      },
+      "minUpperChar": {
+        "label": "Minimum velkých znaků"
+      },
+      "lowerCharRequired": {
+        "label": "Povinné malé znaky"
+      },
+      "minLowerChar": {
+        "label": "Minimum malých znaků"
+      },
+      "numberRequired": {
+        "label": "Povinná čísla"
+      },
+      "minNumber": {
+        "label": "Minimum čísel"
+      },
+      "specialCharRequired": {
+        "label": "Povinné speciální znaky"
+      },
+      "minSpecialChar": {
+        "label": "Minimum speciálních znaků"
+      },
+      "prohibitedCharacters": {
+        "label": "Zakázané znaky",
+        "help": "Zakázané znaky budou kontrolovány při validaci a při generování hesla budou zcela vypuštěny. Vkládejte bez mezer jednotlivé znaky přímo za sebou, například: 1LliIo0!"
+      },
+      "weakPassRequired": {
+        "label":  "Povinné slabé hesla"
+      },
+      "weakPass": {
+        "label": "Slabé hesla"
+      },
+      "passphraseWords": {
+        "label": "Počet slov pro passphrase",
+        "help": "Počet slov které bude obsahovat nově vygenerované passphrase."
+      },
+      "maxPasswordAge": {
+        "label": "Maximální stáří hesla",
+        "help": "Maximální počet dnů platnosti hesla."
+      },
+      "minPasswordAge": {
+        "label": "Minimální doba pro změnu hesla",
+        "help": "Minimální počet dnů platnost hesla, po tuto dobu není možné heslo změnit."
+      },
+      "enchancedControl": {
+        "label": "Rozšířená kontrola",
+        "help": "Rozšířená kontrola hesla zkvalitňuje základní validaci hesla a to o kontrolu podobnosti na minulé hesla a kontrolu podobnosti s uživatelskými atributy. Také je možnost nastavit povinná pouze některá pravidla."
+      },
+      "minRulesToFulfill": {
+        "label": "Minimum pravidel pro splnění politiky",
+        "help": "Minimální počet pravidel pro splnění politiky, pokud heslo splní minimální počet je označeno jako validní."
+      },
+      "maxHistorySimilar": {
+        "label": "Počet zpětně kontrolovaných hesel na shodu",
+        "help": "Počet zpětně kontrolovaných hesel na podobnost."
+      },
+      "blockLoginTime": {
+        "label": "Doba blokace přihlášení (vteřiny)",
+        "help": "Po zadaní X neúspěšných pokusů bude uživateli blokováno přihlášení."
+      },
+      "maxUnsuccessfulAttempts": {
+        "label": "Maximální počet neúspěšných pokusů o přihlášení",
+        "help": "Počet neúspěšných pokusů o přihlášení. Po překročení bude uživateli blokováno přihlášení do aplikace."
+      },
+      "lowerCharBase": {
+        "label": "Povolené malé znaky"
+      },
+      "upperCharBase": {
+        "label": "Povolené velké znaky"
+      },
+      "numberBase": {
+        "label": "Povolené číslice"
+      },
+      "specialCharBase": {
+        "label": "Povolené speciální znaky"
+      },
+      "identityAttributeCheck": {
+        "label": "Atributy identity pro kontrolu",
+        "help": "Atributy uživatele, které budou kontrolovány na podobnost s heslem."
+      },
+      "prefix": {
+        "label": "Prefix",
+        "help": "Prefix bude automaticky doplněn na začátek vygenerované části. Pro vynechání prefixu, nechte pole prázdné."
+      },
+      "suffix": {
+        "label": "Suffix",
+        "help": "Suffix bude automaticky doplněn na konec vygenerované části. Pro vynechání suffixu, nechte pole prázdné."
       }
     },
     "Module": {
@@ -3858,6 +3996,37 @@
       "processedOrder": {
         "label": "Zpracované pořadí"
       }
+    },
+    "GenerateValue": {
+      "dtoType": {
+        "label": "Typ entity",
+        "placeholder": "Vyberte typ entity",
+        "help": "Generování je prováděno pro určitý druh entit. Na základě vybrané entity budou nabídnuty různé druhy generátorů"
+      },
+      "generatorType": {
+        "label": "Typ generátoru",
+        "placeholder": "Vyberte typ generátoru"
+      },
+      "seq": {
+        "label": "Pořadí",
+        "placeholder": "Nastavte pořadí",
+        "help": "Generátory jsou spracovávány dle pořadí od nejmenšího po největší. V případě že dva generátory generují hodnoty pro stejný atribut, výsledná hodnota bude vygenerována z posledního generátoru."
+      },
+      "description": {
+        "label": "Popis"
+      },
+      "disabled": {
+        "label": "Neaktivní",
+        "help": "Neaktivní generátory jsou ignorovány"
+      },
+      "regenerateValue": {
+        "label": "Přegenerovat hodnotu",
+        "help": "V případě zatržení bude vyplněná hodnota od uživatele generátorem přegenerována. V případě odtržení generátor nebude uživatelem vyplněnou hodnotu měnit."
+      },
+      "unmodifiable": {
+        "label": "Systémový generátor",
+        "help": "Systémový generátor nemůže být smazán a nelze upravovat některé jeho atributy."
+      }
     }
   },
   "wf": {
@@ -3964,6 +4133,28 @@
         "approveAutomaticRoleBySecurity": {
           "name": "Schválení úpravy/vytvoření/smazání automatické role",
           "description":"Schválení úpravy/vytvoření/smazání automatické role '{{0}}'"
+        }
+      }
+    },
+    "request-idm-role" : {
+      "name": "Žádost o změnu/vytvoření/odstranění role s názvem '{{0}}'",
+      "task": {
+        "approveAutomaticRole": {
+          "name": "Schválení změny role garantem",
+          "description":"Žádost o změnu/vytvoření/odstranění role s názvem '{{0}}'"
+        }
+      }
+    },
+    "request-idm-role-composition" : {
+      "name": "Schválení žádosti o změnu 'Business' role",
+      "task": {
+        "approveAddBusinessRole": {
+          "name": "Schválení přidání nové 'Business' role",
+          "description":"Schválení přidání 'Business' role ('{{1}}') s názvem '{{0}}' do role '{{2}}'."
+        },
+        "approveRemoveBusinessRole": {
+          "name": "Schválení odebrání 'Business' role",
+          "description":"Schválení odebrání 'Business' role ('{{0}}') s názvem '{{1}}' z role '{{2}}'."
         }
       }
     },
@@ -4186,6 +4377,100 @@
           }
         }
       }
+    },
+    "value-generator": {
+      "core-identity-username-value-generator": {
+        "label": "Standardní generátor uživatelského jména",
+        "help": "Generátor generuje uživatelské jméno na základě vyplněných hodnot 'jméno' a 'příjmení', z těchto hodnot odstraní diaktiritku, ořízne je na definovaný počet a spojí pomocí spojovníku.",
+        "attributes": {
+          "connectioncharacter": {
+            "label": "Spojovací znak",
+            "help": "Znak/y které budou použity pro spojení jména a příjmení. Hodnota nemusí být vyplněna. V tomto případě bude jméno a příjmení spojeno bez žádného spojovacího znaku."
+          },
+          "firstnamecharactercount": {
+            "label": "Počet znaků ze jména",
+            "help": "Maximální počet znaků které budou použity z jména."
+          },
+          "lastnamecharactercount": {
+            "label": "Počet znaků z příjmení",
+            "help": "Maximální počet znaků, které budou použity z příjmení."
+          },
+          "searchuniqueusername": {
+            "label": "Ověřovat unikátní uživatelské jméno",
+            "help": "Nově vygenerované uživatelské jméno bude vyhledáno a v případě existence bude dodáván číselný suffix. Suffix může být inkrementován."
+          },
+          "firstnamefirst": {
+            "label": "Jméno uživatele použít první",
+            "help": "Při generování bude prvně doplněno jméno uživatele následně příjmení. Při odškrknutí bude pořadí opačné."
+          }
+        }
+      },
+      "core-identity-email-value-generator": {
+        "label": "Standardní generátor emailové adresy",
+        "help": "Generátor generuje emailovou adresu na základě uživatelského jména. K uživatelskému jménu přidá definovaný suffix. Pozor výsledná hodnota musí splňovat správný tvar emailové adresy.",
+        "attributes": {
+          "emailsuffix": {
+            "label": "Emailový suffix",
+            "help": "Suffix bude doplněn k uživatelskému jménu a společně musí tvořit emailovou adresu."
+          },
+          "connectioncharacter": {
+            "label": "Spojovací znak",
+            "help": "Znak/y které budou použity pro spojení jména a příjmení. Hodnota nemusí být vyplněna. V tomto případě bude jméno a příjmení spojeno bez žádného spojovacího znaku."
+          },
+          "firstnamecharactercount": {
+            "label": "Počet znaků ze jména",
+            "help": "Maximální počet znaků které budou použity z jména."
+          },
+          "lastnamecharactercount": {
+            "label": "Počet znaků z příjmení",
+            "help": "Maximální počet znaků, které budou použity z příjmení."
+          },
+          "generatefromusername": {
+            "label": "Generovat na základě uživatelského jména",
+            "help": "Základ pro email bude brán z existujícího uživatelského jména. Uživatelské jméno musí v moment generování existovat."
+          },
+          "firstnamefirst": {
+            "label": "Jméno uživatele použít první",
+            "help": "Při generování bude prvně doplněno jméno uživatele následně příjmení. Při odškrknutí bude pořadí opačné."
+          }
+        }
+      },
+      "core-identity-script-value-generator": {
+        "label": "Skriptovaný generátor",
+        "help": "Generátor spouští definovaný skript. Na vstupu skriptu jsou k dispozici tyto atributy 'entity' a 'valueGenerator'. Pozor funkci 'přegenerovat hodnotu' musí skript implementovat sám. Skript musí být z kategorie systémový.",
+        "attributes": {
+          "scriptcode": {
+            "label": "Kód skriptu",
+            "help": "Kód skriptu, který bude spouštěn."
+          }
+        }
+      },
+      "core-identity-form-default-value-generator": {
+        "label": "Doplnění standardních hodnot pro formuláře v dalších údajích",
+        "help": "Generátor doplní všem atributům standardní hodnoty.",
+        "attributes": {
+          "formdefinitionuuid": {
+            "label": "Formulář",
+            "help": "Formulář musí být pro daný typ entity (IdmIdentity). Pokud necháte prázdné budou hodnoty doplněny pro všechny formuláře."
+          },
+          "regexmultiplevalues": {
+            "label": "Oddělovač",
+            "help": "Pokud je atribut vícehodnotový a standardní hodnota obsahuje více hodnot, napište znak/y kterým jsou odděleny. Pokud necháte prázdné bude použit znak ','."
+          }
+        }
+      }
+    },
+    "long-running-task": {
+      "core-test-long-running-task": {
+        "label": "Testovací úloha",
+        "help": "Počítá do zadaného počtu, čeká 300ms pro každou iteraci.",
+        "attributes": {
+          "count": {
+            "label": "Počet",
+            "help": "Počítá do zadaného počtu, čeká 300ms pro každou iteraci."
+          }
+        }
+      }
     }
   },
   "error": {
@@ -4355,6 +4640,10 @@
       "title": "Prvek struktury nelze odebrat",
       "message": "Prvek struktury [{{treeNode}}] je již použit v pracovně právních vztazích. Před odebráním tohoto prvku upravte všechny vztahy."
     },
+    "TREE_NODE_DELETE_FAILED_HAS_CONTRACT_POSITIONS": {
+      "title": "Prvek struktury nelze odebrat",
+      "message": "Prvek struktury [{{treeNode}}] je již použit u pozic v pracovně právních vztazích. Před odebráním tohoto prvku upravte všechny pozice."
+    },
     "TREE_NODE_DELETE_FAILED_HAS_CONTRACT_SLICES": {
       "title": "Prvek struktury nelze odebrat",
       "message": "Prvek struktury [{{treeNode}}] je již použit v časových řezech pracovně právních vztahů. Před odebráním tohoto prvku upravte všechny vztahy."
@@ -4455,6 +4744,10 @@
       "title": "Konfigurace nemůže být uložena",
       "message": "Topic [{{topic}}] a null level již existuje."
     },
+    "NOTIFICATION_CONFIGURATION_RECIPIENT_NOT_FOUND": {
+      "title": "Konfigurace nemůže být uložena",
+      "message": "Vyplnění příjemců je povinné pro přesměrované notifikace s tématem [{{topic}}]."
+    },
     "FORM_DEFINITION_DELETE_FAILED_SYSTEM_DEFINITION": {
       "title": "Definice formuláře nelze smazat",
       "message": "Definice [{{name}}] nelze smazat, protože je označená jako systémová."
@@ -4494,6 +4787,10 @@
     "UNMODIFIABLE_ATTRIBUTE_CHANGE": {
       "title": "Atribut {{name}} nelze změnit",
       "message": "Atribut {{name}} v entitě {{class}} nelze změnit."
+    },
+    "UNMODIFIABLE_DELETE_FAILED": {
+      "title": "Záznam nelze smazat",
+      "message": "Záznam [{{record}}] je systémový a nelze jej odebrat."
     },
     "PASSWORD_EXPIRATION_TASK_DAYS_BEFORE": {
       "title": "Úloha je chybně nakonfigurovaná",
@@ -4791,6 +5088,10 @@
       "title": "Nalezeno více šablon",
       "message": "Více než jedna šablona byla nalezena pro kód: [{{code}}]."
     },
+    "NOTIFICATION_NOT_SENT": {
+      "title": "Notifikace nebyla odeslána",
+      "message": "Konfigurace pro notificaci s tématem [{{topic}}] nebyla nalezena nebo není aktivní."
+    },
     "PASSWORD_CHANGE_ACCOUNT_FAILED": {
       "title": "Chyba při změně hesla",
       "message": "Změna hesla selhala na následujících účtech: [{{accounts}}]."
@@ -4930,6 +5231,74 @@
     "ROLE_COMPOSITION_REMOVE_TASK_RUN_CONCURRENTLY": {
       "title": "Business role je mazána jiným procesem",
       "message": "Business role [{{roleCompositionId}}] je mazána souběžnou úlohou [{{taskId}}]."
+    },
+    "GENERATOR_SCRIPT_RETURN_NULL_OR_BAD_DTO_TYPE": {
+      "title": "Skript pro generování vrací chybový stav",
+      "message": "Skript [{{scriptCode}}] vrátil null, nebo špatný typ entity. Návratová hodnota: [{{returnedValue}}]."
+    },
+    "GENERATOR_FORM_ATTRIBUTE_NOT_FOUND": {
+      "title": "Formulářový atribut pro definici nebyl nalezen",
+      "message": "Formulářový atribut pro definici [{{formDefinitionCode}}] s kódem [{{formAttributeCode}}] nebyl nalezen."
+    },
+    "GENERATOR_FORM_DEFINITION_BAD_TYPE": {
+      "title": "Definice má špatný typ",
+      "message": "Fromulářová definice id [{{formDefinitionId}}], má špastný typ. Správný typ: [{{dtoType}}]."
+    },
+    "IDMIDENTITY_USERNAME_NOTEMPTY": {
+      "title": "Uživatelské jméno nemůže být prázdné",
+      "message": "Uživatelské jméno nebylo vyplněno. Vyplňte prosím uživatelské jméno, nebo zapněte generátor uživatelských jmen."
+    },
+    "DTO_CANNOT_BE_CONVERT_TO_JSON": {
+      "title": "DTO nelze převést do JSON formátu!",
+      "message": "DTO [{{dto}}] nelze převést do JSON formátu!"
+    },
+    "JSON_CANNOT_BE_CONVERT_TO_DTO": {
+      "title": "JSON nelze převést do DTO formátu!",
+      "message": "JSON [{{json}}] nelze převést do DTO formátu!"
+    },
+    "REQUEST_CUD_OPERATIONS_NOT_ALLOWED": {
+      "title": "CUD operace nejsou povoleny na REST kontroleru [{{controller}}]!",
+      "message": "CUD operace nejsou povoleny na REST kontroleru [{{controller}}]! Použíjte REST kontroler agendy žádostí."
+    },
+    "REQUEST_NO_EXECUTE_IMMEDIATELY_RIGHT": {
+      "title": "Nemáte právo na provedení žádosti bez schvalování!",
+      "message": "Nemáte právo (REQUEST_ADMIN) na provedení žádosti [{{request}}] bez spuštění schvalovacího procesu!"
+    },
+    "REQUEST_ITEM_IS_NOT_VALID": {
+      "title": "DTO [{{dto}}] v položce žádosti není validní!",
+      "message": "DTO [{{dto}}]  v položce žádosti [{{item}}] není validní!"
+    },
+    "REQUEST_NO_WF_DEF_FOUND": {
+      "title": "Nebyl nalezen žádný schvalovací proces!",
+      "message": "Nebyl nalezen žádný schvalovací proces pro tento typ objektu [{{entityType}}]!"
+    },
+    "REQUEST_OWNER_WAS_DELETED": {
+      "title": "Vlastník žádosti (cílový objekt) byl smazán!",
+      "message": "Vlastník žádosti [{{owner}}] byl smazán!"
+    },
+    "REQUEST_OWNER_FROM_OTHER_REQUEST_WAS_DELETED": {
+      "title": "Vlastník žádosti (cílový objekt) byl smazán v rámci jiné žádosti!",
+      "message": "Vlastník žádosti [{{owner}}] byl smazán v rámci jiné žádosti [{{otherRequest}}]!"
+    },
+    "REQUEST_CANNOT_BE_EXECUTED_NONE_ITEMS": {
+      "title": "Žádost nemůže být provedena!",
+      "message": "Žádost [{{request}}] nemůže být provedena. Neobsahuje žádné položky!"
+    },
+    "REQUEST_ITEM_CANNOT_BE_EXECUTED": {
+      "title": "Položka žádosti [{{item}}] nemůže být provedena!",
+      "message": "Položka žádosti [{{item}}] nemůže být provedena! Musí být ve stavu 'Schváleno' nebo 'Koncept', ale je ve stavu [{{state}}]!"
+    },
+    "REQUEST_ITEM_CANNOT_BE_CREATED": {
+      "title": "Položka žádosti nemůže být vytvořena/upravena!",
+      "message": "Položka žádosti nemůže být vytvořena/upravena pro objekt [{{dto}}]. Rodičovská žádost můsí být ve stavu 'Zpracovává se', 'Koncept' nebo 'Výjimka', ale je ve stavu [{{state}}]!"
+    },
+    "REQUEST_ITEM_NOT_EXECUTED_PARENT_CANCELED": {
+      "title": "Položka žádosti [{{item}}] nemůže být provedena!",
+      "message": "Položka žádosti [{{item}}] nemůže být provedena, protože používá DTO (nově vytvořené) z jiné již zrušené položky [{{terminatedItem}}]!"
+    },
+    "REQUEST_EXECUTED_CANNOT_DELETE": {
+      "title": "Žádost o změnu oprávnění nemohla být smazána",
+      "message": "Žádost ve stavu 'Provedeno' nemůže být smazána!"
     }
   },
   "validationError": {

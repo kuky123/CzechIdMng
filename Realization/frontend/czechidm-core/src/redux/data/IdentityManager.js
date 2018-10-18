@@ -1,5 +1,5 @@
 import FormableEntityManager from './FormableEntityManager';
-import SecurityManager from '../security/SecurityManager';
+import SecurityManager, { RECEIVE_PROFILE } from '../security/SecurityManager';
 import { IdentityService } from '../../services';
 import DataManager from './DataManager';
 import ProfileManager from './ProfileManager';
@@ -163,6 +163,30 @@ export default class IdentityManager extends FormableEntityManager {
    */
   resolveProfileUiKey(identityId) {
     return `${IdentityManager.UIKEY_PROFILE}${identityId}`;
+  }
+
+  /**
+   * Save logged identity profile metadata.
+   * Refresh logged user context profile.
+   *
+   * @param  {Profile} profile metadata
+   * @return {action}
+   */
+  saveCurrentProfile(identityId, profile) {
+    return (dispatch) => {
+      this.getService().patchProfile(identityId, profile)
+        .then((entity) => {
+          dispatch({
+            type: RECEIVE_PROFILE,
+            profile: entity
+          });
+        })
+        .catch(error => {
+          // log error only into message history (e.g. 403 - authorization policies are wrong configured)
+          // saving profile is optional - logged identity couldn't have permission for read profile (or profile not found)
+          this.flashMessagesManager.addErrorMessage({ hidden: true, level: 'info' }, error);
+        });
+    };
   }
 
   /**

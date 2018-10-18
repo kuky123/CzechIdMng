@@ -9,7 +9,7 @@ import * as Basic from '../../components/basic';
 import * as Advanced from '../../components/advanced';
 import { IdentityManager } from '../../redux';
 
-const PASSWORD_DOES_NOT_MEET_POLICY = 'PASSWORD_DOES_NOT_MEET_POLICY';
+const PASSWORD_PREVALIDATION = 'PASSWORD_PREVALIDATION';
 
 const identityManager = new IdentityManager();
 
@@ -72,8 +72,14 @@ class Create extends Basic.AbstractContent {
       return response.json();
     })
     .then(json => {
-      if (Utils.Response.hasError(json)) {
-        const error = Utils.Response.getFirstError(json);
+      let error;
+      if (Utils.Response.getFirstError(json)) {
+        error = Utils.Response.getFirstError(json);
+      } else if (json._errors) {
+        error = json._errors.pop();
+      }
+
+      if (error) {
         this.setState({
           validationError: error,
           validationDefinition: true
@@ -87,7 +93,7 @@ class Create extends Basic.AbstractContent {
       if (!error) {
         return {};
       }
-      if (error.statusEnum === PASSWORD_DOES_NOT_MEET_POLICY) {
+      if (error.statusEnum === PASSWORD_PREVALIDATION) {
         this.addErrorMessage({hidden: true}, error);
       } else {
         this.addError(error);
@@ -250,7 +256,7 @@ class Create extends Basic.AbstractContent {
 
               <Basic.AbstractForm ref="form" data={detail.entity}>
                 <div className="col-lg-7">
-                  <Basic.TextField ref="username" label={this.i18n('content.identity.profile.username')} required min={3} max={255}/>
+                  <Basic.TextField ref="username" label={this.i18n('content.identity.profile.username')} max={255}/>
                   <Basic.TextField ref="firstName" label={this.i18n('content.identity.profile.firstName')} max={255}/>
                   <Basic.TextField ref="lastName" label={this.i18n('content.identity.profile.lastName')} max={255}/>
                   <Basic.TextField ref="externalCode" label={this.i18n('content.identity.profile.externalCode')} max={255}/>

@@ -1,4 +1,4 @@
-package eu.bcvsolutions.idm.core.notification;
+package eu.bcvsolutions.idm.core.notification.service.impl;
 
 import static org.junit.Assert.assertEquals;
 

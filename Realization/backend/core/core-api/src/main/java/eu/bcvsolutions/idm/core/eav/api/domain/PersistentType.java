@@ -17,5 +17,6 @@ public enum PersistentType {
 	DATE,
 	DATETIME,
 	BYTEARRAY,
-	UUID;
+	UUID, // referenced entity uuid (identity) 
+	ATTACHMENT; // referenced attachment
 }

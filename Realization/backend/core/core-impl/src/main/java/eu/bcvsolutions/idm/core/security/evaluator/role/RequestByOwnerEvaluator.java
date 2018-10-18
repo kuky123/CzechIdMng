@@ -10,11 +10,9 @@ import javax.persistence.criteria.Subquery;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Description;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import eu.bcvsolutions.idm.core.api.dto.IdmRoleDto;
-import eu.bcvsolutions.idm.core.api.dto.filter.IdmRoleFilter;
 import eu.bcvsolutions.idm.core.api.service.IdmRoleService;
 import eu.bcvsolutions.idm.core.model.entity.IdmRequest;
 import eu.bcvsolutions.idm.core.model.entity.IdmRequest_;
@@ -23,6 +21,7 @@ import eu.bcvsolutions.idm.core.model.entity.IdmRole_;
 import eu.bcvsolutions.idm.core.security.api.domain.AbstractAuthentication;
 import eu.bcvsolutions.idm.core.security.api.domain.AuthorizationPolicy;
 import eu.bcvsolutions.idm.core.security.api.domain.BasePermission;
+import eu.bcvsolutions.idm.core.security.api.domain.IdmBasePermission;
 import eu.bcvsolutions.idm.core.security.api.service.AuthorizationManager;
 import eu.bcvsolutions.idm.core.security.api.service.SecurityService;
 import eu.bcvsolutions.idm.core.security.evaluator.AbstractAuthorizationEvaluator;
@@ -41,7 +40,7 @@ import eu.bcvsolutions.idm.core.security.evaluator.AbstractAuthorizationEvaluato
 public class RequestByOwnerEvaluator extends AbstractAuthorizationEvaluator<IdmRequest> {
 
 	public static final String EVALUATOR_NAME = "core-request-by-owner-evaluator";
-	//
+	
 	@Autowired
 	private SecurityService securityService;
 	@Autowired
@@ -61,18 +60,17 @@ public class RequestByOwnerEvaluator extends AbstractAuthorizationEvaluator<IdmR
 		if (authentication == null || authentication.getCurrentIdentity() == null) {
 			return null;
 		}
-		
-			// by IdmRole
-			Subquery<IdmRole> roleSubquery = query.subquery(IdmRole.class);
-			Root<IdmRole> subRoot = roleSubquery.from(IdmRole.class);
-			Predicate rolePredicate = authorizationManager.getPredicate(subRoot, query, builder, permission);
-			roleSubquery.select(subRoot);
 
-			roleSubquery.where(builder.and(
-					builder.equal(subRoot.get(IdmRole_.id), root.get(IdmRequest_.ownerId)), // correlation attr);
-					rolePredicate));
-		
-			return builder.or(builder.exists(roleSubquery));
+		// by IdmRole
+		Subquery<IdmRole> roleSubquery = query.subquery(IdmRole.class);
+		Root<IdmRole> subRoot = roleSubquery.from(IdmRole.class);
+		Predicate rolePredicate = authorizationManager.getPredicate(subRoot, query, builder, permission);
+		roleSubquery.select(subRoot);
+
+		roleSubquery.where(
+				builder.and(builder.equal(subRoot.get(IdmRole_.id), root.get(IdmRequest_.ownerId)), rolePredicate));
+
+		return builder.or(builder.exists(roleSubquery));
 	}
 
 	@Override
@@ -84,18 +82,24 @@ public class RequestByOwnerEvaluator extends AbstractAuthorizationEvaluator<IdmR
 
 		// By IdmRole
 		if (IdmRoleDto.class.getName().equals(entity.getOwnerType())) {
-			IdmRoleFilter roleFilter = new IdmRoleFilter();
-			roleFilter.setId(entity.getOwnerId());
-
-			if (roleService.find(roleFilter, new PageRequest(0, 1)).getTotalElements() > 0) {
-				permissions.addAll(policy.getPermissions());
-				return permissions;
+			Set<String> rolePermissions = roleService.getPermissions(new IdmRoleDto(entity.getOwnerId()));
+			if (rolePermissions.contains(IdmBasePermission.READ.getName()) 
+					|| rolePermissions.contains(IdmBasePermission.UPDATE.getName()) 
+					|| rolePermissions.contains(IdmBasePermission.DELETE.getName()) 
+					|| rolePermissions.contains(IdmBasePermission.ADMIN.getName()) 
+					|| rolePermissions.contains(IdmBasePermission.CREATE.getName())) {
+				permissions.add(IdmBasePermission.CREATE.getName());
+				permissions.add(IdmBasePermission.DELETE.getName());
+				permissions.add(IdmBasePermission.UPDATE.getName());
+				permissions.add(IdmBasePermission.EXECUTE.getName());
+				permissions.add(IdmBasePermission.READ.getName());
+				permissions.add(IdmBasePermission.AUTOCOMPLETE.getName());
 			}
 		}
-		//
+		
 		return permissions;
 	}
-	
+
 	@Override
 	public boolean supportsPermissions() {
 		return false;

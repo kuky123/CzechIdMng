@@ -1,7 +1,7 @@
 package eu.bcvsolutions.idm.core.api.domain;
 
 /**
- * Enum for type of new password.
+ * Enum for generate password policies.
  * - RANDOM 
  * - PASSPHRASE
  * 

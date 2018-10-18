@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import eu.bcvsolutions.idm.acc.domain.ProvisioningEventType;
 import eu.bcvsolutions.idm.acc.dto.SysProvisioningBatchDto;
 import eu.bcvsolutions.idm.acc.dto.SysProvisioningOperationDto;
 import eu.bcvsolutions.idm.acc.dto.SysSystemDto;
+import eu.bcvsolutions.idm.acc.dto.filter.SysProvisioningOperationFilter;
 import eu.bcvsolutions.idm.acc.entity.SysProvisioningOperation_;
 import eu.bcvsolutions.idm.acc.exception.ProvisioningException;
 import eu.bcvsolutions.idm.acc.repository.SysProvisioningOperationRepository;
@@ -111,25 +114,39 @@ public class DefaultProvisioningExecutor implements ProvisioningExecutor {
 			// new batch
 			batch = batchService.save(new SysProvisioningBatchDto(provisioningOperation));
 			provisioningOperation.setResult(new OperationResult.Builder(OperationState.CREATED).build());
-		} else if (provisioningOperationService.findByBatchId(batch.getId(), new PageRequest(0, 1)).getTotalElements() == 0) {
-			// batch is completed (no operations in queue)
-			provisioningOperation.setResult(new OperationResult.Builder(OperationState.CREATED).build());			
 		} else {
-			// put to queue, if previous
-			ResultModel resultModel = new DefaultResultModel(AccResultCode.PROVISIONING_IS_IN_QUEUE, 
-					ImmutableMap.of(
-							"name", uid, 
-							"system", system.getName(),
-							"operationType", provisioningOperation.getOperationType(),
-							"objectClass", provisioningOperation.getProvisioningContext().getConnectorObject().getObjectClass()));
-			LOG.debug(resultModel.toString());				
-			provisioningOperation.setResult(new OperationResult.Builder(OperationState.NOT_EXECUTED).setModel(resultModel).build());
-			if (securityService.getCurrentId() != null) { // TODO: check logged identity and account owner
-				notificationManager.send(
-						AccModuleDescriptor.TOPIC_PROVISIONING,
-						new IdmMessageDto.Builder(NotificationLevel.WARNING)
-							.setModel(provisioningOperation.getResult().getModel())
-							.build());
+			SysProvisioningOperationFilter filter = new SysProvisioningOperationFilter();
+			filter.setBatchId(batch.getId());
+			List<SysProvisioningOperationDto> activeOperations = provisioningOperationService
+					.find(filter, new PageRequest(0, 1, new Sort(Direction.DESC, SysProvisioningOperation_.created.getName())))
+					.getContent();
+			if (activeOperations.isEmpty()) {
+				// batch is completed (no operations in queue)
+				provisioningOperation.setResult(new OperationResult.Builder(OperationState.CREATED).build());			
+			} else {
+				// put to queue, if previous
+				ResultModel resultModel = new DefaultResultModel(AccResultCode.PROVISIONING_IS_IN_QUEUE, 
+						ImmutableMap.of(
+								"name", uid, 
+								"system", system.getName(),
+								"operationType", provisioningOperation.getOperationType(),
+								"objectClass", provisioningOperation.getProvisioningContext().getConnectorObject().getObjectClass()));
+				LOG.debug(resultModel.toString());				
+				provisioningOperation.setResult(new OperationResult.Builder(OperationState.NOT_EXECUTED).setModel(resultModel).build());
+				if (activeOperations.get(0).getResultState() == OperationState.RUNNING) { // the last operation = the first operation and it's running
+					// Retry date will be set for the second operation in the queue (the first is running). 
+					// Other operations will be executed automatically by batch.
+					provisioningOperation.setMaxAttempts(provisioningConfiguration.getRetryMaxAttempts());
+					batch.setNextAttempt(batchService.calculateNextAttempt(provisioningOperation));
+					batch = batchService.save(batch);
+				}
+				if (securityService.getCurrentId() != null) { // TODO: check logged identity and account owner
+					notificationManager.send(
+							AccModuleDescriptor.TOPIC_PROVISIONING,
+							new IdmMessageDto.Builder(NotificationLevel.WARNING)
+								.setModel(provisioningOperation.getResult().getModel())
+								.build());
+				}
 			}
 		}
 		provisioningOperation.setBatch(batch.getId());
@@ -208,7 +225,7 @@ public class DefaultProvisioningExecutor implements ProvisioningExecutor {
 		OperationResult result = null;
 		List<SysProvisioningOperationDto> operations = provisioningOperationService.getByTimelineAndBatchId(batch.getId());
 		if (operations.isEmpty()) {
-			// reset next attemt time if is filled
+			// reset next attempt time if is filled
 			if (batch.getNextAttempt() != null) {
 				batch.setNextAttempt(null);
 				batchService.save(batch);
@@ -216,6 +233,20 @@ public class DefaultProvisioningExecutor implements ProvisioningExecutor {
 			return new OperationResult.Builder(OperationState.EXECUTED).build();
 		}
 		for (SysProvisioningOperationDto provisioningOperation : operations) {
+			// operation is already running - not complete or executed manually between
+			if (provisioningOperation.getResultState() == OperationState.RUNNING) {
+				LOG.debug("Previous operation [{}] still running, next operations will be executed after previous operation ends (with next retry run)",
+						provisioningOperation.getId());
+				//
+				ResultModel resultModel = new DefaultResultModel(AccResultCode.PROVISIONING_IS_IN_QUEUE, 
+						ImmutableMap.of(
+								"name", provisioningOperation.getSystemEntityUid(), 
+								"system", provisioningOperation.getSystem(),
+								"operationType", provisioningOperation.getOperationType(),
+								"objectClass", provisioningOperation.getProvisioningContext().getConnectorObject().getObjectClass()));
+				result = new OperationResult.Builder(OperationState.NOT_EXECUTED).setModel(resultModel).build();
+				break;
+			}			
 			// It not possible to get operation from embedded, because missing request
 			SysProvisioningOperationDto operation = executeInternal(provisioningOperation); // not run in transaction
 			result = operation.getResult();

@@ -4,9 +4,8 @@ import SearchParameters from '../domain/SearchParameters';
 /**
  * Websocket logs
  *
- * TODO: Move websocket init here
- *
  * @author Radek Tomiška
+ * @deprecated @since 9.2.0 websocket notification will be removed
  */
 export default class WebsocketService extends AbstractService {
 

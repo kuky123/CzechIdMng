@@ -19,6 +19,7 @@ import javax.persistence.criteria.Subquery;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -100,7 +101,6 @@ public class DefaultAttachmentManager
 	@Override
 	@Transactional
 	public IdmAttachmentDto saveAttachment(Identifiable owner, IdmAttachmentDto attachment, BasePermission... permission) {
-		Assert.notNull(owner);
 		Assert.notNull(attachment, "Insert attachment");
 		Assert.notNull(attachment.getInputData(), "Insert binary data");
 		//
@@ -188,6 +188,7 @@ public class DefaultAttachmentManager
 		attachment = saveAttachment(owner, attachment, permission);
 		previousVersion.setNextVersion(attachment.getId());
 		save(previousVersion, permission);
+		//
 		return attachment;
 	}
 	
@@ -250,7 +251,18 @@ public class DefaultAttachmentManager
 	@Override
 	@Transactional
 	public void deleteAttachments(Identifiable owner, BasePermission... permission) {
-		getAttachments(owner, null).forEach(attachment -> {
+		Assert.notNull(owner);
+		//
+		deleteAttachments(getOwnerId(owner), getOwnerType(owner), permission);
+	}
+	
+	@Override
+	@Transactional
+	public void deleteAttachments(UUID ownerId, String ownerType, BasePermission... permission) {
+		Assert.notNull(ownerId);
+		Assert.notNull(ownerType);
+		//
+		getAttachments(ownerId, ownerType, null).forEach(attachment -> {
 			deleteAttachment(attachment, permission);
 		});
 	}
@@ -260,9 +272,18 @@ public class DefaultAttachmentManager
 	public Page<IdmAttachmentDto> getAttachments(Identifiable owner, Pageable pageable, BasePermission... permission) {
 		Assert.notNull(owner);
 		//
+		return getAttachments(getOwnerId(owner), getOwnerType(owner), pageable, permission);
+	}
+	
+	@Override
+	@Transactional
+	public Page<IdmAttachmentDto> getAttachments(UUID ownerId, String ownerType, Pageable pageable, BasePermission... permission) {
+		Assert.notNull(ownerId);
+		Assert.notNull(ownerType);
+		//
 		IdmAttachmentFilter filter = new IdmAttachmentFilter();
-		filter.setOwnerType(getOwnerType(owner));
-		filter.setOwnerId(getOwnerId(owner));
+		filter.setOwnerType(ownerType);
+		filter.setOwnerId(ownerId);
 		filter.setLastVersionOnly(Boolean.TRUE);
 		//
 		return find(filter, pageable, permission);
@@ -285,7 +306,6 @@ public class DefaultAttachmentManager
 	
 	@Override
 	public File createTempFile() {
-		purgeTempFiles();
 		try {			
 			File tempFile = File.createTempFile(UUID.randomUUID().toString(), "." + DEFAULT_TEMP_FILE_EXTENSION, new File(getTempPath()));
 			tempFile.deleteOnExit();
@@ -299,13 +319,14 @@ public class DefaultAttachmentManager
 	}
 	
 	/**
-	 * Purge old temporary files once per day.
+	 * Purge old temporary files and attachments once per day.
 	 * Temporary files older than configured ttl will be purged.
+	 * Temporary uploaded attachments older than configured ttl will be purged.
 	 * 
 	 * @return purged files count
 	 */
 	@Scheduled(fixedDelay = 86400000) // once per day
-	public void purgeTempFiles() {	
+	public void purgeTemp() {	
 		int purgedFiles = 0;
 		long ttl = attachmentConfiguration.getTempTtl();
 		if (ttl == 0) {
@@ -331,6 +352,16 @@ public class DefaultAttachmentManager
 		    	}
 		    }
 		}
+		//
+		// purge temporary attachments
+		IdmAttachmentFilter filter = new IdmAttachmentFilter();
+		filter.setOwnerType(TEMPORARY_ATTACHMENT_OWNER_TYPE);
+		filter.setCreatedBefore(DateTime.now().minusMillis(Math.toIntExact(ttl)));
+		for (IdmAttachmentDto attachment : find(filter, null)) {
+			delete(attachment);
+			purgedFiles++;
+		}
+		//
 		LOG.debug("Temporary files were purged [{}]", purgedFiles);
 	}
 	
@@ -341,50 +372,83 @@ public class DefaultAttachmentManager
 		return getOwnerType(owner.getClass());
 	}
 	
+	/**
+	 * Owner type has to be entity class - dto class can be given.
+	 * 
+	 * @param ownerType
+	 * @return
+	 */
+	@Override
+	public String getOwnerType(Class<? extends Identifiable> ownerType) {
+		Assert.notNull(ownerType);
+		//
+		// dto class was given
+		Class<? extends AttachableEntity> ownerEntityType = getAttachableOwnerType(ownerType);
+		if (ownerEntityType == null) {
+			throw new IllegalArgumentException(String.format("Owner type [%s] has to generatize [AttachableEntity]", ownerType));
+		}
+		return ownerEntityType.getCanonicalName();
+	}
+	
 	@Override
 	protected List<Predicate> toPredicates(Root<IdmAttachment> root, CriteriaQuery<?> query, CriteriaBuilder builder, IdmAttachmentFilter filter) {
 		List<Predicate> predicates = super.toPredicates(root, query, builder, filter);
 		//
 		// text - owner type, owner code
-		if (StringUtils.isNotEmpty(filter.getText())) {
+		String text = filter.getText();
+		if (StringUtils.isNotEmpty(text)) {
+			text = text.toLowerCase();
 			predicates.add(builder.or(
-					builder.like(builder.lower(root.get(IdmAttachment_.name)),
-							"%" + filter.getText().toLowerCase() + "%"),
-					builder.like(builder.lower(root.get(IdmAttachment_.description)),
-							"%" + filter.getText().toLowerCase() + "%")));
+					builder.like(builder.lower(root.get(IdmAttachment_.name)), "%" + text + "%"),
+					builder.like(builder.lower(root.get(IdmAttachment_.description)), "%" + text + "%")));
 		}
 		// owner id
-		if (filter.getOwnerId() != null) {
-			predicates.add(builder.equal(root.get(IdmAttachment_.ownerId), filter.getOwnerId()));
+		UUID ownerId = filter.getOwnerId();
+		if (ownerId != null) {
+			predicates.add(builder.equal(root.get(IdmAttachment_.ownerId), ownerId));
 		}
 		// owner type
-		if (StringUtils.isNotEmpty(filter.getOwnerType())) {
-			predicates.add(builder.equal(root.get(IdmAttachment_.ownerType), filter.getOwnerType()));
+		String ownerType = filter.getOwnerType();
+		if (StringUtils.isNotEmpty(ownerType)) {
+			predicates.add(builder.equal(root.get(IdmAttachment_.ownerType), ownerType));
 		}
 		// name
-		if (StringUtils.isNotEmpty(filter.getName())) {
-			predicates.add(builder.equal(root.get(IdmAttachment_.name), filter.getName()));
+		String name = filter.getName();
+		if (StringUtils.isNotEmpty(name)) {
+			predicates.add(builder.equal(root.get(IdmAttachment_.name), name));
 		}
 		// last version only
-		if (filter.getLastVersionOnly() != null && filter.getLastVersionOnly()) {
+		Boolean lastVersionOnly = filter.getLastVersionOnly();
+		if (lastVersionOnly != null && lastVersionOnly) {
 			predicates.add(builder.isNull(root.get(IdmAttachment_.nextVersion)));
 		}
 		// versions
-		if (filter.getVersionsFor() != null) {
+		UUID versionsFor = filter.getVersionsFor();
+		if (versionsFor != null) {
 			CriteriaQuery<IdmAttachment> subCriteriaQuery = builder.createQuery(getEntityClass());
 			Subquery<IdmAttachment> subquery = subCriteriaQuery.subquery(getEntityClass());
 			Root<IdmAttachment> subRoot = subquery.from(getEntityClass());
 			subquery.select(subRoot.get(IdmAttachment_.parent));
 			
-			subquery.where(builder.equal(subRoot.get(IdmAttachment_.id), filter.getVersionsFor()));
+			subquery.where(builder.equal(subRoot.get(IdmAttachment_.id), versionsFor));
 			
 			predicates.add(builder.or(
-					builder.equal(root.get(IdmAttachment_.parent).get(IdmAttachment_.id), filter.getVersionsFor()),
-					builder.equal(root.get(IdmAttachment_.id), filter.getVersionsFor()),
+					builder.equal(root.get(IdmAttachment_.parent).get(IdmAttachment_.id), versionsFor),
+					builder.equal(root.get(IdmAttachment_.id), versionsFor),
 					builder.equal(root.get(IdmAttachment_.parent).get(IdmAttachment_.id), subquery),
 					builder.equal(root, subquery)
 			));
-		}		
+		}
+		// created before
+		DateTime createdBefore = filter.getCreatedBefore();
+		if (createdBefore != null) {
+			predicates.add(builder.lessThan(root.get(IdmAttachment_.created), createdBefore));
+		}
+		// created after
+		DateTime createdAfter = filter.getCreatedAfter();
+		if (createdAfter != null) {
+			predicates.add(builder.greaterThan(root.get(IdmAttachment_.created), createdAfter));
+		}
 		//
 		return predicates;
 	}
@@ -483,30 +547,12 @@ public class DefaultAttachmentManager
 	 * @return
 	 */
 	private UUID getOwnerId(Identifiable owner) {
-		Assert.notNull(owner);
-		if (owner.getId() == null) {
+		if (owner == null || owner.getId() == null) {
 			return null;
 		}		
 		Assert.isInstanceOf(UUID.class, owner.getId(), "Entity with UUID identifier is supported as owner for attachments.");
 		//
 		return (UUID) owner.getId();
-	}
-	
-	/**
-	 * Owner type has to be entity class - dto class can be given.
-	 * 
-	 * @param ownerType
-	 * @return
-	 */
-	private String getOwnerType(Class<? extends Identifiable> ownerType) {
-		Assert.notNull(ownerType);
-		//
-		// dto class was given
-		Class<? extends AttachableEntity> ownerEntityType = getAttachableOwnerType(ownerType);
-		if (ownerEntityType == null) {
-			throw new IllegalArgumentException(String.format("Owner type [%s] has to generatize [AttachableEntity]", ownerType));
-		}
-		return ownerEntityType.getCanonicalName();
 	}
 	
 	/**

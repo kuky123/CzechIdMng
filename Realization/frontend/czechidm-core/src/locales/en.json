@@ -29,7 +29,8 @@
       "common": "The operation completed successfully",
       "create": "Creation successfully completed",
       "update": "Update successfully completed",
-      "delete": "Deletion successfully completed"
+      "delete": "Deletion successfully completed",
+      "upload": "File successfully uploaded"
     },
     "task": {
       "detailNotFound":"This task is not supported!",
@@ -54,7 +55,8 @@
     "property": "Attribute",
     "value": "Value",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "readOnly": "Read only"
   },
   "button": {
     "activate": "Activate",
@@ -446,7 +448,8 @@
           "IDENTITY-SELECT": "Select identity (SelectBox)",
           "ROLE-SELECT": "Select role (SelectBox)",
           "FORM-DEFINITION-SELECT": "Select form definition (SelectBox)",
-          "BOOLEAN-SELECT": "$t(enums.PersistentTypeEnum.BOOLEAN) (SelectBox)"
+          "BOOLEAN-SELECT": "$t(enums.PersistentTypeEnum.BOOLEAN) (SelectBox)",
+          "ATTACHMENT": "$t(enums.PersistentTypeEnum.ATTACHMENT)"
         },
         "attributes": {
           "empty": "Form definition was found, but doesn't contain editable attributes."
@@ -554,7 +557,8 @@
       "DATE": "Date",
       "DATETIME": "Date + time",
       "BYTEARRAY": "Byte array",
-      "UUID": "Uuid identifier"
+      "UUID": "Uuid identifier",
+      "ATTACHMENT": "Attachment"
     },
     "ObjectClassEnum": {
       "Identity": "Identity",
@@ -605,7 +609,8 @@
     },
     "PasswordPolicyGenerateTypeEnum": {
       "RANDOM": "Random",
-      "PASSPHRASE": "Passphrase"
+      "PASSPHRASE": "Passphrase",
+      "PREFIX_AND_SUFFIX": "Prefix and suffix"
     },
     "PasswordPolicyIdentityAttributeEnum": {
       "USERNAME": "User name",
@@ -804,7 +809,8 @@
       "AUTOMATICROLEATTRIBUTERULE": "Rules for automatic roles (attributes)",
       "AUTOMATICROLEREQUEST": "Requests for automatic roles",
       "AUTOMATICROLEATTRIBUTERULEREQUEST": "Requests for automatic roles (rules of the attributes)",
-      "TOKEN": "Token"
+      "TOKEN": "Token",
+      "GENERATEVALUE": "Value generate"
     }
   },
   "content": {
@@ -829,6 +835,9 @@
         "title": "503",
         "description": "The service is currently not available.",
         "note": "Please, try it later."
+      },
+      "syntax-error": {
+        "message": "Server communication failed, try to execute operation again. If the issue persists, please contact your application administrator."
       }
     },
     "about": {
@@ -948,23 +957,40 @@
         "policiesNames": "Password does not meet these password policies: {{0}}",
         "policiesNamesPreValidation": "Password have to meet these password policies: {{0}}",
         "minRulesToFulfillCount": "Minimum mandatory rules to fulfill: {{0}}",
-        "minRulesToFulfill": "Fill in at least {{count}} the following rules: {{0}}",
+        "minRulesToFulfill": "Fill in at least {{count}} of the following rules: {{0}}",
         "passwordSimilarUsername": "Password cannot be similar to login: {{0}}",
         "passwordSimilarEmail": "Password cannot be similar to email: {{0}}",
         "passwordSimilarFirstName": "Password cannot be similar to first name: {{0}}",
         "passwordSimilarLastName": "Password cannot be similar to surname: {{0}}",
         "date": "Password can not be change now, try again: {{0}}",
-        "advancedControlValidateType": "Enhanced control is available only for validate politics.",
-        "specialCharacterBase": "List of special characters for password policies: ",
-        "passwordSimilarUsernamePreValidate": "Password cannot be similar to login.",
-        "passwordSimilarEmailPreValidate": "Password cannot be similar to email.",
-        "passwordSimilarFirstNamePreValidate": "Password cannot be similar to first name.",
-        "passwordSimilarLastNamePreValidate": "Password cannot be similar to surname.",
-        "maxHistorySimilar": "The password must be different from the last {{0}} passwords."
+        "advancedControlValidateType": "Enhanced control is available only for validate policies.",
+        "specialCharacterBase":{
+          "list": "List of special characters for password policies: {{0}}",
+          "text": "Special characters: {{0}}"
+          },
+        "forbiddenCharacterBase": {
+          "list": "List of forbidden characters for password policies: {{0}}",
+          "text": "Forbidden characters: {{0}}"
+          },
+        "passwordSimilarUsernamePreValidate": "login",
+        "passwordSimilarEmailPreValidate": "email",
+        "passwordSimilarFirstNamePreValidate": "first name",
+        "passwordSimilarLastNamePreValidate": "surname",
+        "passwordSimilarPreValidate": "Password cannot be similar to",
+        "passwordHintPreValidate": "Hint for a ",
+        "passwordHintPreValidatePwd": "new password",
+        "passwordHintPreValidateHeader": "Password have to meet this requirements:",
+        "maxHistorySimilar": "The password must be different from the last {{0}} passwords.",
+        "prevalidationLink": {
+          "title": "Rules for new password"
+        }
       },
       "save": {
         "success": "Password policy [{{name}}] successfully saved."
-      }
+      },
+      "rulesHelp": "Select which rules are required set number of how many additional rules newly created password must fulfill at least.",
+      "emptyValues": "To omit any field, leave it empty.",
+      "prefixAndSuffixGeneratedHelp": "Prefix and suffix are not counted in the total length and another validation during the password generation. For example, using prefix and suffix may generate a password longer than the maximum length."
     },
     "configuration": {
       "header": "Configuration",
@@ -987,7 +1013,7 @@
         }
       },
       "configurable": "Configurable items <small>editable, can override static items</small>",
-      "environment": "Static environment configuration items <small>read only</small>",
+      "environment": "Static environment configuration items <small>$t(label.readOnly)</small>",
       "fromFile": "Application configuration from configuration files <small>application.properties</small>",
       "fromEnvironment": "Environment configuration <small>backend</small>",
       "guarded": "If item key contains values: [<strong>{{guarded}}</strong>] the item is automatically confidential and non-public. Items with key beginning with [<strong>idm.sec.</strong>] can not be public.",
@@ -2824,6 +2850,25 @@
           "success": "Entity events successfully deleted."
         }
       }
+    },
+    "generateValues": {
+      "header": "Generate values",
+      "title": "Generate values",
+      "create": {
+        "header": "Create new generator"
+      },
+      "edit": {
+        "header": "Edit generator"
+      },
+      "noGenerators": "The selected entity type doesn't contain any generators",
+      "noProperties": "The selected generator doesn't have any settings.",
+      "selectGenerator": "For display the settings, you must first select the generator.",
+      "generatorProperties": {
+        "title": "Generator settings"
+      },
+      "filter": {
+        "dtoType": "Entity type"
+      }
     }
   },
   "entity": {
@@ -2992,7 +3037,7 @@
       },
       "description": "Description",
       "required": "Required",
-      "readonly": "Read-only",
+      "readonly": "$t(label.readOnly)",
       "confidential": "Confidential",
       "multiple": "Multivalued",
       "placeholder": {
@@ -3356,7 +3401,19 @@
       "level": "Level",
       "notificationType": "Channel",
       "template": "Template",
-      "description": "Description"
+      "description": "Description",
+      "disabled": {
+        "label": "$t(label.disabled)",
+        "help": "Notifications will not be sent."
+      },
+      "redirect": {
+        "label": "Redirect",
+        "help": "Notification will be redirected to configured recipients. Notification to original recipient will be not sent."
+      },
+      "recipients": {
+        "label": "Recipients",
+        "help": "Additional notification will be sent to configured recipients. Recipients are required, if notification is redirected."
+      }
     },
     "Email": {
       "topic": "$t(entity.Notification.topic)",
@@ -3457,56 +3514,130 @@
       "traceLine": "Record"
     },
     "PasswordPolicy": {
-      "type": "Type",
-      "name": "Name",
-      "basic": "Basic information",
-      "bases": "Characters",
-      "generateType": "Generation type",
-      "disabled": "$t(label.disabled)",
-      "description": "Description",
-      "defaultPolicy": "Default policy",
-      "passwordLengthRequired": "Password length requirement",
-      "minPasswordLength": "Minimum length",
-      "maxPasswordLength": "Maximum length",
-      "upperCharRequired": "Uppercase letters requirement",
-      "minUpperChar": "Minimum number of uppercase letters",
-      "lowerCharRequired": "Lowercase letters requirement",
-      "minLowerChar": "Minimum number of lowercase letters",
-      "numberRequired": "Digits requirement",
-      "minNumber": "Minimum number of digits",
-      "specialCharRequired": "Special characters requirement",
-      "minSpecialChar": "Minimum number of special characters",
-      "prohibitedCharacters": "Forbidden characters",
-      "weakPassRequired": "Required weak passwords",
-      "weakPass": "Weak passwords",
-      "passphraseWords": "Number of words in passphrase",
-      "maxPasswordAge": "Maximum password age",
-      "minPasswordAge": "Minimum number of days for password validity",
-      "enchancedControl": "Enabled",
-      "minRulesToFulfill": "Minimum number of additional rules for policy",
-      "maxHistorySimilar": "Number of old passwords checked for match",
-      "blockLoginTime": "Login blocking time (seconds)",
-      "maxUnsuccessfulAttempts": "Maximum number of unsuccessful login attempts",
-      "lowerCharBase": "Lowercase letters",
-      "upperCharBase": "Uppercase letters",
-      "numberBase": "Digits",
-      "specialCharBase": "Special characters",
-      "identityAttributeCheck": "User attributes not allowed in password",
-      "help": {
-        "defaultPolicy": "Default policy is used for CzechIdM and all systems without set policy.",
-        "maxPasswordAge": "Maximum number of days for password validity.",
-        "minPasswordAge": "Minimum number of days for password validity.",
-        "enchancedControl": "Enhanced control makes passwords more secure by comparing new passwords with previous ones and user attributes. It is possible to select which rules are required.",
-        "rules": "Select which rules are required set number of how many additional rules newly created password must fulfill at least.",
-        "minRulesToFulfill": "Minimum number of the requirements which password must match to be valid.",
-        "maxHistorySimilar": "Number of retroactively checked passwords, which cannot be same as new.",
-        "blockLoginTime": "After entering X failed attempts, the user will be blocked from signing in.",
-        "maxUnsuccessfulAttempts": "Number of unsuccessful login attempts. Upon overrun, the user will be blocked from logging into the application.",
-        "prohibitedCharacters": "Listed characters are not allowed for generating and validating passwords. Enter characters without spaces, e.g. 1LliIo0!",
-        "bases": "Character set allowed for password generation. Forbidden characters are excluded from sets.",
-        "identityAttributeCheck": "Password may not contain any listed attributes or variations thereof.",
-        "emptyValues": "To omit any field, leave it empty.",
-        "passphraseWords": "Select number of words passphrase contains."
+      "type": {
+        "label": "Type"
+      },
+      "name": {
+        "label": "Name"
+      },
+      "basic": {
+        "label": "Basic information"
+      },
+      "bases": {
+        "label": "Characters",
+        "help": "Character set allowed for password generation. Forbidden characters are excluded from sets."
+      },
+      "generateType": {
+        "label": "Generation type"
+      },
+      "disabled": {
+        "label": "$t(label.disabled)"
+      },
+      "description": {
+        "label": "Description"
+      },
+      "defaultPolicy": {
+        "label": "Default policy",
+        "help": "Default policy is used for CzechIdM and all systems without set policy."
+      },
+      "passwordLengthRequired": {
+        "label": "Password length requirement"
+      },
+      "minPasswordLength": {
+        "label": "Minimum length"
+      },
+      "maxPasswordLength": {
+        "label": "Maximum length"
+      },
+      "upperCharRequired": {
+        "label": "Uppercase letters requirement"
+      },
+      "minUpperChar": {
+        "label": "Minimum number of uppercase letters"
+      },
+      "lowerCharRequired": {
+        "label": "Lowercase letters requirement"
+      },
+      "minLowerChar": {
+        "label": "Minimum number of lowercase letters"
+      },
+      "numberRequired": {
+        "label": "Digits requirement"
+      },
+      "minNumber": {
+        "label": "Minimum number of digits"
+      },
+      "specialCharRequired": {
+        "label": "Special characters requirement"
+      },
+      "minSpecialChar": {
+        "label": "Minimum number of special characters"
+      },
+      "prohibitedCharacters": {
+        "label": "Forbidden characters",
+        "help": "Listed characters are not allowed for generating and validating passwords. Enter characters without spaces, e.g. 1LliIo0!"
+      },
+      "weakPassRequired": {
+        "label": "Required weak passwords"
+      },
+      "weakPass": {
+        "label": "Weak passwords"
+      },
+      "passphraseWords": {
+        "label": "Number of words in passphrase",
+        "help": "Select number of words passphrase contains."
+      },
+      "maxPasswordAge": {
+        "label":"Maximum password age",
+        "help": "Maximum number of days for password validity."
+      },
+      "minPasswordAge": {
+        "label": "Minimum number of days for password validity",
+        "help": "Minimum number of days for password validity."
+      },
+      "enchancedControl": {
+        "label": "Enabled",
+        "help": "Enhanced control makes passwords more secure by comparing new passwords with previous ones and user attributes. It is possible to select which rules are required."
+      },
+      "minRulesToFulfill": {
+        "label": "Minimum number of additional rules for policy",
+        "help": "Minimum number of the requirements which password must match to be valid."
+      },
+      "maxHistorySimilar": {
+        "label": "Number of old passwords checked for match",
+        "help": "Number of retroactively checked passwords, which cannot be same as new."
+      },
+      "blockLoginTime": {
+        "label": "Login blocking time (seconds)",
+        "help": "After entering X failed attempts, the user will be blocked from signing in."
+      },
+      "maxUnsuccessfulAttempts": {
+        "label": "Maximum number of unsuccessful login attempts",
+        "help": "Number of unsuccessful login attempts. Upon overrun, the user will be blocked from logging into the application."
+      },
+      "lowerCharBase": {
+        "label": "Lowercase letters"
+      },
+      "upperCharBase": {
+        "label": "Uppercase letters"
+      },
+      "numberBase": {
+        "label": "Digits"
+      },
+      "specialCharBase": {
+        "label": "Special characters"
+      },
+      "identityAttributeCheck": {
+        "label": "User attributes not allowed in password",
+        "help": "Password may not contain any listed attributes or variations thereof."
+      },
+      "prefix": {
+        "label": "Prefix",
+        "help": "The prefix will be automatically added to the beginning of the generated part. To skip the prefix, leave the field blank."
+      },
+      "suffix": {
+        "label": "Suffix",
+        "help": "Suffix will be automatically added to the end of the generated part. To skip the suffix, leave the field blank."
       }
     },
     "Module": {
@@ -3815,6 +3946,37 @@
       "processedOrder": {
         "label": "Processed order"
       }
+    },
+    "GenerateValue": {
+      "dtoType": {
+        "label": "Entity type",
+        "placeholder": "Select type of entity",
+        "help": "Generation is done for a specific type of entity. Based on the selected entities will be shown generators"
+      },
+      "generatorType": {
+        "label": "Generator type",
+        "placeholder": "Select type of generator"
+      },
+      "seq": {
+        "label": "Order",
+        "placeholder": "Setup order",
+        "help": "Generators are handled in order from the smallest to the largest. If two generators generate values for the same attribute, the resulting value will be generated and used from the last generator."
+      },
+      "description": {
+        "label": "Description"
+      },
+      "disabled": {
+        "label": "Disabled",
+        "help": "Disabled generators are ignored"
+      },
+      "regenerateValue": {
+        "label": "Regenerate value",
+        "help": "If will be checkbox checked, the value from user will be regenerated by the generator. If will be checkbox unchecked, the generator will not change value."
+      },
+      "unmodifiable": {
+        "label": "System generator",
+        "help": "System generator cannot be deleted. Some of its configurations are not editable."
+      }
     }
   },
   "wf": {
@@ -3921,6 +4083,28 @@
         "approveAutomaticRoleBySecurity": {
           "name": "Approval create/change/remove of automatic role",
           "description":"Approval create/change/remove of automatic role '{{0}}'"
+        }
+      }
+    },
+    "request-idm-role" : {
+      "name": "Request for change/create/remove role with name '{{0}}'",
+      "task": {
+        "approveAutomaticRole": {
+          "name": "Approve role changes by guarantee",
+          "description":"Request for change/create/remove role with name '{{0}}'"
+        }
+      }
+    },
+    "request-idm-role-composition" : {
+      "name": "Approving request change of business role",
+      "task": {
+        "approveAddBusinessRole": {
+          "name": "Approve adding the new business role",
+          "description":"Approval of adding business role with name '{{0}}' as '{{1}}' to role '{{2}}'"
+        },
+        "approveRemoveBusinessRole": {
+          "name": "Approve removing the business role",
+          "description":"Approve removal of the business role ({{0}}) with name '{{1}}' from role '{{2}}'."
         }
       }
     },
@@ -4143,6 +4327,100 @@
           }
         }
       }
+    },
+    "value-generator": {
+      "core-identity-username-value-generator": {
+        "label": "Standard username generator",
+        "help": "The generator generates the user name based on the 'first name' and 'surname'. Generator deletes the diacritic, cuts first name and surname to a defined number of characters, and connects them with connection character.",
+        "attributes": {
+          "connectioncharacter": {
+            "label": "Connection character",
+            "help": "The character(s) to be used to connects the first name and surname. The value does not need to be filled in. In this case, the first name and surname will be connected without any coupling character."
+          },
+          "firstnamecharactercount": {
+            "label": "Count of characters from the first name",
+            "help": "The maximum count of characters to use from the fisrt name."
+          },
+          "lastnamecharactercount": {
+            "label": "Count of characters from the surname",
+            "help": "The maximum count of characters to use from the surname."
+          },
+          "searchuniqueusername": {
+            "label": "Verify unique username",
+            "help": "The newly generated username will be searched. If username will be exists, numeric suffix will be added. Suffix may be incremented."
+          },
+          "firstnamefirst": {
+            "label": "As first value use first name",
+            "help": "When generating, the first name of the user will be added first. If you unchecked, the order will be the opposite."
+          }
+        }
+      },
+      "core-identity-email-value-generator": {
+        "label": "Standard email generator",
+        "help": "The generator generates the email adress based on the username. Adds a defined suffix to the username. Beware, the result value must match the correct email address format.",
+        "attributes": {
+          "emailsuffix": {
+            "label": "Email suffix",
+            "help": "The Suffix will be added to the username and together they must create an email address."
+          },
+          "connectioncharacter": {
+            "label": "Connection character",
+            "help": "The character(s) to be used to connects the first name and surname. The value does not need to be filled in. In this case, the first name and surname will be connected without any coupling character."
+          },
+          "firstnamecharactercount": {
+            "label": "Count of characters from the first name",
+            "help": "The maximum count of characters to use from the fisrt name."
+          },
+          "lastnamecharactercount": {
+            "label": "Count of characters from the surname",
+            "help": "The maximum count of characters to use from the surname."
+          },
+          "generatefromusername": {
+            "label": "Generate based on username",
+            "help": "Email will be based on existing username. The username must exist at the moment of generation."
+          },
+          "firstnamefirst": {
+            "label": "As first value use first name",
+            "help": "When generating, the first name of the user will be added first. If you unchecked, the order will be the opposite."
+          }
+        }
+      },
+      "core-identity-script-value-generator": {
+        "label": "Scripted Generator",
+        "help": "The generator executes the defined script. At the script input are these attributes 'entity' and 'valueGenerator'. Beware functionality 'value regenerate' must implement the script itself. The script must be from the system category.",
+        "attributes": {
+          "scriptcode": {
+            "label": "Script code",
+            "help": "Script code to run."
+          }
+        }
+      },
+      "core-identity-form-default-value-generator": {
+        "label": "Addition default values for the forms with next inforamtion",
+        "help": "Generator add default values for all attributes.",
+        "attributes": {
+          "formdefinitionuuid": {
+            "label": "Form",
+            "help": "Form must be for given entity type (IdmIdentity). If you leave form empty, the values will be added to all form definition."
+          },
+          "regexmultiplevalues": {
+            "label": "Separator",
+            "help": "If the attribute is multi-valued and the default value contains multiple values, write character(s) that seperate values. If left blank, a default character will be used ','."
+          }
+        }
+      }
+    },
+    "long-running-task": {
+      "core-test-long-running-task": {
+        "label": "Test task",
+        "help": "Counts to given count, waits 300ms for every iteration.",
+        "attributes": {
+          "count": {
+            "label": "Count",
+            "help": "Counts to given count, waits 300ms for every iteration."
+          }
+        }
+      }
     }
   },
   "error": {
@@ -4312,6 +4590,10 @@
       "title": "Structure element cannot be removed",
       "message": "Structure element [{{treeNode}}] is used in contracted positions. Edit all used contracted positions before removing."
     },
+    "TREE_NODE_DELETE_FAILED_HAS_CONTRACT_POSITIONS": {
+      "title": "Structure element cannot be removed",
+      "message": "Structure element [{{treeNode}}] is used in other contracted positions. Edit all used other contracted positions before removing."
+    },
     "TREE_NODE_DELETE_FAILED_HAS_CONTRACT_SLICES": {
       "title": "Structure element cannot be removed",
       "message": "Structure element [{{treeNode}}] is used in contract slice positions. Edit all used contract slice positions before removing."
@@ -4412,6 +4694,10 @@
       "title": "Configuration can not be saved",
       "message": "Topic [{{topic}}] and null level exists!."
     },
+    "NOTIFICATION_CONFIGURATION_RECIPIENT_NOT_FOUND": {
+      "title": "Configuration can not be saved",
+      "message": "Recipients are required for redirected notifications with topic [{{topic}}]."
+    },
     "FORM_DEFINITION_DELETE_FAILED_SYSTEM_DEFINITION": {
       "title": "Form definition can not be deleted",
       "message": "Definition [{{name}}] it can't be deleted, because is flagged as system."
@@ -4451,6 +4737,10 @@
     "UNMODIFIABLE_ATTRIBUTE_CHANGE": {
       "title": "Attribute {{name}} can't change",
       "message": "Attribute {{name}} in entity {{class}} can't change."
+    },
+    "UNMODIFIABLE_DELETE_FAILED": {
+      "title": "Record cannot be deleted",
+      "message": "Unmodifiable record [{{record}}] cannot be deleted."
     },
     "PASSWORD_EXPIRATION_TASK_DAYS_BEFORE": {
       "title": "Task has invalid configuration",
@@ -4748,6 +5038,10 @@
       "title": "More then one template was found",
       "message": "More then one template was found for code: [{{code}}]."
     },
+    "NOTIFICATION_NOT_SENT": {
+      "title": "Notification not sent",
+      "message": "Notification configuration for topic [{{topic}}] not found or is disabled."
+    },
     "PASSWORD_CHANGE_ACCOUNT_FAILED": {
       "title": "Password change failed",
       "message": "Can not change password in these accounts: [{{accounts}}]."
@@ -4887,6 +5181,74 @@
     "ROLE_COMPOSITION_REMOVE_TASK_RUN_CONCURRENTLY": {
       "title": "Role is removed by concurrent task",
       "message": "Business role [{{roleCompositionId}}] is removed by concurrent task [{{taskId}}]."
+    },
+    "GENERATOR_SCRIPT_RETURN_NULL_OR_BAD_DTO_TYPE": {
+      "title": "Script for generated values returns an error state",
+      "message": "Script [{{scriptCode}}] returned null, or wrong type of entity. Return value: [{{returnedValue}}]."
+    },
+    "GENERATOR_FORM_ATTRIBUTE_NOT_FOUND": {
+      "title": "Form attribute for definition not found",
+      "message": "Form attribute for definition [{{formDefinitionCode}}] with code [{{formAttributeCode}}] not found."
+    },
+    "GENERATOR_FORM_DEFINITION_BAD_TYPE": {
+      "title": "Form definition has wrong type",
+      "message": "Form definition id [{{formDefinitionId}}], has not type. Correct type: [{{dtoType}}]."
+    },
+    "IDMIDENTITY_USERNAME_NOTEMPTY": {
+      "title": "Username cann't be empty",
+      "message": "Username has not been filled. Please fill the username or enable the username generator."
+    },
+    "DTO_CANNOT_BE_CONVERT_TO_JSON": {
+      "title": "DTO cannot be convert to the JSON!",
+      "message": "DTO [{{dto}}] cannot be convert to the JSON!"
+    },
+    "JSON_CANNOT_BE_CONVERT_TO_DTO": {
+      "title": "JSON cannot be convert to the DTO!",
+      "message": "JSON [{{json}}] cannot be convert to the DTO!"
+    },
+    "REQUEST_CUD_OPERATIONS_NOT_ALLOWED": {
+      "title": "CUD operations are not allowed on that REST controller [{{controller}}]!",
+      "message": "CUD operations are not allowed on that REST controller [{{controller}}]! Use request REST endpoint."
+    },
+    "REQUEST_NO_EXECUTE_IMMEDIATELY_RIGHT": {
+      "title": "You do not have right for immidiately execute request!",
+      "message": "You do not have right (REQUEST_ADMIN) for immidiately execute request [{{request}}]!"
+    },
+    "REQUEST_ITEM_IS_NOT_VALID": {
+      "title": "DTO [{{dto}}] in the request item is not valid!",
+      "message": "DTO [{{dto}}] in the request item [{{item}}] is not valid!"
+    },
+    "REQUEST_NO_WF_DEF_FOUND": {
+      "title": "No approval workflow definition found!",
+      "message": "No approval workflow definition found for entity type [{{entityType}}]!"
+    },
+    "REQUEST_OWNER_WAS_DELETED": {
+      "title": "Owner was deleted!",
+      "message": "Owner [{{owner}}] was deleted!"
+    },
+    "REQUEST_OWNER_FROM_OTHER_REQUEST_WAS_DELETED": {
+      "title": "Owner from other request was deleted!",
+      "message": "Owner [{{owner}}] from other request [{{otherRequest}}] was deleted!"
+    },
+    "REQUEST_CANNOT_BE_EXECUTED_NONE_ITEMS": {
+      "title": "Request cannot be executed. Has no request items!",
+      "message": "Request [{{request}}] cannot be executed. Has no request items!"
+    },
+    "REQUEST_ITEM_CANNOT_BE_EXECUTED": {
+      "title": "Request item [{{item}}] cannot be executed!",
+      "message": "Request item [{{item}}] cannot be executed. Must be in state APPROVED or CONCEPT, but is in state [{{state}}]!"
+    },
+    "REQUEST_ITEM_CANNOT_BE_CREATED": {
+      "title": "Request item cannot be created/changed for object [{{dto}}]!",
+      "message": "Request item cannot be created/changed for object [{{dto}}]. Parent request must be in state INPROGRESS or CONCEPT or EXCEPTION, but is in state [{{state}}]!"
+    },
+    "REQUEST_ITEM_NOT_EXECUTED_PARENT_CANCELED": {
+      "title": "Request item [{{item}}] could not be executed!",
+      "message": "Request item [{{item}}] could not be executed, because is using DTO from terminated item [{{terminatedItem}}]!"
+    },
+    "REQUEST_EXECUTED_CANNOT_DELETE": {
+      "title": "Request for change permission cannot be deleted",
+      "message": "Request for change permission in state 'Executed' cannot be delete!"
     }
   },
   "validationError": {

@@ -7,7 +7,6 @@ const INITIAL_STATE = new Immutable.Map({
   [Properties.PROPERTIES]: null, // public configuration propereties
   [Properties.NAVIGATION]: null,  // all navigation items from enabled modules as Map
   selectedNavigationItems: ['home'], // homepage by default
-  navigationCollapsed: false, // TODO: move to local storage - different reducer
   i18nReady: null,              // localization language is ready
   modulesReady: false,            // modules loaders is ready
   navigationReady: false,
@@ -45,9 +44,6 @@ export function config(state = INITIAL_STATE, action) {
         itemId = item.parentId;
       }
       return state.set('selectedNavigationItems', newState);
-    }
-    case Actions.COLLAPSE_NAVIGATION: {
-      return state.set('navigationCollapsed', action.collapsed);
     }
     case Actions.I18N_INIT: {
       return state.set('i18nReady', null);

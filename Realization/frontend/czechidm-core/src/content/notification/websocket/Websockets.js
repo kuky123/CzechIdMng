@@ -6,6 +6,8 @@ import WebsocketTable from './WebsocketTable';
 
 /**
  * List of websocket logs
+ *
+ * @deprecated @since 9.2.0 websocket notification will be removed
  */
 export default class Websockets extends Basic.AbstractContent {
 

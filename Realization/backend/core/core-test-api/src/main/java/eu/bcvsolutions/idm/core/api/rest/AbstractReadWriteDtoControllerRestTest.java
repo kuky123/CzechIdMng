@@ -73,7 +73,7 @@ import eu.bcvsolutions.idm.test.api.TestHelper;
  * - get form definitions
  * - save form values
  * 
- * Make sure controller support all methods. Add methods implementation instead skipping tests.
+ * Make sure controller support all methods => add methods implementation instead skipping tests (but it's possible).
  * Controller's service should support {@link DataFilter} - methods which requires it are skipped internally (see log), but
  * better way is to implement {@link DataFilter} in service.
  * 

@@ -759,7 +759,95 @@ public class DefaultIdmPasswordPolicyIntegrationTest extends AbstractIntegration
 		
 		passwordPolicyService.delete(policy);
 	}
-	
+
+	@Test
+	public void testExistingSuffix() {
+		String suffix = "test-suffix-" + System.currentTimeMillis();
+		IdmPasswordPolicyDto policy = new IdmPasswordPolicyDto();
+		policy.setName("test_policy" + System.currentTimeMillis());
+		policy.setType(IdmPasswordPolicyType.GENERATE);
+		policy.setGenerateType(IdmPasswordPolicyGenerateType.RANDOM);
+		policy.setMinNumber(4);
+		policy.setMinPasswordLength(4);
+		policy.setMaxPasswordLength(4);
+		policy.setSuffix(suffix);
+		policy = passwordPolicyService.save(policy);
+		
+		String generatePassword = passwordPolicyService.generatePassword(policy);
+		
+		assertTrue(generatePassword.endsWith(suffix));
+		String password = StringUtils.remove(generatePassword, suffix);
+		// password must be only integer
+		Integer.valueOf(password);
+		assertEquals(4, password.length());
+		assertEquals(suffix.length() + 4, generatePassword.length());
+	}
+
+	@Test
+	public void testExistingPrefix() {
+		String prefix = "test-prefix-" + System.currentTimeMillis();
+		IdmPasswordPolicyDto policy = new IdmPasswordPolicyDto();
+		policy.setName("test_policy" + System.currentTimeMillis());
+		policy.setType(IdmPasswordPolicyType.GENERATE);
+		policy.setGenerateType(IdmPasswordPolicyGenerateType.RANDOM);
+		policy.setPrefix(prefix);
+		policy.setMinLowerChar(5);
+		policy.setMinPasswordLength(5);
+		policy.setMaxPasswordLength(5);
+		policy = passwordPolicyService.save(policy);
+		
+		String generatePassword = passwordPolicyService.generatePassword(policy);
+		
+		assertTrue(generatePassword.startsWith(prefix));
+		String password = StringUtils.remove(generatePassword, prefix);
+		assertEquals(5, password.length());
+		assertEquals(prefix.length() + 5, generatePassword.length());
+	}
+
+	@Test
+	public void testExistingPrefixAndSuffix() {
+		String prefix = "test-prefix-" + System.currentTimeMillis();
+		String suffix = "test-suffix-" + System.currentTimeMillis();
+		IdmPasswordPolicyDto policy = new IdmPasswordPolicyDto();
+		policy.setName("test_policy" + System.currentTimeMillis());
+		policy.setType(IdmPasswordPolicyType.GENERATE);
+		policy.setGenerateType(IdmPasswordPolicyGenerateType.RANDOM);
+		policy.setPrefix(prefix);
+		policy.setSuffix(suffix);
+		policy.setMaxPasswordLength(10);
+		policy.setMinPasswordLength(10);
+		policy = passwordPolicyService.save(policy);
+		
+		String generatePassword = passwordPolicyService.generatePassword(policy);
+		
+		assertTrue(generatePassword.startsWith(prefix));
+		assertTrue(generatePassword.endsWith(suffix));
+		assertEquals(suffix.length() + prefix.length() + 10, generatePassword.length());
+		
+		String password = StringUtils.remove(generatePassword, prefix);
+		password = StringUtils.remove(password, suffix);
+		assertEquals(10, password.length());
+	}
+
+	@Test
+	public void testPrefixAndSuffixWithPassphrase() {
+		String prefix = "test-prefix-" + System.currentTimeMillis();
+		String suffix = "test-suffix-" + System.currentTimeMillis();
+		IdmPasswordPolicyDto policy = new IdmPasswordPolicyDto();
+		policy.setName("test_policy" + System.currentTimeMillis());
+		policy.setType(IdmPasswordPolicyType.GENERATE);
+		policy.setGenerateType(IdmPasswordPolicyGenerateType.PASSPHRASE);
+		policy.setPrefix(prefix);
+		policy.setSuffix(suffix);
+		policy.setPassphraseWords(2);
+		policy = passwordPolicyService.save(policy);
+		
+		String generatePassword = passwordPolicyService.generatePassword(policy);
+		
+		assertTrue(generatePassword.startsWith(prefix));
+		assertTrue(generatePassword.endsWith(suffix));
+	}
+
 	private void checkMaxHistorySimilarError(ResultCodeException exception, int maxHistorySettingOriginal) {
 		ErrorModel error = exception.getError().getError();
 		assertTrue(error.getMessage().contains("Password does not match password policy"));

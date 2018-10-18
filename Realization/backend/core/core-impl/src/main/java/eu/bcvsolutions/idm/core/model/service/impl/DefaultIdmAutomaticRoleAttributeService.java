@@ -660,6 +660,7 @@ public class DefaultIdmAutomaticRoleAttributeService
 		case BYTEARRAY: {
 			return AbstractFormValue_.byteValue;
 		}
+		case ATTACHMENT:
 		case UUID: {
 			return AbstractFormValue_.uuidValue;
 		}
@@ -732,6 +733,7 @@ public class DefaultIdmAutomaticRoleAttributeService
 		case BYTEARRAY: {
 			return value.getBytes(StandardCharsets.UTF_8);
 		}
+		case ATTACHMENT:
 		case UUID: {
 			return UUID.fromString(value);
 		}

@@ -76,7 +76,7 @@ class EavContent extends Basic.AbstractContent {
     const { _formInstances, _showLoading, showSaveButton } = this.props;
     const { error } = this.state;
 
-    let content;
+    let content = null;
     if (error) {
       // loading eav definition failed
       content = (

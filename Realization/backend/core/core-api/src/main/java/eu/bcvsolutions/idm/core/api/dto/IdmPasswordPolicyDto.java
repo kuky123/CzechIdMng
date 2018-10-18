@@ -61,6 +61,8 @@ public class IdmPasswordPolicyDto extends AbstractDto implements PasswordGenerat
 	private boolean disabled = false;
 	private Integer maxUnsuccessfulAttempts;
 	private Integer blockLoginTime;
+	private String prefix;
+	private String suffix;
 	
 	public String getName() {
 		return name;
@@ -314,6 +316,22 @@ public class IdmPasswordPolicyDto extends AbstractDto implements PasswordGenerat
 	@JsonIgnore
 	public String getCode() {
 		return getName();
+	}
+
+	public String getPrefix() {
+		return prefix;
+	}
+
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
+	}
+
+	public String getSuffix() {
+		return suffix;
+	}
+
+	public void setSuffix(String suffix) {
+		this.suffix = suffix;
 	}
 
 	@JsonIgnore

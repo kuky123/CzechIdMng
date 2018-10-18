@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import ReactDropzone from 'react-dropzone';
+import _ from 'lodash';
 //
 import AbstractContextComponent from '../AbstractContextComponent/AbstractContextComponent';
 import Well from '../Well/Well';
@@ -19,6 +20,7 @@ class Dropzone extends AbstractContextComponent {
 
   render() {
     const {
+      id,
       onDrop,
       multiple,
       accept,
@@ -46,12 +48,17 @@ class Dropzone extends AbstractContextComponent {
         content = this.i18n('component.basic.Dropzone.infoText');
       }
     }
+    let _id = id;
+    if (!_id) {
+      _id = _.uniqueId('dropzone_');
+    }
     //
     return (
       <div className={ hidden ? 'hidden' : '' }>
         <ReactDropzone
+          id={ _id }
           ref="dropzone"
-          style={style ? style : defaultStyle.style}
+          style={{ ...defaultStyle.style, ...style }}
           activeStyle={styleActive ? styleActive : defaultStyle.styleActive}
           rejectStyle={styleReject ? styleReject : defaultStyle.styleReject}
           multiple={multiple}
@@ -59,7 +66,7 @@ class Dropzone extends AbstractContextComponent {
           disablePreview
           disabled={ readOnly }
           onDrop={onDrop}>
-          <div style={{color: '#777'}}>
+          <div style={{ color: '#777' }}>
             { content }
           </div>
         </ReactDropzone>
@@ -70,6 +77,10 @@ class Dropzone extends AbstractContextComponent {
 }
 
 Dropzone.propTypes = {
+  /**
+   * Component identifier
+   */
+  id: PropTypes.string,
   /**
   * Rendered component
   */

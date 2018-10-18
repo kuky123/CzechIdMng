@@ -1,6 +1,5 @@
 package eu.bcvsolutions.idm.core.security.api.dto;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,16 +33,6 @@ public class AuthorizationEvaluatorDto extends AbstractComponentDto {
 	private List<String> parameters;
 	private boolean supportsPermissions;
 	private IdmFormDefinitionDto formDefinition;
-	
-	@Override
-	public String getId() {
-		return evaluatorType;
-	}
-	
-	@Override
-	public void setId(Serializable id) {
-		evaluatorType = (String) id;	
-	}
 	
 	public String getEntityType() {
 		return entityType;

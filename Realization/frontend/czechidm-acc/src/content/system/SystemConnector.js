@@ -255,7 +255,8 @@ class SystemConnectorContent extends Basic.AbstractContent {
           <Advanced.EavForm
             ref="eav"
             formInstance={ formInstance }
-            readOnly={ !Managers.SecurityManager.hasAuthority('SYSTEM_UPDATE') }/>
+            readOnly={ !Managers.SecurityManager.hasAuthority('SYSTEM_UPDATE') }
+            useDefaultValue/>
           <Basic.PanelFooter rendered={ Managers.SecurityManager.hasAuthority('SYSTEM_UPDATE') }>
             <Basic.Button
               type="submit"

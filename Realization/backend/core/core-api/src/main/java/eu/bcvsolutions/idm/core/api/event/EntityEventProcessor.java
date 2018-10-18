@@ -32,8 +32,7 @@ public interface EntityEventProcessor<T extends Serializable> extends Ordered, C
 	String PROPERTY_EVENT_TYPES = "eventTypes";
 	
 	/**
-	 *  bean name / unique identifier (spring bean name or other unique identifier)
-	 *  Look out: name is not unique (by module or name can be reused for the same configuration)
+	 *  bean name / unique identifier (spring bean name)
 	 *  
 	 * @return
 	 */

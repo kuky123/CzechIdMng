@@ -244,6 +244,48 @@ class IdentityService extends FormableEntityService {
   }
 
   /**
+   * Fetch profile
+   *
+   * @param  {string, number} identityId entity id
+   * @param {string} token CIDMST token
+   * @return {Promise}
+   */
+  getProfile(identityId, token = null) {
+    return RestApiService
+    .get(this.getApiPath() + `/${encodeURIComponent(identityId)}/profile`, token)
+    .then(response => {
+      return response.json();
+    })
+    .then(json => {
+      if (Utils.Response.hasError(json)) {
+        throw Utils.Response.getFirstError(json);
+      }
+      return json;
+    });
+  }
+
+  /**
+   * Save (create + patch) profile
+   *
+   * @param  {string, number} identityId entity id
+   * @param {Profile} profile
+   * @return {Promise}
+   */
+  patchProfile(identityId, profile) {
+    return RestApiService
+    .patch(this.getApiPath() + `/${encodeURIComponent(identityId)}/profile`, profile)
+    .then(response => {
+      return response.json();
+    })
+    .then(json => {
+      if (Utils.Response.hasError(json)) {
+        throw Utils.Response.getFirstError(json);
+      }
+      return json;
+    });
+  }
+
+  /**
    * Upload image to BE
    */
   uploadProfileImage(identityId, formData) {

@@ -11,7 +11,7 @@ import eu.bcvsolutions.idm.core.security.api.domain.GuardedString;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
- * Identity authentication
+ * Identity authentication - response
  * 
  * @author Svanda
  * @author Radek Tomiška

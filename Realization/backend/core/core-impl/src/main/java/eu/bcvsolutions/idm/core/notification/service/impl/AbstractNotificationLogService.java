@@ -57,6 +57,9 @@ public class AbstractNotificationLogService<DTO extends IdmNotificationDto, E ex
 		}
     	
         final E result = super.toEntity(dto, entity);
+        if (result == null) {
+        	return null;
+        }
         result.getRecipients().forEach(r -> r.setNotification(result));
         return result;
     }

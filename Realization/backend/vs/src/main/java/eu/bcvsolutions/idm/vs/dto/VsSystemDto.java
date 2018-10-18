@@ -34,8 +34,11 @@ public class VsSystemDto extends AbstractDto {
 	private List<UUID> implementers;
 	@ApiModelProperty(required = false, notes = "Roles where his identities will be implementers for this system.")
 	private List<UUID> implementerRoles;
-	@ApiModelProperty(required = false, notes = "Attributes of systems, if is empty then will be used default attributes")
+	@ApiModelProperty(required = false, notes = "Attributes of systems, if is empty then will be used default attributes.")
 	private List<String> attributes;
+	@ApiModelProperty(required = true, notes = "For virtula system will be created and mapped new role.")
+	private boolean createDefaultRole = false;
+	private String roleName;
 
 	public String getName() {
 		return name;
@@ -76,5 +79,21 @@ public class VsSystemDto extends AbstractDto {
 
 	public void setAttributes(List<String> attributes) {
 		this.attributes = attributes;
+	}
+
+	public boolean isCreateDefaultRole() {
+		return createDefaultRole;
+	}
+
+	public void setCreateDefaultRole(boolean createDefaultRole) {
+		this.createDefaultRole = createDefaultRole;
+	}
+
+	public String getRoleName() {
+		return roleName;
+	}
+
+	public void setRoleName(String roleName) {
+		this.roleName = roleName;
 	}
 }

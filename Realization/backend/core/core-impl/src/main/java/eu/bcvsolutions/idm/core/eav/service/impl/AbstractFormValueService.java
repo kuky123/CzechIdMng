@@ -326,6 +326,7 @@ public abstract class AbstractFormValueService<O extends FormableEntity, E exten
 			case BYTEARRAY: {
 				return repository.findOwnersByByteArrayValue(attribute.getId(), value.getByteValue(), pageable);
 			}
+			case ATTACHMENT:
 			case UUID: {
 				return repository.findOwnersByUuidValue(attribute.getId(), value.getUuidValue(), pageable);
 			}

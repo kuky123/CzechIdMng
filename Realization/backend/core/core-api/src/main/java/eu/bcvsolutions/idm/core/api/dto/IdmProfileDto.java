@@ -29,6 +29,7 @@ public class IdmProfileDto extends AbstractDto  {
 	private UUID image;
 	@Size(max = DefaultFieldLengths.ENUMARATION)
 	private String preferredLanguage;
+	private boolean navigationCollapsed;
 
 	public IdmProfileDto() {
 	}
@@ -59,5 +60,13 @@ public class IdmProfileDto extends AbstractDto  {
 
 	public void setPreferredLanguage(String preferredLanguage) {
 		this.preferredLanguage = preferredLanguage;
+	}
+	
+	public boolean isNavigationCollapsed() {
+		return navigationCollapsed;
+	}
+	
+	public void setNavigationCollapsed(boolean navigationCollapsed) {
+		this.navigationCollapsed = navigationCollapsed;
 	}
 }

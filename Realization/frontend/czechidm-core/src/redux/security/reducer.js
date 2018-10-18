@@ -1,10 +1,15 @@
-
-
 import _ from 'lodash';
 import {
-  REQUEST_LOGIN, RECEIVE_LOGIN, RECEIVE_LOGIN_EXPIRED,
-  RECEIVE_LOGIN_ERROR, LOGOUT, RECEIVE_REMOTE_LOGIN_ERROR,
-  REQUEST_REMOTE_LOGIN } from './SecurityManager';
+  REQUEST_LOGIN,
+  RECEIVE_LOGIN,
+  RECEIVE_LOGIN_EXPIRED,
+  RECEIVE_LOGIN_ERROR,
+  RECEIVE_PROFILE, // @since 9.3.0
+  LOGOUT,
+  RECEIVE_REMOTE_LOGIN_ERROR,
+  REQUEST_REMOTE_LOGIN
+} from './SecurityManager';
+import { Actions } from '../config/constants';
 
 // TODO: integrate immutable map with redux-localstorage
 const INITIAL_STATE = {
@@ -17,7 +22,9 @@ const INITIAL_STATE = {
     isTryRemoteLogin: true,
     tokenCSRF: null,
     tokenCIDMST: null,
-    authorities: [] // user authorities
+    authorities: [], // identity authorities
+    profile: null, // identity profile @since 9.3.0
+    navigationCollapsed: false
   }
 };
 
@@ -80,6 +87,20 @@ export function security(state = INITIAL_STATE, action) {
           showLoading: false,
           isTryRemoteLogin: true,
           tokenCIDMST: null
+        })
+      });
+    }
+    case RECEIVE_PROFILE: {
+      return _.merge({}, state, {
+        userContext: _.merge({}, state.userContext, {
+          profile: action.profile
+        })
+      });
+    }
+    case Actions.COLLAPSE_NAVIGATION: {
+      return _.merge({}, state, {
+        userContext: _.merge({}, state.userContext, {
+          navigationCollapsed: action.collapsed
         })
       });
     }

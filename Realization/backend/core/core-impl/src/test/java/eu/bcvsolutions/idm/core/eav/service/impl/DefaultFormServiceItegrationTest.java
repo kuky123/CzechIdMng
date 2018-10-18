@@ -56,6 +56,9 @@ import eu.bcvsolutions.idm.core.eav.api.service.IdmFormDefinitionService;
 import eu.bcvsolutions.idm.core.eav.entity.IdmFormAttribute;
 import eu.bcvsolutions.idm.core.eav.entity.IdmFormAttribute_;
 import eu.bcvsolutions.idm.core.eav.entity.IdmFormDefinition;
+import eu.bcvsolutions.idm.core.ecm.api.dto.IdmAttachmentDto;
+import eu.bcvsolutions.idm.core.ecm.api.service.AttachmentManager;
+import eu.bcvsolutions.idm.core.ecm.service.DefaultAttachmentManagerIntegrationTest;
 import eu.bcvsolutions.idm.core.model.domain.CoreGroupPermission;
 import eu.bcvsolutions.idm.core.model.entity.IdmIdentity;
 import eu.bcvsolutions.idm.core.model.entity.IdmIdentityContract;
@@ -90,6 +93,7 @@ public class DefaultFormServiceItegrationTest extends AbstractIntegrationTest {
 	@Autowired private IdmFormDefinitionService formDefinitionService;	
 	@Autowired private IdmRoleRepository roleRepository;
 	@Autowired private LookupService lookupService;
+	@Autowired private AttachmentManager attachmentManager;
 	//
 	private DefaultFormService formService;
 	
@@ -1164,6 +1168,67 @@ public class DefaultFormServiceItegrationTest extends AbstractIntegrationTest {
 		Assert.assertEquals(FORM_VALUE_TWO, (m.get(attributeSecuredName).get(0)).getValue());
 	}
 	
+	@Test
+	public void testSaveAttachment() {
+		IdmIdentityDto owner = getHelper().createIdentity((GuardedString) null);
+		// create attachment ... upload attachment is solved by @IdmAttachmentControllerRestTest
+		IdmAttachmentDto tempAttachment = createTempAttachment();
+		//
+		// create definition with attachment parameter
+		IdmFormAttributeDto attribute = new IdmFormAttributeDto();
+		String attributeName = getHelper().createName();
+		attribute.setCode(attributeName);
+		attribute.setName(attributeName);
+		attribute.setPersistentType(PersistentType.ATTACHMENT);
+		IdmFormDefinitionDto formDefinitionOne = formService.createDefinition(
+				IdmIdentity.class.getCanonicalName(),
+				getHelper().createName(),
+				Lists.newArrayList(attribute));
+		attribute = formDefinitionOne.getMappedAttributeByCode(attribute.getCode());
+		//
+		// save new form value
+		IdmFormValueDto value = new IdmFormValueDto(attribute);
+		value.setShortTextValue(tempAttachment.getName()); // filename
+		value.setValue(tempAttachment.getId());
+		//
+		List<IdmFormValueDto> saveValues = formService.saveValues(owner, formDefinitionOne.getId(), Lists.newArrayList(value));
+		//
+		Assert.assertEquals(1, saveValues.size());
+		Assert.assertEquals(tempAttachment.getName(), saveValues.get(0).getShortTextValue()); // filename
+		Assert.assertEquals(tempAttachment.getId(), saveValues.get(0).getUuidValue());
+		//
+		IdmAttachmentDto attachment = attachmentManager.get(saveValues.get(0).getUuidValue());
+		Assert.assertEquals(saveValues.get(0).getId(), attachment.getOwnerId());
+		Assert.assertNotEquals(AttachmentManager.TEMPORARY_ATTACHMENT_OWNER_TYPE, attachment.getOwnerType());
+		//
+		// update form value
+		tempAttachment = createTempAttachment();
+		value = new IdmFormValueDto(attribute);
+		value.setShortTextValue(tempAttachment.getName()); // filename
+		value.setValue(tempAttachment.getId());
+		//
+		saveValues = formService.saveValues(owner, formDefinitionOne.getId(), Lists.newArrayList(value));
+		//
+		Assert.assertEquals(1, saveValues.size());
+		Assert.assertEquals(tempAttachment.getName(), saveValues.get(0).getShortTextValue()); // filename
+		Assert.assertEquals(tempAttachment.getId(), saveValues.get(0).getUuidValue());
+		//
+		attachment = attachmentManager.get(attachment.getId());
+		IdmAttachmentDto newAttachmentVersion = attachmentManager.get(saveValues.get(0).getUuidValue());
+		Assert.assertEquals(saveValues.get(0).getId(), newAttachmentVersion.getOwnerId());
+		Assert.assertNotEquals(AttachmentManager.TEMPORARY_ATTACHMENT_OWNER_TYPE, attachment.getOwnerType());
+		Assert.assertEquals(attachment.getId(), newAttachmentVersion.getParent());
+		Assert.assertEquals(newAttachmentVersion.getId(), attachment.getNextVersion());
+		//
+		// delete form value
+		value = new IdmFormValueDto(attribute);
+		saveValues = formService.saveValues(owner, formDefinitionOne.getId(), Lists.newArrayList(value));
+		//
+		Assert.assertTrue(saveValues.isEmpty());
+		Assert.assertNull(attachmentManager.get(newAttachmentVersion.getId()));
+		Assert.assertNull(attachmentManager.get(attachment.getId()));
+	}
+	
 	private long prepareDataAndFind(Class<? extends AbstractEntity> type, AbstractDto owner) {
 		//
 		//create attribute
@@ -1185,5 +1250,11 @@ public class DefaultFormServiceItegrationTest extends AbstractIntegrationTest {
 		filter.setDefinitionId(definition.getId());
 		Page<IdmFormValueDto> result = formService.findValues(filter, new PageRequest(0, Integer.MAX_VALUE));
 		return result.getTotalElements();
+	}
+	
+	private IdmAttachmentDto createTempAttachment() {
+		IdmAttachmentDto dto = DefaultAttachmentManagerIntegrationTest.prepareDto();
+		//
+		return attachmentManager.save(dto);
 	}
 }

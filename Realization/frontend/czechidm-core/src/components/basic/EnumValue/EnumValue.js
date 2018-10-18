@@ -72,7 +72,7 @@ EnumValue.propTypes = {
   /**
    * Custom level. If no level is given, then level by enum value will be used.
    */
-  level: PropTypes.oneOf(['default', 'success', 'warning', 'info', 'danger', 'link', 'primary']),
+  level: PropTypes.oneOf(['default', 'success', 'warning', 'info', 'danger', 'link', 'primary', 'error']),
 };
 
 EnumValue.defaultProps = {

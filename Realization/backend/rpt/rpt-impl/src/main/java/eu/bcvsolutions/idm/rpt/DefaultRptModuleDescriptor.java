@@ -11,9 +11,8 @@ import org.springframework.stereotype.Component;
 import eu.bcvsolutions.idm.core.api.domain.PropertyModuleDescriptor;
 import eu.bcvsolutions.idm.core.api.domain.ResultCode;
 import eu.bcvsolutions.idm.core.notification.api.dto.NotificationConfigurationDto;
-import eu.bcvsolutions.idm.core.notification.entity.IdmWebsocketLog;
+import eu.bcvsolutions.idm.core.notification.entity.IdmEmailLog;
 import eu.bcvsolutions.idm.core.security.api.domain.GroupPermission;
-import eu.bcvsolutions.idm.rpt.RptModuleDescriptor;
 import eu.bcvsolutions.idm.rpt.api.domain.RptGroupPermission;
 import eu.bcvsolutions.idm.rpt.api.domain.RptResultCode;
 
@@ -45,14 +44,14 @@ public class DefaultRptModuleDescriptor extends PropertyModuleDescriptor impleme
 		configs.add(new NotificationConfigurationDto(
 				TOPIC_REPORT_GENERATE_SUCCESS, 
 				null, 
-				IdmWebsocketLog.NOTIFICATION_TYPE,
+				IdmEmailLog.NOTIFICATION_TYPE,
 				"Send notification, after report is successfully generated.", 
 				getNotificationTemplateId("reportGenerateSuccess")));
 		//
 		configs.add(new NotificationConfigurationDto(
-				TOPIC_REPORT_GENERATE_FAILED	, 
+				TOPIC_REPORT_GENERATE_FAILED,
 				null, 
-				IdmWebsocketLog.NOTIFICATION_TYPE,
+				IdmEmailLog.NOTIFICATION_TYPE,
 				"Send notification, after report generation failed.", 
 				getNotificationTemplateId("reportGenerateFailed")));
 		//

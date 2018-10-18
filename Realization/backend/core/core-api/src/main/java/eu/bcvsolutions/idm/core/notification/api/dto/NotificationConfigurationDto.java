@@ -4,26 +4,32 @@ import java.util.UUID;
 
 import org.springframework.hateoas.core.Relation;
 
+import eu.bcvsolutions.idm.core.api.domain.Disableable;
 import eu.bcvsolutions.idm.core.api.domain.Embedded;
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
 import eu.bcvsolutions.idm.core.notification.api.domain.NotificationLevel;
 
 /**
  * Notification configuration
+ * 
+ * Lookout: IdM prefix is missing ... but it's too late 
  *
  * @author Radek Tomiška
  */
 @Relation(collectionRelation = "notificationConfigurations")
-public class NotificationConfigurationDto extends AbstractDto {
+public class NotificationConfigurationDto extends AbstractDto implements Disableable {
 
 	private static final long serialVersionUID = 1L;
-
+	//
 	private String topic;
 	private NotificationLevel level;
 	private String notificationType;
 	private String description;
 	@Embedded(dtoClass = IdmNotificationTemplateDto.class)
 	private UUID template;
+	private boolean disabled;
+	private boolean redirect;
+	private String recipients;
 
 	public NotificationConfigurationDto() {
 	}
@@ -86,5 +92,31 @@ public class NotificationConfigurationDto extends AbstractDto {
 
 	public void setTemplate(UUID notificationTemplate) {
 		this.template = notificationTemplate;
+	}
+
+	@Override
+	public boolean isDisabled() {
+		return disabled;
+	}
+
+	@Override
+	public void setDisabled(boolean disabled) {
+		this.disabled = disabled;
+	}
+	
+	public void setRedirect(boolean redirect) {
+		this.redirect = redirect;
+	}
+	
+	public boolean isRedirect() {
+		return redirect;
+	}
+	
+	public void setRecipients(String recipients) {
+		this.recipients = recipients;
+	}
+	
+	public String getRecipients() {
+		return recipients;
 	}
 }

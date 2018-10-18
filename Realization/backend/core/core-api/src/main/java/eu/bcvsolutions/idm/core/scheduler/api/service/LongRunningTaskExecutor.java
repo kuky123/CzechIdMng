@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
 import eu.bcvsolutions.idm.core.api.entity.OperationResult;
+import eu.bcvsolutions.idm.core.api.service.Configurable;
 import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmLongRunningTaskDto;
 import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmProcessedTaskItemDto;
 
@@ -15,9 +16,22 @@ import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmProcessedTaskItemDto;
  * 
  * @author Radek Tomiška
  */
-public interface LongRunningTaskExecutor<V> extends Callable<V> {
+public interface LongRunningTaskExecutor<V> extends Callable<V>, Configurable {
 	
+	String CONFIGURABLE_TYPE = "long-running-task";
 	String PARAMETER_INSTANCE_ID = "core:instanceId"; // server instance id
+	
+	@Override
+	default String getConfigurableType() {
+		return CONFIGURABLE_TYPE;
+	}
+	
+	/**
+	 *  bean name / unique identifier (spring bean name)
+	 *  
+	 * @return
+	 */
+	String getId();
 
 	/**
 	 * Returns task name (task class name by default)

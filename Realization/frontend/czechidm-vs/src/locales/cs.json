@@ -75,6 +75,14 @@
         "label": "Role s realizátory",
         "placeholder": "Uživatelé v IdM, kteří mají přiřazené tyto role, budou realizátory požadavků"
       },
+      "createDefaultRole": {
+        "label": "Vytvořit výchozí roli",
+        "placeholder": "V rámci vytvoření virtuálního systému, bude vytvořena i nová role, která bude tento systém přiřazovat."
+      },
+      "roleName": {
+        "label": "Kód výchozí role",
+        "placeholder": "Pokud se bude kód role schodovat s již existující rolí, tak bude pro mapování tohoto systému využita tato existující role."
+      },
       "label": "Seznam",
       "title": "Virtuální systémy",
       "action": {

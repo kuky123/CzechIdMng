@@ -225,7 +225,7 @@ function select(state) {
     bulk: state.data.bulk,
     appReady: state.config.get('appReady'),
     i18nReady: state.config.get('i18nReady'),
-    navigationCollapsed: state.config.get('navigationCollapsed'),
+    navigationCollapsed: state.security.userContext.navigationCollapsed,
     hideFooter: state.config.get('hideFooter')
   };
 }

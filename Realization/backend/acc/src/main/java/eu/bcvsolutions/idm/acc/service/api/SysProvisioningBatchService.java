@@ -23,9 +23,10 @@ public interface SysProvisioningBatchService extends ReadWriteDtoService<SysProv
 	/**
 	 * Calculates when the request should be invoked
 	 * 
+	 * @param operation
 	 * @return Date of the next attempt. Null if there should be no next attempt 
 	 */
-	DateTime calculateNextAttempt(SysProvisioningOperationDto request);
+	DateTime calculateNextAttempt(SysProvisioningOperationDto operation);
 	
 	/**
 	 * Gets batches to process (cteated requests)

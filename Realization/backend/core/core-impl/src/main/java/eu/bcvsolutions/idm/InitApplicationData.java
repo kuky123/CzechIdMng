@@ -2,6 +2,7 @@ package eu.bcvsolutions.idm;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 import eu.bcvsolutions.idm.core.api.config.domain.TreeConfiguration;
 import eu.bcvsolutions.idm.core.api.domain.RoleType;
 import eu.bcvsolutions.idm.core.api.dto.IdmAuthorizationPolicyDto;
+import eu.bcvsolutions.idm.core.api.dto.IdmGenerateValueDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityRoleDto;
@@ -22,6 +24,7 @@ import eu.bcvsolutions.idm.core.api.dto.IdmTreeNodeDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmTreeTypeDto;
 import eu.bcvsolutions.idm.core.api.service.EntityEventManager;
 import eu.bcvsolutions.idm.core.api.service.IdmAuthorizationPolicyService;
+import eu.bcvsolutions.idm.core.api.service.IdmGenerateValueService;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityContractService;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityRoleService;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityService;
@@ -31,6 +34,7 @@ import eu.bcvsolutions.idm.core.api.service.IdmTreeNodeService;
 import eu.bcvsolutions.idm.core.api.service.IdmTreeTypeService;
 import eu.bcvsolutions.idm.core.config.flyway.CoreFlywayConfig;
 import eu.bcvsolutions.idm.core.eav.api.service.FormService;
+import eu.bcvsolutions.idm.core.generator.identity.IdentityFormDefaultValueGenerator;
 import eu.bcvsolutions.idm.core.model.entity.IdmIdentity;
 import eu.bcvsolutions.idm.core.model.entity.IdmIdentityContract;
 import eu.bcvsolutions.idm.core.model.entity.IdmRole;
@@ -80,6 +84,9 @@ public class InitApplicationData implements ApplicationListener<ContextRefreshed
 	@Autowired private IdmScriptService scriptService;
 	@Autowired private TreeConfiguration treeConfiguration;
 	@Autowired private EntityEventManager entityEventManager;
+	@Autowired private IdmGenerateValueService generateValueService;
+	//
+	private static final UUID DEFAULT_FORM_GENERATE_VALUE_ID = UUID.fromString("61ae4b97-421d-4075-8911-8003989f30df"); // static system generate value uuid
 
 	@Override
 	public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -105,6 +112,16 @@ public class InitApplicationData implements ApplicationListener<ContextRefreshed
 				formService.createDefinition(IdmIdentityContract.class, new ArrayList<>());
 			}
 			//
+			// register default value generators
+			if (generateValueService.get(DEFAULT_FORM_GENERATE_VALUE_ID) == null) {
+				IdmGenerateValueDto generateValue = new IdmGenerateValueDto(DEFAULT_FORM_GENERATE_VALUE_ID);
+				generateValue.setDtoType(IdmIdentityDto.class.getCanonicalName());
+				generateValue.setGeneratorType(IdentityFormDefaultValueGenerator.class.getCanonicalName());
+				generateValue.setSeq((short) 100);
+				generateValue.setUnmodifiable(true);
+				generateValueService.save(generateValue);
+			}
+			//
 			// create super admin role
 			IdmRoleDto existsSuperAdminRole = this.roleService.getByCode(ADMIN_ROLE);
 			if (existsSuperAdminRole == null && this.roleService.find(new PageRequest(0, 1)).getTotalElements() == 0) {
@@ -121,7 +138,7 @@ public class InitApplicationData implements ApplicationListener<ContextRefreshed
 				policy.setEvaluator(BasePermissionEvaluator.class);
 				authorizationPolicyService.save(policy);
 				//
-				LOG.info(MessageFormat.format("Super admin Role created [id: {0}]", superAdminRole.getId()));
+				LOG.info(MessageFormat.format("Super admin Role created [id: {0}]", existsSuperAdminRole.getId()));
 			}
 			//
 			// create super admin

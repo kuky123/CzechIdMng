@@ -1356,6 +1356,16 @@
         "icon": "link",
         "label": "Provést přepočet účtů",
         "help": "Tato operace vyvolá pro každou vybranou roli <strong>přepočet účtů</strong>. Přepočet bude proveden pro všechny uživatele s danou rolí. Samotný přepočet i následný provisioning je prováděn <strong>asynchronně</strong>. Postup můžete sledovat v agendě spravující <strong>Události</strong>."
+      },
+      "system-duplicate-bulk-action": {
+        "icon": "fa:clone",
+        "label": "Duplikovat systém",
+        "help": "Vytvoří duplikát systému <strong>včetně všech konfigurací</strong>. Nový systém bude neaktivní, stejně jako jeho nastavené synchronizace. "
+      },
+      "system-delete-bulk-action": {
+        "label": "Odebrat",
+        "help": "Smaže vybrané systémy. <strong>Odebíraný systém nesmí obsahovat žádné účty ani nevyřešené provisioning operace</strong>.",
+        "icon": "fa:trash"
       }
     }
   },
@@ -1474,7 +1484,7 @@
     },
     "PROVISIONING_ATTRIBUTE_STRATEGY_CONFLICT": {
       "title": "Provisioning - Strategie atributu jsou konfliktní",
-      "message": "Strategie [{{strategyParent}}] a [{{strategyConflict}}] jsou pro atribut [{{attribute}}] konfliktní!"
+      "message": "Strategie [{{strategyParent}} (role {{roleParent}})] a [{{strategyConflict}} (role {{roleConflict}})] jsou pro atribut [{{attribute}}] konfliktní!"
     },
     "SYNCHRONIZATION_IS_NOT_ENABLED": {
       "title": "Synchronizace není povolená",
@@ -1730,6 +1740,14 @@
     },
     "ROLE_ACM_BULK_ACTION_NONE_IDENTITIES": {
       "message": "Žádná z vybraných rolí <strong>neobsahuje</strong> vazbu na uživatele.",
+      "title": ""
+    },
+    "SYSTEM_DELETE_BULK_ACTION_NUMBER_OF_ACCOUNTS": {
+      "message": "Systém <strong>{{system}}</strong> obsahuje  <strong class=\"highlight\">{{count}}</strong> účtů.",
+      "title": ""
+    },
+    "SYSTEM_DELETE_BULK_ACTION_NUMBER_OF_PROVISIONINGS": {
+      "message": "Systém <strong>{{system}}</strong> obsahuje  <strong class=\"highlight\">{{count}}</strong> nevyřešených provisioning operací.",
       "title": ""
     }
   },

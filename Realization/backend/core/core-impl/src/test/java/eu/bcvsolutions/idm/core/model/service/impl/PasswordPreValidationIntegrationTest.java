@@ -50,6 +50,7 @@ public class PasswordPreValidationIntegrationTest extends AbstractIntegrationTes
 		policy.setDefaultPolicy(true);
 		policy.setMinPasswordLength(5);
 		policy.setMaxPasswordLength(10);
+		policy.setProhibitedCharacters("Test");
 		PasswordChangeDto passwordChange = new PasswordChangeDto();
 		passwordChange.setIdm(true);
 
@@ -59,7 +60,7 @@ public class PasswordPreValidationIntegrationTest extends AbstractIntegrationTes
 		} catch (ResultCodeException ex) {
 			assertEquals(5, ex.getError().getError().getParameters().get("minLength"));
 			assertEquals(10, ex.getError().getError().getParameters().get("maxLength"));
-			assertEquals(policy.getName(), ex.getError().getError().getParameters().get("policiesNamesPreValidation"));
+			assertEquals("Test", ((Map<String, String>)ex.getError().getError().getParameters().get("forbiddenCharacterBase")).get(policy.getName()));
 
 			assertEquals(3, ex.getError().getError().getParameters().size());
 			policy.setDefaultPolicy(false);
@@ -83,9 +84,8 @@ public class PasswordPreValidationIntegrationTest extends AbstractIntegrationTes
 		} catch (ResultCodeException ex) {
 			assertEquals(5, ex.getError().getError().getParameters().get("minUpperChar"));
 			assertEquals(10, ex.getError().getError().getParameters().get("minLowerChar"));
-			assertEquals(policy.getName(), ex.getError().getError().getParameters().get("policiesNamesPreValidation"));
 
-			assertEquals(3, ex.getError().getError().getParameters().size());
+			assertEquals(2, ex.getError().getError().getParameters().size());
 			policy.setDefaultPolicy(false);
 			passwordPolicyService.save(policy);
 		}
@@ -107,9 +107,8 @@ public class PasswordPreValidationIntegrationTest extends AbstractIntegrationTes
 		} catch (ResultCodeException ex) {
 			assertEquals(5, ex.getError().getError().getParameters().get("minNumber"));
 			assertEquals(10, ex.getError().getError().getParameters().get("minSpecialChar"));
-			assertEquals(policy.getName(), ex.getError().getError().getParameters().get("policiesNamesPreValidation"));
 			assertFalse(ex.getError().getError().getParameters().get("specialCharacterBase") == null);
-			assertEquals(4, ex.getError().getError().getParameters().size());
+			assertEquals(3, ex.getError().getError().getParameters().size());
 			policy.setDefaultPolicy(false);
 			passwordPolicyService.save(policy);
 		}
@@ -150,9 +149,8 @@ public class PasswordPreValidationIntegrationTest extends AbstractIntegrationTes
 			assertEquals(4, ex.getError().getError().getParameters().get("minLowerChar"));
 			assertEquals(parametrs.toString(),
 					ex.getError().getError().getParameters().get("minRulesToFulfill").toString());
-			assertEquals(policy.getName(), ex.getError().getError().getParameters().get("policiesNamesPreValidation"));
 			// special char base, passwordSimilarUsername, passwordSimilarEmail ->
-			assertEquals(10, ex.getError().getError().getParameters().size());
+			assertEquals(9, ex.getError().getError().getParameters().size());
 			policy.setDefaultPolicy(false);
 			passwordPolicyService.save(policy);
 		}

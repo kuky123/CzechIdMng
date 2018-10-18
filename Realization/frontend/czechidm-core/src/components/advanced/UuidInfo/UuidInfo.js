@@ -72,7 +72,10 @@ UuidInfo.propTypes = {
   /**
    * uuid, entity identifier
    */
-  value: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number
+  ]).isRequired
 };
 UuidInfo.defaultProps = {
   ...Basic.AbstractContextComponent.defaultProps

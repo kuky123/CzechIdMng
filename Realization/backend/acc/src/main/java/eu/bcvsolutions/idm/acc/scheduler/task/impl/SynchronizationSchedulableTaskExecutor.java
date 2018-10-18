@@ -86,9 +86,13 @@ public class SynchronizationSchedulableTaskExecutor extends AbstractSchedulableT
 
 	@Override
 	public String getDescription() {
+		String deafultDescription =  "Synchronization long running task";
+		if (synchronizationId == null) {
+			return deafultDescription;
+		}
 		AbstractSysSyncConfigDto config = service.get(synchronizationId);
 		if (config == null) {
-			return "Synchronization long running task";
+			return deafultDescription;
 		}
 		return MessageFormat.format("Run synchronization name: [{0}] - system mapping id: [{1}]", config.getName(),
 				config.getSystemMapping());

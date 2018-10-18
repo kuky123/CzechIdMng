@@ -249,6 +249,7 @@ public class IdmFormValueDto extends AbstractDto implements Requestable {
 		case BYTEARRAY: {
 			return byteValue;
 		}
+		case ATTACHMENT:
 		case UUID: {
 			return uuidValue;
 		}
@@ -283,6 +284,7 @@ public class IdmFormValueDto extends AbstractDto implements Requestable {
 			case BYTEARRAY: {
 				return byteValue == null || byteValue.length == 0;
 			}
+			case ATTACHMENT:
 			case UUID: {
 				return uuidValue == null;
 			}
@@ -317,6 +319,7 @@ public class IdmFormValueDto extends AbstractDto implements Requestable {
 			case BYTEARRAY: {
 				return byteValue == null;
 			}
+			case ATTACHMENT:
 			case UUID: {
 				return uuidValue == null;
 			}
@@ -463,6 +466,7 @@ public class IdmFormValueDto extends AbstractDto implements Requestable {
 				}
 				break;
 			}
+			case ATTACHMENT:
 			case UUID: {
 				try {
 					setUuidValue(DtoUtils.toUuid(value));
@@ -516,6 +520,23 @@ public class IdmFormValueDto extends AbstractDto implements Requestable {
 		this.doubleValue = null;
 		this.byteValue = null;
 		this.uuidValue = null;
+	}
+	
+	/**
+	 * Sets all filled values from given value
+	 * 
+	 * @param value
+	 * @since 9.3.0
+	 */
+	public void setValues(IdmFormValueDto value) {
+		this.booleanValue = value.getBooleanValue();
+		this.stringValue = value.getStringValue();
+		this.shortTextValue = value.getShortTextValue();
+		this.dateValue = value.getDateValue();
+		this.longValue = value.getLongValue();
+		this.doubleValue = value.getDoubleValue();
+		this.byteValue = value.getByteValue();
+		this.uuidValue = value.getUuidValue();
 	}
 	
 	public void setOwner(FormableEntity owner) {

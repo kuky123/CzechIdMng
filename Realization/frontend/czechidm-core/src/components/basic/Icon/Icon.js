@@ -95,7 +95,10 @@ Icon.propTypes = {
   /**
    * glyphicon or font-awesome (by type) suffix name
    */
-  icon: PropTypes.string,
+  icon: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.bool // false => no icon
+  ]),
   /**
    * glyphicon or font-awesome (by type) suffix name - alias to icon property, has lower priority
    */

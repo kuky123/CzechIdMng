@@ -199,7 +199,8 @@ public enum CoreGroupPermission implements GroupPermission {
 			IdmBasePermission.UPDATE, 
 			IdmBasePermission.DELETE),
 	FORMATTRIBUTE(
-			IdmBasePermission.ADMIN, 
+			IdmBasePermission.ADMIN,
+			IdmBasePermission.COUNT,
 			IdmBasePermission.AUTOCOMPLETE,
 			IdmBasePermission.READ, 
 			IdmBasePermission.CREATE, 
@@ -287,7 +288,15 @@ public enum CoreGroupPermission implements GroupPermission {
 			IdmBasePermission.CREATE, 
 			IdmBasePermission.UPDATE, 
 			IdmBasePermission.DELETE, 
-			IdmBasePermission.EXECUTE);
+			IdmBasePermission.EXECUTE),
+	GENERATEVALUE(
+			IdmBasePermission.ADMIN, 
+			IdmBasePermission.COUNT,
+			IdmBasePermission.AUTOCOMPLETE, 
+			IdmBasePermission.READ, 
+			IdmBasePermission.CREATE, 
+			IdmBasePermission.UPDATE, 
+			IdmBasePermission.DELETE),;
 	
 	// String constants could be used in pre / post authorize SpEl expressions
 	
@@ -472,6 +481,7 @@ public enum CoreGroupPermission implements GroupPermission {
 	public static final String FORM_DEFINITION_UPDATE = "FORMDEFINITION" + BasePermission.SEPARATOR + "UPDATE";
 	public static final String FORM_DEFINITION_DELETE = "FORMDEFINITION" + BasePermission.SEPARATOR + "DELETE";
 	//
+	public static final String FORM_ATTRIBUTE_COUNT = "FORMATTRIBUTE" + BasePermission.SEPARATOR + "COUNT";
 	public static final String FORM_ATTRIBUTE_AUTOCOMPLETE = "FORMATTRIBUTE" + BasePermission.SEPARATOR + "AUTOCOMPLETE";
 	public static final String FORM_ATTRIBUTE_READ = "FORMATTRIBUTE" + BasePermission.SEPARATOR + "READ";
 	public static final String FORM_ATTRIBUTE_CREATE = "FORMATTRIBUTE" + BasePermission.SEPARATOR + "CREATE";
@@ -521,6 +531,14 @@ public enum CoreGroupPermission implements GroupPermission {
 	public static final String REQUEST_ITEM_UPDATE = "REQUESTITEM" + BasePermission.SEPARATOR + "UPDATE";
 	public static final String REQUEST_ITEM_DELETE = "REQUESTITEM" + BasePermission.SEPARATOR + "DELETE";
 	public static final String REQUEST_ITEM_AUTOCOMPLETE = "REQUESTITEM" + BasePermission.SEPARATOR + "AUTOCOMPLETE";
+	//
+	public static final String GENERATE_VALUE_ADMIN = "GENERATEVALUE" + BasePermission.SEPARATOR + "ADMIN";
+	public static final String GENERATE_VALUE_READ = "GENERATEVALUE" + BasePermission.SEPARATOR + "READ";
+	public static final String GENERATE_VALUE_COUNT = "GENERATEVALUE" + BasePermission.SEPARATOR + "COUNT";
+	public static final String GENERATE_VALUE_CREATE = "GENERATEVALUE" + BasePermission.SEPARATOR + "CREATE";
+	public static final String GENERATE_VALUE_UPDATE = "GENERATEVALUE" + BasePermission.SEPARATOR + "UPDATE";
+	public static final String GENERATE_VALUE_DELETE = "GENERATEVALUE" + BasePermission.SEPARATOR + "DELETE";
+	public static final String GENERATE_VALUE_AUTOCOMPLETE = "GENERATEVALUE" + BasePermission.SEPARATOR + "AUTOCOMPLETE";
 	
 	private final List<BasePermission> permissions;
 

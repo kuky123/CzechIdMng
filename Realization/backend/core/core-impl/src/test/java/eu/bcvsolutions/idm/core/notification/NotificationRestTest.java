@@ -62,7 +62,7 @@ public class NotificationRestTest extends AbstractRestTest {
 			.andReturn()
 			.getResponse();
 		//
-		assertEquals(200, response.getStatus());
+		assertEquals(201, response.getStatus());
 	}
 
 	IdmIdentityDto createTestIdentity(String name) {

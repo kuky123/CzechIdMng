@@ -33,6 +33,7 @@ import eu.bcvsolutions.idm.core.api.exception.CoreException;
 import eu.bcvsolutions.idm.core.api.service.AbstractReadWriteDtoService;
 import eu.bcvsolutions.idm.core.api.service.ConfidentialStorage;
 import eu.bcvsolutions.idm.core.api.service.IdmRequestItemService;
+import eu.bcvsolutions.idm.core.api.service.LookupService;
 import eu.bcvsolutions.idm.core.api.service.RequestManager;
 import eu.bcvsolutions.idm.core.api.service.RequestManager.RequestPredicate;
 import eu.bcvsolutions.idm.core.model.domain.CoreGroupPermission;
@@ -69,6 +70,8 @@ public class DefaultIdmRequestItemService
 	@Autowired
 	@Lazy
 	private RequestManager requestManager;
+	@Autowired
+	private LookupService lookupService;
 
 	@Autowired
 	public DefaultIdmRequestItemService(IdmRequestItemRepository repository) {
@@ -114,6 +117,10 @@ public class DefaultIdmRequestItemService
 				@SuppressWarnings("unchecked")
 				Requestable requestable = requestManager.convertItemToDto(requestItemDto,
 						(Class<Requestable>) Class.forName(requestItemDto.getOwnerType()));
+				// Item for remove operation does not contains the JSON data, so we need load owner via lookupService
+				if (requestable == null  && RequestOperationType.REMOVE == requestItemDto.getOperation()) {
+					requestable = (Requestable) lookupService.lookupDto(requestItemDto.getOwnerType(), requestItemDto.getOwnerId());
+				}
 				if (requestable == null) {
 					// Entity was not found ... maybe was deleted or not exists yet
 					LOG.debug(MessageFormat.format("Owner [{0}, {1}] not found for request {2}.",
@@ -167,8 +174,10 @@ public class DefaultIdmRequestItemService
 								@SuppressWarnings("unchecked")
 								Class<? extends Requestable> ownerType = (Class<? extends Requestable>) Class
 										.forName(item.getOwnerType());
-								Requestable requestable;
-								requestable = requestManager.convertItemToDto(item, ownerType);
+								Requestable requestable = requestManager.convertItemToDto(item, ownerType);
+								if (requestable == null) {
+									return false;
+								}
 								List<Requestable> filteredDtos = requestManager
 										.filterDtosByPredicates(ImmutableList.of(requestable), ownerType, predicates);
 								return filteredDtos.contains(requestable);

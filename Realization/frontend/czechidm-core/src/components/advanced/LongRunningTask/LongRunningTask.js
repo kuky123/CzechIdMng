@@ -37,7 +37,7 @@ class LongRunningTask extends Basic.AbstractContent {
   }
 
   updateLrtState() {
-    const { entityIdentifier, entity, _entity } = this.props;
+    const { entityIdentifier, entity, _entity, onComplete } = this.props;
 
     let identifier = entityIdentifier;
     if (entity || _entity) {
@@ -51,6 +51,9 @@ class LongRunningTask extends Basic.AbstractContent {
     this.context.store.dispatch(manager.fetchEntity(identifier, null, (task) => {
       if (task && OperationStateEnum.findSymbolByKey(task.resultState) !== OperationStateEnum.RUNNING) {
         this.safelyClearInterval();
+        if (onComplete) {
+          onComplete({ task });
+        }
       }
     }));
   }
@@ -128,9 +131,14 @@ class LongRunningTask extends Basic.AbstractContent {
   }
 
   setRefresh(task) {
-    const { updateInterval } = this.props;
+    const { updateInterval, onComplete } = this.props;
     if (task && OperationStateEnum.findSymbolByKey(task.resultState) === OperationStateEnum.RUNNING) {
       this.updateIntervalId = setInterval(this.updateLrtState.bind(this), updateInterval);
+    } else {
+      // task ended right after he was ececuted
+      if (onComplete) {
+        onComplete({ task });
+      }
     }
   }
 
@@ -302,6 +310,10 @@ LongRunningTask.propTypes = {
    * Decorator
    */
   face: PropTypes.oneOf(['count', 'full']),
+  /**
+   * When task is completed, this callback will be called. Processed task is given as func param.
+   */
+  onComplete: PropTypes.func
 };
 LongRunningTask.defaultProps = {
   rendered: true,

@@ -11,9 +11,9 @@
 <tasks xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="IdmTasks.xsd">
 	<task>
-		<taskType>eu.bcvsolutions.idm.core.scheduler.task.impl.TestTaskExecutor</taskType>
 		<description>TEST DESCRIPTION</description>
 		<instanceId>idm-test</instanceId>
+		<taskType>eu.bcvsolutions.idm.core.scheduler.task.impl.TestTaskExecutor</taskType>
 		
 		<triggers>
 			<trigger>
@@ -22,9 +22,9 @@
 				<state>ACTIVE</state>
 			</trigger>
 			<trigger>
+				<state>ACTIVE</state>
 				<type>eu.bcvsolutions.idm.core.scheduler.api.dto.SimpleTaskTrigger</type>
 				<fireTime>4102441200000</fireTime>
-				<state>ACTIVE</state>
 			</trigger>
 		</triggers>
 		

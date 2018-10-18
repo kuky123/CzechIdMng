@@ -33,7 +33,7 @@ class ImageDropzone extends Basic.AbstractContextComponent {
           accept={ accept }
           onDrop={ onDrop }
           children={ children && children.props.src ? children : undefined }
-          style={ children && children.props.src ? { margin: '0' } : ImageDropzone.defaultProps.style }
+          style={ children && children.props.src ? { margin: 0, padding: 0, border: 'none' } : ImageDropzone.defaultProps.style }
           {...others}/>
       </div>
     );

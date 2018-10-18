@@ -218,7 +218,9 @@ export class ReportTable extends Advanced.AbstractTableContent {
         {
           enabledRenderers.map(renderer => {
             return (
-              <a href={ this.getManager().getService().getDownloadUrl(entity.id, renderer.name) }
+              <a
+                key={ `rep-${renderer.id}-${entity.id}` }
+                href={ this.getManager().getService().getDownloadUrl(entity.id, renderer.name) }
                 title={ this.i18n('action.download.title', { report: entity.name, renderer: renderer.description } )}
                 className={ `btn btn-primary ${className}` }
                 style={{ color: 'white', marginLeft: 3 }}>

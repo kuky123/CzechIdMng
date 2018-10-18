@@ -220,8 +220,8 @@ public class DefaultRequestManager implements RequestManager {
 			boolean haveRightExecuteImmediately = securityService.hasAnyAuthority(CoreGroupPermission.REQUEST_ADMIN);
 
 			if (checkRight && !haveRightExecuteImmediately) {
-				throw new RoleRequestException(CoreResultCode.ROLE_REQUEST_NO_EXECUTE_IMMEDIATELY_RIGHT,
-						ImmutableMap.of("new", request));
+				throw new RoleRequestException(CoreResultCode.REQUEST_NO_EXECUTE_IMMEDIATELY_RIGHT,
+						ImmutableMap.of("request", request));
 			}
 
 			// Execute request immediately
@@ -807,9 +807,9 @@ public class DefaultRequestManager implements RequestManager {
 				});
 
 		// We have to ensure the referential integrity, because some items (his DTOs)
-		// could be child of terminated item (DTO)
+		// could be child of terminated (Disapproved, Cancelled) item (DTO)
 		sortedItems.stream() //
-				.filter(item -> item.getState().isTerminatedState()) // We check terminated ADDed items
+				.filter(item -> item.getState().isTerminatedState()) // We check terminated ADDed items (Executed state could not yet occur)
 				.filter(item -> RequestOperationType.ADD == item.getOperation()) //
 				.filter(item -> item.getOwnerId() != null) //
 				.forEach(terminatedItem -> {

@@ -47,7 +47,7 @@ class SmsContent extends Basic.AbstractContent {
           {
             !entity
             ||
-            <NotificationDetail notification={entity}/>
+            <NotificationDetail notification={ entity } showTopic={ false }/>
           }
         </Basic.Panel>
 

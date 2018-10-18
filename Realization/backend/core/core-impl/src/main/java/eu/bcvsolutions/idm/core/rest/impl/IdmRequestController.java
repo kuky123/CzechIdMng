@@ -343,6 +343,8 @@ public class IdmRequestController extends AbstractReadWriteDtoController<IdmRequ
 		filter.setOwnerType(getParameterConverter().toString(parameters, "ownerType"));
 		filter.setOwnerId(getParameterConverter().toUuid(parameters, "ownerId"));
 		filter.setStates(getParameterConverter().toEnums(parameters, "states", RequestState.class));
+		filter.setCreatedAfter(getParameterConverter().toDateTime(parameters, "from"));
+		filter.setCreatedBefore(getParameterConverter().toDateTime(parameters, "till"));
 		return filter;
 	}
 	

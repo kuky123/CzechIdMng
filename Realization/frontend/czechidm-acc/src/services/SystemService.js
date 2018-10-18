@@ -24,6 +24,10 @@ class SystemService extends Services.AbstractService {
     return false;
   }
 
+  supportsBulkAction() {
+    return true;
+  }
+
   getGroupPermission() {
     return 'SYSTEM';
   }

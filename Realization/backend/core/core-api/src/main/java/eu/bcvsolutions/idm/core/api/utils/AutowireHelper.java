@@ -115,6 +115,10 @@ public final class AutowireHelper implements ApplicationContextAware {
 	 * @return
 	 */
 	public static String getBeanDescription(Class<?> beanClass) {
+		if (applicationContext == null) {
+			// application is not initialized yet
+			return null;
+		}
 		String[] beanNames =  applicationContext.getBeanNamesForType(beanClass);
 		if (beanNames.length != 1) {
 			return null;

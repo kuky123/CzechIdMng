@@ -438,7 +438,7 @@ module.exports = {
                 'labelKey': 'content.role.compositions.title',
                 'order': 120,
                 'path': 'requests/:requestId/role/:entityId/compositions',
-                'access': [ { 'type': 'HAS_ANY_AUTHORITY', 'authorities': ['ROLEGUARANTEE_READ'] } ]
+                'access': [ { 'type': 'HAS_ANY_AUTHORITY', 'authorities': ['ROLECOMPOSITION_READ'] } ]
               },
               {
                 'id': 'request-role-guarantees',
@@ -563,6 +563,7 @@ module.exports = {
         'labelKey': 'content.audit.title',
         'titleKey': 'content.audit.title',
         'icon': 'stats',
+        'path': '/audit/entities',
         'order': 1900,
         'items': [
           {
@@ -733,10 +734,10 @@ module.exports = {
             'labelKey': 'content.websockets.title',
             'order': 100,
             'path': '/notification/websockets',
+            '_deprecated': '@deprecated @since 9.2.0 websocket notification will be removed',
             'access': [
               {
-                'type': 'HAS_ANY_AUTHORITY',
-                'authorities': ['NOTIFICATION_READ']
+                'type': 'DENY_ALL'
               }
             ]
           },
@@ -794,7 +795,7 @@ module.exports = {
           {
             'type': 'HAS_ANY_AUTHORITY',
             'authorities': [
-              'TREETYPE_READ', 'TREENODE_READ', 'CONFIGURATION_READ', 'MODULE_READ',
+              'TREETYPE_READ', 'TREENODE_READ', 'CONFIGURATION_READ', 'MODULE_READ', 'GENERATEVALUE_READ',
               'SCHEDULER_READ', 'FORMDEFINITION_READ', 'PASSWORDPOLICY_READ', 'SCRIPT_READ', 'ROLECATALOGUE_READ', 'CONFIDENTIALSTORAGEVALUE_READ'
             ]
           }
@@ -1161,6 +1162,16 @@ module.exports = {
                 'access': [ { 'type': 'HAS_ANY_AUTHORITY', 'authorities': ['FORMDEFINITION_READ'] } ]
               }
             ]
+          },
+          {
+            'id': 'generate-values',
+            'labelKey': 'content.generateValues.header',
+            'titleKey': 'content.generateValues.title',
+            'icon': 'random',
+            'iconColor': '#000000',
+            'order': 50,
+            'path': '/generate-values',
+            'access': [ { 'type': 'HAS_ANY_AUTHORITY', 'authorities': ['GENERATEVALUE_READ'] } ],
           },
           {
             'id': 'confidential-storage',

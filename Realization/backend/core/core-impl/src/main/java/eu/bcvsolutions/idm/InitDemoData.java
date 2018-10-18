@@ -428,7 +428,6 @@ public class InitDemoData implements ApplicationListener<ContextRefreshedEvent> 
 				sure.setCode("sure");
 				sure.setName("Registration");
 				sure.setPersistentType(PersistentType.BOOLEAN);
-				sure.setDefaultValue(Boolean.TRUE.toString());
 				sure = formService.saveAttribute(IdmIdentity.class, sure);
 				
 				IdmFormAttributeDto intNumber = new IdmFormAttributeDto();

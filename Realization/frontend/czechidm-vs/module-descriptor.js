@@ -16,6 +16,7 @@ module.exports = {
         'titleKey': 'vs:content.virtuals.title',
         'icon': 'link',
         'iconColor': '#008AFF',
+        'path': '/vs/systems',
         'order': 1101,
         'access': [ { 'type': 'HAS_ANY_AUTHORITY', 'authorities': ['SYSTEM_READ', 'VSREQUEST_READ'] } ],
         'items': [

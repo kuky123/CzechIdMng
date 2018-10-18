@@ -53,6 +53,10 @@ public class IdmProfile extends AbstractEntity implements AttachableEntity {
 	@Size(max = DefaultFieldLengths.ENUMARATION)
 	@Column(name = "preferred_language", length = DefaultFieldLengths.ENUMARATION)
 	private String preferredLanguage;
+	
+	@Audited
+	@Column(name = "navigation_collapsed", nullable = false)
+	private boolean navigationCollapsed;
 
 	public IdmProfile() {
 	}
@@ -83,5 +87,13 @@ public class IdmProfile extends AbstractEntity implements AttachableEntity {
 
 	public void setPreferredLanguage(String preferredLanguage) {
 		this.preferredLanguage = preferredLanguage;
+	}
+	
+	public boolean isNavigationCollapsed() {
+		return navigationCollapsed;
+	}
+	
+	public void setNavigationCollapsed(boolean navigationCollapsed) {
+		this.navigationCollapsed = navigationCollapsed;
 	}
 }

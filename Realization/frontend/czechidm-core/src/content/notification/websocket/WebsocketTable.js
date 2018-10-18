@@ -13,6 +13,7 @@ import NotificationLevelEnum from '../../../enums/NotificationLevelEnum';
 * Table of audit log for websockets
 *
 * @author Radek Tomiška
+* @deprecated @since 9.2.0 websocket notification will be removed
 */
 export class WebsocketTable extends Advanced.AbstractTableContent {
 

@@ -213,6 +213,16 @@ public class DefaultIdmRequestService extends AbstractReadWriteDtoService<IdmReq
 		if (filter.getOwnerType() != null) {
 			predicates.add(builder.equal(root.get(IdmRequest_.ownerType), filter.getOwnerType()));
 		}
+		
+		// Created before
+		if (filter.getCreatedBefore() != null) {
+			predicates.add(builder.lessThan(root.get(IdmRequest_.created), filter.getCreatedBefore()));
+		}
+
+		// Created after
+		if (filter.getCreatedAfter() != null) {
+			predicates.add(builder.greaterThan(root.get(IdmRequest_.created), filter.getCreatedAfter()));
+		}
 		return predicates;
 	}
 

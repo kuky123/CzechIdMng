@@ -54,7 +54,10 @@ NavigationItem.propTypes = {
   id: PropTypes.string,
   to: PropTypes.string,
   title: PropTypes.string,
-  icon: PropTypes.string,
+  icon: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.bool // false => no icon
+  ]),
   active: PropTypes.bool,
   text: PropTypes.oneOfType([
     PropTypes.string,

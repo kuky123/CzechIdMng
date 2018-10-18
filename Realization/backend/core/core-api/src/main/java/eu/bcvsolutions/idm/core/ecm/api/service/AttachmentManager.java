@@ -12,7 +12,7 @@ import eu.bcvsolutions.idm.core.api.domain.Identifiable;
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
 import eu.bcvsolutions.idm.core.api.entity.AbstractEntity;
 import eu.bcvsolutions.idm.core.api.exception.ForbiddenEntityException;
-import eu.bcvsolutions.idm.core.api.service.ReadDtoService;
+import eu.bcvsolutions.idm.core.api.service.ReadWriteDtoService;
 import eu.bcvsolutions.idm.core.ecm.api.dto.IdmAttachmentDto;
 import eu.bcvsolutions.idm.core.ecm.api.dto.filter.IdmAttachmentFilter;
 import eu.bcvsolutions.idm.core.ecm.api.entity.AttachableEntity;
@@ -29,8 +29,13 @@ import eu.bcvsolutions.idm.core.security.api.service.AuthorizableService;
  * @since 7.6.0
  */
 public interface AttachmentManager extends 
-		ReadDtoService<IdmAttachmentDto, IdmAttachmentFilter>,
+		ReadWriteDtoService<IdmAttachmentDto, IdmAttachmentFilter>,
 		AuthorizableService<IdmAttachmentDto> {
+	
+	/**
+	 * Temporary attachments - they are uploaded without owner.
+	 */
+	String TEMPORARY_ATTACHMENT_OWNER_TYPE = "TEMP";
 
 	/**
 	 * Save attachment. Closes given data input stream automatically.
@@ -92,6 +97,19 @@ public interface AttachmentManager extends
 	Page<IdmAttachmentDto> getAttachments(Identifiable owner, Pageable pageable, BasePermission... permission);
 	
 	/**
+	 * Returns owner's attachments in last version.
+	 * 
+	 * @param ownerId
+	 * @param ownerType
+	 * @param pageable
+	 * @param permission permissions to evaluate (AND)
+	 * @return
+	 * @throws ForbiddenEntityException if authorization policies doesn't met
+	 * @since 9.3.0
+	 */
+	Page<IdmAttachmentDto> getAttachments(UUID ownerId, String ownerType, Pageable pageable, BasePermission... permission);
+	
+	/**
 	 * Returns all attachment versions orderer from newer to older.
 	 * 
 	 * @param attachmentId
@@ -142,6 +160,17 @@ public interface AttachmentManager extends
 	void deleteAttachments(Identifiable owner, BasePermission... permission);
 	
 	/**
+	 * Deletes all attachments by given owner type and id 
+	 * 
+	 * @param ownerId
+	 * @param ownerType
+	 * @param permission permissions to evaluate (AND)
+	 * @throws ForbiddenEntityException if authorization policies doesn't met
+	 * @since 9.3.0
+	 */
+	void deleteAttachments(UUID ownerId, String ownerType, BasePermission... permission);
+	
+	/**
 	 *  Create temporary file with default ("bin") extension
 	 * 
 	 * @return
@@ -156,4 +185,13 @@ public interface AttachmentManager extends
 	 * @since 9.0.0
 	 */
 	String getOwnerType(Identifiable owner);
+	
+	/**
+	 * Owner type has to be entity class - dto class can be given.
+	 * 
+	 * @param ownerType
+	 * @return
+	 * @since 9.3.0
+	 */
+	String getOwnerType(Class<? extends Identifiable> ownerType);
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import eu.bcvsolutions.idm.core.api.dto.IdmConfigurationDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmTreeTypeDto;
 import eu.bcvsolutions.idm.core.api.dto.filter.IdmTreeTypeFilter;
+import eu.bcvsolutions.idm.core.api.script.ScriptEnabled;
 import eu.bcvsolutions.idm.core.security.api.service.AuthorizableService;
 
 /**
@@ -20,14 +21,15 @@ import eu.bcvsolutions.idm.core.security.api.service.AuthorizableService;
 public interface IdmTreeTypeService extends 
 		EventableDtoService<IdmTreeTypeDto, IdmTreeTypeFilter>,
 		CodeableService<IdmTreeTypeDto>,
-		AuthorizableService<IdmTreeTypeDto> {
+		AuthorizableService<IdmTreeTypeDto>,
+		ScriptEnabled {
 
 	/**
 	 * Prefix to configuration
 	 */
-	static final String CONFIGURATION_PREFIX = ConfigurationService.IDM_PRIVATE_PROPERTY_PREFIX + "core.treeType.";
-	static final String CONFIGURATION_PROPERTY_VALID = "valid";
-	static final String CONFIGURATION_PROPERTY_REBUILD = "rebuild";
+	String CONFIGURATION_PREFIX = ConfigurationService.IDM_PRIVATE_PROPERTY_PREFIX + "core.treeType.";
+	String CONFIGURATION_PROPERTY_VALID = "valid";
+	String CONFIGURATION_PROPERTY_REBUILD = "rebuild";
 	
 	/**
 	 * Returns tree type by code 

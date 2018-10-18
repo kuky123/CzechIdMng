@@ -9,7 +9,7 @@ import { HelpContent } from '../domain';
 import { SecurityManager, IdentityManager, ConfigurationManager } from '../redux';
 
 const IDM_NAME = Utils.Config.getConfig('app.name', 'CzechIdM');
-const PASSWORD_DOES_NOT_MEET_POLICY = 'PASSWORD_DOES_NOT_MEET_POLICY';
+const PASSWORD_PREVALIDATION = 'PASSWORD_PREVALIDATION';
 
 const identityManager = new IdentityManager();
 const securityManager = new SecurityManager();
@@ -84,8 +84,14 @@ class PasswordChange extends Basic.AbstractContent {
       return response.json();
     })
     .then(json => {
-      if (Utils.Response.hasError(json)) {
-        const error = Utils.Response.getFirstError(json);
+      let error;
+      if (Utils.Response.getFirstError(json)) {
+        error = Utils.Response.getFirstError(json);
+      } else {
+        error = json._errors.pop();
+      }
+
+      if (error) {
         this.setState({
           validationError: error,
           validationDefinition: true
@@ -99,7 +105,7 @@ class PasswordChange extends Basic.AbstractContent {
       if (!error) {
         return {};
       }
-      if (error.statusEnum === PASSWORD_DOES_NOT_MEET_POLICY) {
+      if (error.statusEnum === PASSWORD_PREVALIDATION) {
         this.addErrorMessage({hidden: true}, error);
       } else {
         this.addError(error);

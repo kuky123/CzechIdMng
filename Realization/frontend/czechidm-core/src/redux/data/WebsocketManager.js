@@ -5,6 +5,7 @@ import { WebsocketService } from '../../services';
  * Websocket logs
  *
  * @author Radek Tomiška
+ * @deprecated @since 9.2.0 websocket notification will be removed
  */
 export default class WebsocketManager extends EntityManager {
 

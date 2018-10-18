@@ -4,7 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -25,9 +24,9 @@ import eu.bcvsolutions.idm.core.notification.entity.IdmWebsocketLog;
  * Send messages through websocket
  * 
  * @author Radek Tomiška
- *
+ * @deprecated @since 9.2.0 websocket notification will be removed
  */
-@Component("websocketNotificationSender")
+@Deprecated
 public class DefaultWebsocketNotificationSender extends AbstractNotificationSender<IdmWebsocketLogDto> implements WebsocketNotificationSender {
 
 	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DefaultWebsocketNotificationSender.class);
@@ -46,7 +45,6 @@ public class DefaultWebsocketNotificationSender extends AbstractNotificationSend
 		this.websocket = websocket;
 		this.websocketLogService = websocketLogService;
 		this.identityService = identityService;
-
 	}
 
 	@Override

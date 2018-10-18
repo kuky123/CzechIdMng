@@ -18,7 +18,7 @@ public interface EmailNotificationSender extends NotificationSender<IdmEmailLogD
 	 * @param emails
 	 * @return
 	 */
-	public IdmEmailLogDto send(IdmMessageDto message, String[] emails);
+	IdmEmailLogDto send(IdmMessageDto message, String[] emails);
 	
 	/**
 	 * Method send email and save notification to log
@@ -27,5 +27,5 @@ public interface EmailNotificationSender extends NotificationSender<IdmEmailLogD
 	 * @param emails
 	 * @return
 	 */
-	public IdmEmailLogDto send(IdmMessageDto message, String email);
+	IdmEmailLogDto send(IdmMessageDto message, String email);
 }

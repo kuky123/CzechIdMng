@@ -56,7 +56,7 @@ RoleEav.defaultProps = {
 
 function select(state, component) {
   if (!manager) {
-    return null;
+    return {};
   }
   return {
     _entity: manager.getEntity(state, component.params.entityId),

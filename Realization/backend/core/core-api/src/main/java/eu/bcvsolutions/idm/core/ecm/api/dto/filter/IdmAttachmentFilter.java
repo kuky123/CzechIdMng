@@ -1,11 +1,16 @@
 package eu.bcvsolutions.idm.core.ecm.api.dto.filter;
 
+import java.io.Serializable;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import eu.bcvsolutions.idm.core.api.dto.filter.DataFilter;
+import eu.bcvsolutions.idm.core.api.utils.DtoUtils;
+import eu.bcvsolutions.idm.core.eav.api.domain.PersistentType;
+import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormValueDto;
 import eu.bcvsolutions.idm.core.ecm.api.dto.IdmAttachmentDto;
 
 /**
@@ -17,8 +22,11 @@ import eu.bcvsolutions.idm.core.ecm.api.dto.IdmAttachmentDto;
  */
 public class IdmAttachmentFilter extends DataFilter {
 
-	private UUID ownerId;
-	private String ownerType;
+	public static final String PARAMETER_OWNER_ID = "ownerId";
+	public static final String PARAMETER_OWNER_TYPE = "ownerType";
+	public static final String PARAMETER_CREATED_BEFORE= "createdBefore";
+	public static final String PARAMETER_CREATED_AFTER = "createdAfter";
+	//
 	private String name;
 	private Boolean lastVersionOnly; // true - last version only
 	private UUID versionsFor; // attachment id - all versions for attachment
@@ -32,19 +40,19 @@ public class IdmAttachmentFilter extends DataFilter {
 	}
 
 	public UUID getOwnerId() {
-		return ownerId;
+		return DtoUtils.toUuid(data.getFirst(PARAMETER_OWNER_ID));
 	}
 
 	public void setOwnerId(UUID ownerId) {
-		this.ownerId = ownerId;
+		data.set(PARAMETER_OWNER_ID, ownerId);
 	}
 
 	public String getOwnerType() {
-		return ownerType;
+		return (String) data.getFirst(PARAMETER_OWNER_TYPE);
 	}
 
 	public void setOwnerType(String ownerType) {
-		this.ownerType = ownerType;
+		data.set(PARAMETER_OWNER_TYPE, ownerType);
 	}
 	
 	public void setName(String name) {
@@ -69,5 +77,31 @@ public class IdmAttachmentFilter extends DataFilter {
 	
 	public void setVersionsFor(UUID versionsFor) {
 		this.versionsFor = versionsFor;
+	}
+
+	public DateTime getCreatedAfter() {
+		// FIXME: parameter converter
+		IdmFormValueDto value = new IdmFormValueDto();
+		value.setPersistentType(PersistentType.DATETIME);
+		value.setValue((Serializable) data.getFirst(PARAMETER_CREATED_AFTER));
+		//
+		return value.getDateValue();
+	}
+
+	public void setCreatedAfter(DateTime createdAfter) {
+		data.set(PARAMETER_CREATED_AFTER, createdAfter);
+	}
+
+	public DateTime getCreatedBefore() {
+		// FIXME: parameter converter
+		IdmFormValueDto value = new IdmFormValueDto();
+		value.setPersistentType(PersistentType.DATETIME);
+		value.setValue((Serializable) data.getFirst(PARAMETER_CREATED_BEFORE));
+		//
+		return value.getDateValue();
+	}
+
+	public void setCreatedBefore(DateTime createdBefore) {
+		data.set(PARAMETER_CREATED_BEFORE, createdBefore);
 	}
 }

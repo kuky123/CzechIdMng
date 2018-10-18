@@ -181,7 +181,7 @@ class RoleDetail extends Basic.AbstractContent {
       return null;
     }
     let requestsForceSearch = new SearchParameters();
-    requestsForceSearch = requestsForceSearch.setFilter('ownerId', entity.id);
+    requestsForceSearch = requestsForceSearch.setFilter('ownerId', entity.id ? entity.id : SearchParameters.BLANK_UUID);
     requestsForceSearch = requestsForceSearch.setFilter('ownerType', 'eu.bcvsolutions.idm.core.api.dto.IdmRoleDto');
     requestsForceSearch = requestsForceSearch.setFilter('states', ['IN_PROGRESS', 'CONCEPT', 'EXCEPTION']);
     //
@@ -294,7 +294,8 @@ class RoleDetail extends Basic.AbstractContent {
           </Basic.Tab>
           <Basic.Tab
             eventKey={ 2 }
-            disabled={roleManager.isRequestModeEnabled()}
+            rendered={entity.id ? true : false}
+            disabled={roleManager.isRequestModeEnabled() || !entity.id}
             title={
               <span>
                 { this.i18n('content.requests.header') }

@@ -1,4 +1,4 @@
-package eu.bcvsolutions.idm.core.notification;
+package eu.bcvsolutions.idm.core.notification.service.impl;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.joda.time.DateTime;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -17,14 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import eu.bcvsolutions.idm.InitTestData;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto;
+import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityService;
 import eu.bcvsolutions.idm.core.notification.api.domain.NotificationLevel;
 import eu.bcvsolutions.idm.core.notification.api.domain.NotificationState;
 import eu.bcvsolutions.idm.core.notification.api.dto.IdmMessageDto;
-import eu.bcvsolutions.idm.core.notification.api.dto.NotificationConfigurationDto;
 import eu.bcvsolutions.idm.core.notification.api.dto.IdmNotificationDto;
 import eu.bcvsolutions.idm.core.notification.api.dto.IdmNotificationLogDto;
 import eu.bcvsolutions.idm.core.notification.api.dto.IdmNotificationTemplateDto;
+import eu.bcvsolutions.idm.core.notification.api.dto.NotificationConfigurationDto;
 import eu.bcvsolutions.idm.core.notification.api.dto.filter.IdmNotificationFilter;
 import eu.bcvsolutions.idm.core.notification.api.service.EmailNotificationSender;
 import eu.bcvsolutions.idm.core.notification.api.service.IdmEmailLogService;
@@ -34,14 +34,18 @@ import eu.bcvsolutions.idm.core.notification.api.service.IdmNotificationTemplate
 import eu.bcvsolutions.idm.core.notification.api.service.NotificationManager;
 import eu.bcvsolutions.idm.core.notification.entity.IdmConsoleLog;
 import eu.bcvsolutions.idm.core.notification.entity.IdmEmailLog;
+import eu.bcvsolutions.idm.core.notification.entity.IdmNotificationConfiguration;
 import eu.bcvsolutions.idm.core.notification.entity.IdmNotificationLog;
 import eu.bcvsolutions.idm.core.notification.repository.IdmEmailLogRepository;
+import eu.bcvsolutions.idm.core.notification.repository.IdmNotificationConfigurationRepository;
 import eu.bcvsolutions.idm.core.notification.repository.IdmNotificationLogRepository;
+import eu.bcvsolutions.idm.core.security.api.domain.GuardedString;
 import eu.bcvsolutions.idm.test.api.AbstractIntegrationTest;
-import eu.bcvsolutions.idm.test.api.TestHelper;
 
 /**
  * Notification service tests
+ * 
+ * TODO: move filters to rest layer
  * 
  * @author Radek Tomiška
  * @author Marek Klement
@@ -49,66 +53,52 @@ import eu.bcvsolutions.idm.test.api.TestHelper;
  */
 public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrationTest {
 
-	private static final String TOPIC = "idm:test";
-
-	@Autowired private TestHelper helper;
 	@Autowired private NotificationManager notificationManager;
 	@Autowired private EmailNotificationSender emailService;
-	@Autowired private IdmNotificationLogRepository idmNotificationRepository;
+	@Autowired private IdmNotificationLogRepository notificationRepository;
+	@Autowired private IdmNotificationConfigurationRepository notificationConfigurationRepository;
 	@Autowired private IdmNotificationLogService notificationLogService;
 	@Autowired private IdmIdentityService identityService;
 	@Autowired private IdmEmailLogRepository emailLogRepository;
 	@Autowired private IdmEmailLogService emailLogService;
 	@Autowired private IdmNotificationTemplateService notificationTemplateService;
 	@Autowired private IdmNotificationConfigurationService notificationConfigurationService;
-	//
-	NotificationConfigurationDto config = null;
 
 	@Before
 	public void clear() {
-		loginAsAdmin();
 		// TODO: make test stateless!
 		emailLogRepository.deleteAll();
-		idmNotificationRepository.deleteAll();
-		//
-		config = new NotificationConfigurationDto();
-		config.setTopic(TOPIC);
-		config.setNotificationType(IdmEmailLog.NOTIFICATION_TYPE);
-		config = notificationConfigurationService.save(config);
-	}
-
-	@After
-	@Override
-	public void logout() {
-		notificationConfigurationService.delete(config);
-		super.logout();
+		notificationRepository.deleteAll();
 	}
 
 	@Test
 	@Transactional
 	public void testSendSimple() {
-		assertEquals(0, idmNotificationRepository.count());
+		assertEquals(0, notificationRepository.count());
+		NotificationConfigurationDto config = createConfig();
+		
 		IdmNotificationTemplateDto template = createTestTemplate("Idm notification", "subject");
 
 		IdmIdentityDto identity = identityService.getByUsername(InitTestData.TEST_USER_1);
 
-		notificationManager.send(TOPIC, new IdmMessageDto.Builder().setTemplate(template).build(), identity);
+		notificationManager.send(config.getTopic(), new IdmMessageDto.Builder().setTemplate(template).build(), identity);
 
-		assertEquals(1, idmNotificationRepository.count());
+		assertEquals(1, notificationRepository.count());
 		assertEquals(1, emailLogRepository.count());
 	}
 
 	@Test
 	@Transactional
 	public void testFilterByDate() {
-		assertEquals(0, idmNotificationRepository.count());
+		assertEquals(0, notificationRepository.count());
 		IdmNotificationTemplateDto template = createTestTemplate("Idm notification", "subject");
 		IdmIdentityDto identity = identityService.getByUsername(InitTestData.TEST_USER_1);
-
+		NotificationConfigurationDto config = createConfig();
+		//
 		DateTime from = new DateTime().minusDays(1);
 		DateTime till = new DateTime().minusDays(1);
-		notificationManager.send(TOPIC, new IdmMessageDto.Builder().setTemplate(template).build(), identity);
-		notificationManager.send(TOPIC, new IdmMessageDto.Builder().setTemplate(template).build(), identity);
+		notificationManager.send(config.getTopic(), new IdmMessageDto.Builder().setTemplate(template).build(), identity);
+		notificationManager.send(config.getTopic(), new IdmMessageDto.Builder().setTemplate(template).build(), identity);
 
 		IdmNotificationFilter filter = new IdmNotificationFilter();
 		filter.setNotificationType(IdmNotificationLog.class);
@@ -125,6 +115,7 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 	@Test
 	@Transactional
 	public void testEmailFilterBySender() {
+		NotificationConfigurationDto config = createConfig();
 		// create templates
 		IdmNotificationTemplateDto template = createTestTemplate("Idm notification", "subject");
 
@@ -139,7 +130,7 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 		IdmIdentityDto identity = identityService.getByUsername(InitTestData.TEST_USER_1);
 		IdmIdentityDto identity2 = identityService.getByUsername(InitTestData.TEST_USER_2);
 
-		emailService.send(TOPIC, new IdmMessageDto.Builder().setTemplate(template).build(), identity);
+		emailService.send(config.getTopic(), new IdmMessageDto.Builder().setTemplate(template).build(), identity);
 
 		filter.setSender(null);
 		assertEquals(1, emailLogService.find(filter, null).getTotalElements());
@@ -171,7 +162,7 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 
 	@Test
 	public void textFilterTest(){
-		IdmIdentityDto identity = helper.createIdentity();
+		IdmIdentityDto identity = getHelper().createIdentity();
 		IdmNotificationFilter filter = new IdmNotificationFilter();
 		//
 		// create templates
@@ -196,7 +187,7 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 
 	@Test
 	public void senderFilterTest(){
-		IdmIdentityDto sender = helper.createIdentity();
+		IdmIdentityDto sender = getHelper().createIdentity();
 		IdmNotificationFilter filter = new IdmNotificationFilter();
 		IdmNotificationDto notification = new IdmNotificationDto();
 		notification.setIdentitySender(sender.getId());
@@ -240,10 +231,10 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 	@Test
 	@Ignore
 	public void stateFilterTest(){
-		IdmIdentityDto identity1 = helper.createIdentity();
-		IdmIdentityDto identity2 = helper.createIdentity();
-		IdmIdentityDto identity3 = helper.createIdentity();
-		IdmIdentityDto identity4 = helper.createIdentity();
+		IdmIdentityDto identity1 = getHelper().createIdentity();
+		IdmIdentityDto identity2 = getHelper().createIdentity();
+		IdmIdentityDto identity3 = getHelper().createIdentity();
+		IdmIdentityDto identity4 = getHelper().createIdentity();
 		List<IdmIdentityDto> identities = Arrays.asList(identity1, identity2, identity3, identity4);
 		IdmNotificationTemplateDto template = createTestTemplate("TestTemplate6", "testSubject6");
 		IdmMessageDto message = new IdmMessageDto.Builder().setTemplate(template).build();
@@ -266,7 +257,7 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 		String topic = "testTopic-" + System.currentTimeMillis();
 		String text = "testMessageText-" + System.currentTimeMillis();
 		//
-		IdmIdentityDto identity = helper.createIdentity();
+		IdmIdentityDto identity = getHelper().createIdentity();
 		// create config, for email, topic and without level = wildcard
 		NotificationConfigurationDto config = new NotificationConfigurationDto();
 		config.setTopic(topic); // topic
@@ -305,7 +296,7 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 		template.setSubject(textTemplate);
 		template = notificationTemplateService.save(template);
 		//
-		IdmIdentityDto identity = helper.createIdentity();
+		IdmIdentityDto identity = getHelper().createIdentity();
 		// create config, for email, topic, template and without level = wildcard
 		NotificationConfigurationDto config = new NotificationConfigurationDto();
 		config.setTopic(topic); // topic
@@ -345,7 +336,7 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 		template.setSubject(textTemplate);
 		template = notificationTemplateService.save(template);
 		//
-		IdmIdentityDto identity = helper.createIdentity();
+		IdmIdentityDto identity = getHelper().createIdentity();
 		// create config, for email, topic, template and without level = wildcard
 		NotificationConfigurationDto config = new NotificationConfigurationDto();
 		config.setTopic(topic); // topic
@@ -390,7 +381,7 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 		template2.setSubject(textTemplate2);
 		template2 = notificationTemplateService.save(template2);
 		//
-		IdmIdentityDto identity = helper.createIdentity();
+		IdmIdentityDto identity = getHelper().createIdentity();
 		// create config, for email, topic, template and without level = wildcard
 		NotificationConfigurationDto config1 = new NotificationConfigurationDto();
 		config1.setTopic(topic); // topic
@@ -458,7 +449,7 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 		template2.setSubject(textTemplate2);
 		template2 = notificationTemplateService.save(template2);
 		//
-		IdmIdentityDto identity = helper.createIdentity();
+		IdmIdentityDto identity = getHelper().createIdentity();
 		// create config, for email, topic, template and without level = wildcard
 		NotificationConfigurationDto config1 = new NotificationConfigurationDto();
 		config1.setTopic(topic); // topic
@@ -499,7 +490,7 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 	
 	@Test
 	public void sendNofificationToConsoleIfTopicNotFound() {
-		String topic = helper.createName();
+		String topic = getHelper().createName();
 		// create config, for email, topic, template and without level = wildcard
 		NotificationConfigurationDto config = new NotificationConfigurationDto();
 		config.setTopic(topic); // topic
@@ -507,7 +498,7 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 		config.setNotificationType(IdmEmailLog.NOTIFICATION_TYPE); // email
 		config = notificationConfigurationService.save(config);
 		//
-		IdmIdentityDto identity = helper.createIdentity();
+		IdmIdentityDto identity = getHelper().createIdentity();
 		List<IdmNotificationLogDto> notifications = notificationManager.send(
 				topic, 
 				new IdmMessageDto
@@ -525,6 +516,143 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 		//
 		Assert.assertEquals(IdmConsoleLog.NOTIFICATION_TYPE, notification.getType());
 	}
+	
+	@Transactional
+	@Test(expected = ResultCodeException.class)
+	public void testSendRedirectNotificationWithEmptyRecipients() {
+		IdmNotificationConfiguration config = new IdmNotificationConfiguration();
+		config.setTopic(getHelper().createName());
+		config.setNotificationType(IdmConsoleLog.NOTIFICATION_TYPE);
+		config.setRedirect(true);
+		config = notificationConfigurationRepository.save(config);
+		//
+		notificationManager.send(
+				config.getTopic(), 
+				new IdmMessageDto
+					.Builder()
+					.setLevel(NotificationLevel.SUCCESS)
+					.setMessage("message")
+					.setSubject("subject")
+					.build(),
+				getHelper().createIdentity((GuardedString) null));
+	}
+	
+	@Test
+	@Transactional
+	public void testSendNotificationToAlias() {
+		final IdmIdentityDto originalRecipient = getHelper().createIdentity((GuardedString) null);
+		NotificationConfigurationDto config = new NotificationConfigurationDto();
+		config.setTopic(getHelper().createName());
+		config.setNotificationType(IdmConsoleLog.NOTIFICATION_TYPE);
+		config.setRecipients("one,two,two,two");
+		config.setRedirect(false);
+		//
+		// we are using repository directly - validations are on the service layer
+		config = notificationConfigurationService.save(config);
+		//
+		String subject = getHelper().createName();
+		List<IdmNotificationLogDto> notifications = notificationManager.send(
+				config.getTopic(), 
+				new IdmMessageDto
+					.Builder()
+					.setLevel(NotificationLevel.SUCCESS)
+					.setMessage("message")
+					.setSubject(subject)
+					.build(),
+					originalRecipient);
+		//
+		Assert.assertEquals(2, notifications.size());
+		Assert.assertTrue(notifications.stream().anyMatch(n -> {
+			return n.getRecipients().size() == 1 && originalRecipient.getId().equals(n.getRecipients().get(0).getIdentityRecipient());
+		}));
+		Assert.assertTrue(notifications.stream().anyMatch(n -> {
+			return n.getRecipients().size() == 2 
+					&& n.getRecipients().stream().anyMatch(r -> "one".equals(r.getRealRecipient()))
+					&& n.getRecipients().stream().anyMatch(r -> "two".equals(r.getRealRecipient()));
+		}));
+		//
+		// test by filter
+		IdmNotificationFilter filter = new IdmNotificationFilter();
+		filter.setText(subject);
+		filter.setNotificationType(IdmNotificationLog.class); // envelope only
+		notifications = notificationLogService.find(filter, null).getContent();
+		//
+		Assert.assertEquals(2, notifications.size());
+		Assert.assertTrue(notifications.stream().anyMatch(n -> {
+			return n.getRecipients().size() == 1 && originalRecipient.getId().equals(n.getRecipients().get(0).getIdentityRecipient());
+		}));
+		Assert.assertTrue(notifications.stream().anyMatch(n -> {
+			return n.getRecipients().size() == 2 
+					&& n.getRecipients().stream().anyMatch(r -> "one".equals(r.getRealRecipient()))
+					&& n.getRecipients().stream().anyMatch(r -> "two".equals(r.getRealRecipient()));
+		}));
+		//
+		filter.setNotificationType(IdmConsoleLog.class); // target sender
+		notifications = notificationLogService.find(filter, null).getContent();
+		//
+		Assert.assertEquals(2, notifications.size());
+		Assert.assertTrue(notifications.stream().anyMatch(n -> {
+			return n.getRecipients().size() == 1 && originalRecipient.getId().equals(n.getRecipients().get(0).getIdentityRecipient());
+		}));
+		Assert.assertTrue(notifications.stream().anyMatch(n -> {
+			return n.getRecipients().size() == 2 
+					&& n.getRecipients().stream().allMatch(r -> IdmConsoleLog.NOTIFICATION_TYPE.equals(r.getRealRecipient()));
+		}));
+	}
+	
+	@Test
+	@Transactional
+	public void testSendNotificationToAliasWithRedirect() {
+		final IdmIdentityDto originalRecipient = getHelper().createIdentity((GuardedString) null);
+		NotificationConfigurationDto config = new NotificationConfigurationDto();
+		config.setTopic(getHelper().createName());
+		config.setNotificationType(IdmConsoleLog.NOTIFICATION_TYPE);
+		config.setRecipients("one,two,two,two");
+		config.setRedirect(true);
+		//
+		// we are using repository directly - validations are on the service layer
+		config = notificationConfigurationService.save(config);
+		//
+		String subject = getHelper().createName();
+		List<IdmNotificationLogDto> notifications = notificationManager.send(
+				config.getTopic(), 
+				new IdmMessageDto
+					.Builder()
+					.setLevel(NotificationLevel.SUCCESS)
+					.setMessage("message")
+					.setSubject(subject)
+					.build(),
+					originalRecipient);
+		//
+		Assert.assertEquals(1, notifications.size());
+		Assert.assertTrue(notifications.stream().anyMatch(n -> {
+			return n.getRecipients().size() == 2 
+					&& n.getRecipients().stream().anyMatch(r -> "one".equals(r.getRealRecipient()))
+					&& n.getRecipients().stream().anyMatch(r -> "two".equals(r.getRealRecipient()));
+		}));
+		//
+		// test by filter
+		IdmNotificationFilter filter = new IdmNotificationFilter();
+		filter.setText(subject);
+		filter.setNotificationType(IdmNotificationLog.class); // envelope only
+		notifications = notificationLogService.find(filter, null).getContent();
+		//
+		Assert.assertEquals(1, notifications.size());
+		Assert.assertTrue(notifications.stream().anyMatch(n -> {
+			return n.getRecipients().size() == 2 
+					&& n.getRecipients().stream().anyMatch(r -> "one".equals(r.getRealRecipient()))
+					&& n.getRecipients().stream().anyMatch(r -> "two".equals(r.getRealRecipient()));
+		}));
+		//
+		filter.setNotificationType(IdmConsoleLog.class); // target sender
+		notifications = notificationLogService.find(filter, null).getContent();
+		//
+		Assert.assertEquals(1, notifications.size());
+		Assert.assertTrue(notifications.stream().anyMatch(n -> {
+			return n.getRecipients().size() == 2 
+					&& n.getRecipients().stream().anyMatch(r -> IdmConsoleLog.NOTIFICATION_TYPE.equals(r.getRealRecipient()));
+		}));
+	}
 
 	private IdmNotificationTemplateDto createTestTemplate(String body, String subject) {
 		// create templates
@@ -535,6 +663,19 @@ public class DefaultNotificationServiceIntegrationTest extends AbstractIntegrati
 		template.setCode(subject);
 		template.setSubject(subject);
 		return notificationTemplateService.save(template);
+	}
+	
+	/**
+	 * TODO: move to helper?
+	 * 
+	 * @return
+	 */
+	private NotificationConfigurationDto createConfig() {
+		NotificationConfigurationDto config = new NotificationConfigurationDto();
+		config.setTopic(getHelper().createName());
+		config.setNotificationType(IdmEmailLog.NOTIFICATION_TYPE);
+		//
+		return  notificationConfigurationService.save(config);
 	}
 
 }

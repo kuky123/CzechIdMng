@@ -3,9 +3,10 @@ import _ from 'lodash';
 import Stomp from 'stompjs';
 import SockJS from 'sockjs-client';
 //
-import { AuthenticateService } from '../../services';
+import { AuthenticateService, IdentityService, LocalizationService } from '../../services';
 import FlashMessagesManager from '../flash/FlashMessagesManager';
 import ConfigLoader from '../../utils/ConfigLoader';
+import { Actions } from '../config/constants';
 
 /**
  * action types
@@ -16,6 +17,7 @@ export const RECEIVE_LOGIN_EXPIRED = 'RECEIVE_LOGIN_EXPIRED';
 export const RECEIVE_LOGIN_ERROR = 'RECEIVE_LOGIN_ERROR';
 export const REQUEST_REMOTE_LOGIN = 'REQUEST_REMOTE_LOGIN';
 export const RECEIVE_REMOTE_LOGIN_ERROR = 'RECEIVE_REMOTE_LOGIN_ERROR';
+export const RECEIVE_PROFILE = 'RECEIVE_PROFILE';
 export const LOGOUT = 'LOGOUT';
 //
 const TOKEN_COOKIE_NAME = 'XSRF-TOKEN';
@@ -24,6 +26,7 @@ const ADMIN_PERMISSION = 'ADMIN';
 const ADMIN_AUTHORITY = `APP${PERMISSION_SEPARATOR}${ADMIN_PERMISSION}`;
 
 const authenticateService = new AuthenticateService();
+const identityService = new IdentityService();
 const flashMessagesManager = new FlashMessagesManager();
 let stompClient = null;
 
@@ -93,21 +96,55 @@ export default class SecurityManager {
   _handleUserAuthSuccess(dispatch, getState, redirect, json) {
     const decoded = AuthenticateService.decodeToken(json.token);
     const userName = decoded.currentUsername;
-    // construct logged user context
-    const userContext = {
-      id: json.authentication.currentIdentityId,
-      isAuthenticated: true,
-      username: userName,
-      tokenCIDMST: json.token,
-      tokenCSRF: authenticateService.getCookie(TOKEN_COOKIE_NAME),
-      authorities: json.authorities.map(authority => authority.authority)
-    };
-    //
-    // remove all messages (only logout could be fond in messages after logout)
-    dispatch(flashMessagesManager.removeAllMessages());
-    //
-    // send userContext to state
-    dispatch(this.receiveLogin(userContext, redirect));
+    // load identity profile
+    identityService.getProfile(userName, json.token)
+      .catch(error => {
+        // profile is optional - logged identity couldn't have permission for read profile (or profile not found)
+        flashMessagesManager.addErrorMessage({ hidden: true, level: 'info' }, error);
+        return null;
+      })
+      .then(profile => {
+        // construct logged user context
+        const userContext = {
+          id: json.authentication.currentIdentityId,
+          isAuthenticated: true,
+          username: userName,
+          tokenCIDMST: json.token,
+          tokenCSRF: authenticateService.getCookie(TOKEN_COOKIE_NAME),
+          authorities: json.authorities.map(authority => authority.authority),
+          profile
+        };
+        //
+        // remove all messages (only logout could be fond in messages after logout)
+        dispatch(flashMessagesManager.removeAllMessages());
+        //
+        // init FE by saved profile on BE
+        if (profile) {
+          // collapse navigation
+          dispatch({
+            type: Actions.COLLAPSE_NAVIGATION,
+            collapsed: profile.navigationCollapsed
+          });
+          //
+          // change locale by profile
+          if (profile.preferredLanguage) {
+            LocalizationService.changeLanguage(profile.preferredLanguage, (error) => {
+              if (error) {
+                // FIXME: locale is broken ... but en message will be better
+                dispatch(flashMessagesManager.addMessage({level: 'error', title: 'Nepodařilo se iniciovat lokalizaci', message: error }));
+              } else {
+                dispatch({
+                  type: Actions.I18N_READY,
+                  lng: profile.preferredLanguage
+                });
+              }
+            });
+          }
+        }
+        //
+        // send userContext to state
+        dispatch(this.receiveLogin(userContext, redirect));
+      });
   }
 
   /*
@@ -128,8 +165,10 @@ export default class SecurityManager {
   receiveLogin(userContext, redirect) {
     return dispatch => {
       // login to websocket
-      dispatch(SecurityManager.connectStompClient(userContext));
+      // @deprecated @since 9.2.0, will be removed (move websocket notification support to your custom module if needed)
+      // dispatch(SecurityManager.connectStompClient(userContext));
       // getState().logger.debug('received login', userContext);
+      //
       // redirect after login, if needed
       if (redirect) {
         redirect(userContext.isAuthenticated);
@@ -222,7 +261,7 @@ export default class SecurityManager {
   receiveLogout() {
     return dispatch => {
       // logout from web sockets
-      dispatch(SecurityManager.disconectStompClient());
+      // dispatch(SecurityManager.disconectStompClient());
       dispatch({
         type: LOGOUT
       });
@@ -432,6 +471,7 @@ export default class SecurityManager {
    * Connect websocket client to receiving flashmessages from BE
    *
    * @param  {UserContext} userContext
+   * @deprecated @since 9.2.0, will be removed
    */
   static connectStompClient(userContext = null) {
     return (dispatch, getState) => {
@@ -464,6 +504,7 @@ export default class SecurityManager {
    * Disconnect websocket client to receiving flashmessages from BE
    *
    * @return {[type]} [description]
+   * @deprecated @since 9.2.0, will be removed
    */
   static disconectStompClient() {
     return (dispatch, getState) => {

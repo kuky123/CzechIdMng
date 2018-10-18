@@ -1348,6 +1348,16 @@
         "icon": "link",
         "label": "Invoke account management",
         "help": "This operation invokes <strong>account management</strong> for each selected role. The account management will be invoke for all users with the role. Account management itself and subsequent provisioning are performed <strong>asynchronously</strong>.  You can see progress of this operations in the <strong>Events</strong> agenda."
+      },
+      "system-duplicate-bulk-action": {
+        "icon": "fa:clone",
+        "label": "Duplicate the system",
+        "help": "Creates copy of selected systems <strong>duplicate contains all configurations</strong>. New system (and his syncs) will be inactive. "
+      },
+      "system-delete-bulk-action": {
+        "label": "Remove",
+        "help": "Remove selected systems. <strong>Removed system must not contains any accounts and unresolved provisioning operations</strong>.",
+        "icon": "fa:trash"
       }
     }
   },
@@ -1466,7 +1476,7 @@
     },
     "PROVISIONING_ATTRIBUTE_STRATEGY_CONFLICT": {
       "title": "Provisioning - Attribute strategy conflict",
-      "message": "Strategies [{{strategyParent}}] and [{{strategyConflict}}] are in conflict for attribute [{{attribute}}]!"
+      "message": "Strategies [{{strategyParent}} (role {{roleParent}})] and [{{strategyConflict}} (role {{roleConflict}})] are in conflict for attribute [{{attribute}}]!"
     },
     "SYNCHRONIZATION_IS_NOT_ENABLED": {
       "title": "Synchronization is not allowed",
@@ -1722,6 +1732,14 @@
     },
     "ROLE_ACM_BULK_ACTION_NONE_IDENTITIES": {
       "message": "The selected roles do <strong>not</strong> contain any user relationships.",
+      "title": ""
+    },
+    "SYSTEM_DELETE_BULK_ACTION_NUMBER_OF_ACCOUNTS": {
+      "message": "System <strong>{{system}}</strong> contains  <strong class=\"highlight\">{{count}}</strong> accounts",
+      "title": ""
+    },
+    "SYSTEM_DELETE_BULK_ACTION_NUMBER_OF_PROVISIONINGS": {
+      "message": "System <strong>{{system}}</strong> contains  <strong class=\"highlight\">{{count}}</strong> unresolved provisioning operations",
       "title": ""
     }
   },

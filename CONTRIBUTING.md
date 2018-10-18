@@ -8,12 +8,14 @@ We use [Redmine](https://redmine.czechidm.com) to track bugs and enhancements.
 
 If you believe that you have found a bug, please take a moment to search the existing issues. If no one else has reported the problem, please open a new ticket that describes the problem in detail and has sufficient category and instructions to be able to reproduce the issue. Ideally, one which describes how to reproduce it. Application, module (backend, frontend) and browser version has to be included in ticket description.
 
+**Please dont forget write affected version**. If you want help with solving bug, we primary need know what version do you use. Without affected version we are not able solve the ticket and ticket will be returned to you.
+
 #### Strict ticket example:
 | Name form attribute   |      Values/Info      |
 |----------|:-------------:|
 | Queue |  Task, Defect, Feature |
 | Subject |    Clear, unambiguous and unique name, **don't create duplicate tickets please!** |
-| Description | **Detailed description**, bug or feature, with affected version. Description of how to reproduce bug, preferably StackTrace with error. Info as to why this new feature is necessary. |
+| Description | **Detailed description**, bug or feature, **with affected version**. Description of how to reproduce bug, preferably StackTrace with error. Info as to why this new feature is necessary. |
 | State | Please keep state as New |
 | Priority | Only critical bugs have higher priority than normal. For features, never set priority higher than normal. Features are planned far in advance. It is possible that your feature will be appear in a later version. |
 | Assigned | If you don't know who is responsible for a category don't choose anyone. |

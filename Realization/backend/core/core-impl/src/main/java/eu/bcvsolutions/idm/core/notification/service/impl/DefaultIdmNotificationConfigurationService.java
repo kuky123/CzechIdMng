@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 
 import eu.bcvsolutions.idm.core.api.domain.CoreResultCode;
 import eu.bcvsolutions.idm.core.api.entity.AbstractEntity_;
@@ -33,6 +35,7 @@ import eu.bcvsolutions.idm.core.api.service.ConfigurationService;
 import eu.bcvsolutions.idm.core.api.service.ModuleService;
 import eu.bcvsolutions.idm.core.notification.api.domain.NotificationLevel;
 import eu.bcvsolutions.idm.core.notification.api.dto.BaseNotification;
+import eu.bcvsolutions.idm.core.notification.api.dto.IdmNotificationRecipientDto;
 import eu.bcvsolutions.idm.core.notification.api.dto.NotificationConfigurationDto;
 import eu.bcvsolutions.idm.core.notification.api.dto.filter.IdmNotificationConfigurationFilter;
 import eu.bcvsolutions.idm.core.notification.api.service.IdmNotificationConfigurationService;
@@ -42,7 +45,6 @@ import eu.bcvsolutions.idm.core.notification.entity.IdmNotificationConfiguration
 import eu.bcvsolutions.idm.core.notification.entity.IdmNotificationConfiguration_;
 import eu.bcvsolutions.idm.core.notification.entity.IdmNotificationLog;
 import eu.bcvsolutions.idm.core.notification.repository.IdmNotificationConfigurationRepository;
-import eu.bcvsolutions.idm.core.security.api.domain.BasePermission;
 
 /**
  * Configuration for notification routing
@@ -55,7 +57,10 @@ public class DefaultIdmNotificationConfigurationService
 	extends AbstractReadWriteDtoService<NotificationConfigurationDto, IdmNotificationConfiguration, IdmNotificationConfigurationFilter> 
     implements IdmNotificationConfigurationService {
 	
+	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DefaultIdmNotificationConfigurationService.class);
+	//
 	@Autowired private ApplicationContext context;
+	//
 	private final IdmNotificationConfigurationRepository repository;
 	private final PluginRegistry<NotificationSender<?>, String> notificationSenders;
 	private final ModuleService moduleService;
@@ -77,7 +82,7 @@ public class DefaultIdmNotificationConfigurationService
 	
 	@Override
 	@Transactional
-	public NotificationConfigurationDto save(NotificationConfigurationDto dto, BasePermission... permission) {
+	public NotificationConfigurationDto saveInternal(NotificationConfigurationDto dto) {
 		Assert.notNull(dto);
 		//
 		// check duplicity
@@ -85,7 +90,16 @@ public class DefaultIdmNotificationConfigurationService
 		if (duplicitEntity != null && !duplicitEntity.getId().equals(dto.getId())) {
 			throw new ResultCodeException(CoreResultCode.NOTIFICATION_TOPIC_AND_LEVEL_EXISTS, ImmutableMap.of("topic", dto.getTopic()));
 		}
-		return super.save(dto);
+		//
+		// check recipient is filled when redirect is enabled
+		if (dto.isRedirect()) {
+			if (getRecipients(dto).isEmpty()) {
+				// redirect and no recipient is configured => exception
+				throw new ResultCodeException(CoreResultCode.NOTIFICATION_CONFIGURATION_RECIPIENT_NOT_FOUND, ImmutableMap.of("topic", dto.getTopic()));
+			}
+		}
+		//
+		return super.saveInternal(dto);
 	}
 	
 	/**
@@ -123,32 +137,49 @@ public class DefaultIdmNotificationConfigurationService
 		Assert.notNull(notification.getMessage());
 		//
 		// default senders for unknown topics
+		NotificationLevel level = notification.getMessage().getLevel();
 		String topic = notification.getTopic();
 		if (StringUtils.isEmpty(notification.getTopic())) {
 			return getDefaultSenders();
 		}
+		// if configuration for given topic is found, but is disabled, 
+		// then default senders are not used => noticication is disabled and not be sent.
+		boolean disabled = false;
+		//
 		List<NotificationSender<?>> senders = new ArrayList<>();
 		if (!IdmNotificationLog.NOTIFICATION_TYPE.equals(notification.getType())) {
-			// concrete sender
+			// concrete sender - configuration was resolved before, check for disabled is not needed now
 			NotificationSender<?> sender = getSender(notification.getType());
 			if (sender != null) {
 				senders.add(sender);
 			}
 		} else {
-			// notification - find all senders by topic and level
-			final NotificationLevel lvl = notification.getMessage().getLevel();
-			final List<String> types = repository.findTypes(topic, lvl);
-			types.forEach(type -> {
-				NotificationSender<?> sender = getSender(type);
-				if (sender != null) {
-					senders.add(sender);
+			// notification - find all senders by topic and level by configuration
+			// check configuration is enabled
+			List<IdmNotificationConfiguration> configs = repository.findAllByTopicAndWildcardLevel(topic, level);
+			//
+			for(IdmNotificationConfiguration config : configs) {
+				if (config.isDisabled()) {
+					disabled = true;
+					LOG.debug("Configuration for topic [{}], level [{}], type [{}] is disabled. "
+							+ "Notification will not be sent by this configuration", topic, level, config.getNotificationType());
+				} else {
+					NotificationSender<?> sender = getSender(config.getNotificationType());
+					if (sender != null) {
+						senders.add(sender);
+					}
 				}
-			});
+			}
 		}
 		//
 		if (senders.isEmpty()) {
-			// configuration not found - return default senderr
-			return getDefaultSenders();
+			if (disabled) {
+				LOG.info("All configurations for topic [{}], level [{}] are disabled. "
+						+ "Notification will not be sent.", topic, level);
+			} else {
+				// configuration not found - return default senders
+				return getDefaultSenders();
+			}
 		}
 		return senders;
 	}
@@ -210,10 +241,41 @@ public class DefaultIdmNotificationConfigurationService
 	public NotificationConfigurationDto getConfigurationByTopicLevelNotificationType(String topic, NotificationLevel level, String notificationType) {
 		return toDto(this.repository.findByTopicAndLevelAndNotificationType(topic, level, notificationType));
 	}
-
+	
+	@Override
+	public NotificationConfigurationDto getConfigurationByTopicAndNotificationTypeAndLevelIsNull(String topic, String notificationType) {
+		return toDto(this.repository.findByTopicAndNotificationTypeAndLevelIsNull(topic, notificationType));
+	}
+	
 	@Override
 	public List<NotificationConfigurationDto> getConfigurations(String topic, NotificationLevel level) {
 		return toDtos(repository.findByTopicAndLevel(topic, level), false);
+	}
+	
+	@Override
+	public List<NotificationConfigurationDto> getWildcardConfigurations(String topic) {
+		return toDtos(repository.findByTopicAndLevelIsNull(topic), false);
+	}
+	
+	@Override
+	public List<IdmNotificationRecipientDto> getRecipients(NotificationConfigurationDto configuration) {
+		Set<String> uniqueRecipients = Sets.newHashSet();
+		//
+		String rawRecipients = configuration.getRecipients();
+		if (StringUtils.isNotBlank(rawRecipients)) {
+			for(String rawRecipient : StringUtils.split(rawRecipients, ConfigurationService.PROPERTY_MULTIVALUED_SEPARATOR)) {
+				if (StringUtils.isNotBlank(rawRecipient)) {
+					uniqueRecipients.add(rawRecipient.trim());
+				}
+			}
+		}
+		return uniqueRecipients
+				.stream()
+				.sorted()
+				.map(recipient -> {
+					return new IdmNotificationRecipientDto(recipient);
+				})
+				.collect(Collectors.toList());
 	}
 	
 	@Override
@@ -234,9 +296,19 @@ public class DefaultIdmNotificationConfigurationService
 		//template uuid of notification configuration
 		if (filter.getTemplate() != null) {
 			predicates.add(builder.equal(root.get(IdmNotificationConfiguration_.template).get(AbstractEntity_.id), filter.getTemplate()));
-		}		
+		}
+		//disabled notification, default = false
+		Boolean disabled = filter.getDisabled();
+		if (disabled != null) {
+			predicates.add(builder.equal(root.get(IdmNotificationConfiguration_.disabled), disabled));
+		}
+		//topic of notification configuration without like for searching on BE
+		String topic = filter.getTopic();
+		if (StringUtils.isNotEmpty(topic)) {
+			predicates.add(builder.equal(root.get(IdmNotificationConfiguration_.topic), topic));
+		}
 		//
 		return predicates;
-		}
+	}
 
 }

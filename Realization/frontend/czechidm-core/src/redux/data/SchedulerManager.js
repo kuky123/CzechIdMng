@@ -62,7 +62,7 @@ export default class SchedulerManager extends EntityManager {
             let tasks = new Immutable.Map();
             if (json._embedded && json._embedded.tasks) {
               json._embedded.tasks.forEach(item => {
-                tasks = tasks.set(item.id, item);
+                tasks = tasks.set(item.taskType, item);
               });
             }
             dispatch(this.dataManager.receiveData(uiKey, tasks));

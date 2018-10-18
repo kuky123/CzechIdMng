@@ -104,7 +104,7 @@ class NotificationDetail extends Basic.AbstractContent {
   }
 
   render() {
-    const { notification, identityOnly, isNew, userContext} = this.props;
+    const { notification, identityOnly, isNew, userContext, showTopic } = this.props;
     const { showLoading } = this.state;
     //
     if (!notification) {
@@ -143,7 +143,7 @@ class NotificationDetail extends Basic.AbstractContent {
             <NotificationSentState notification={notification} style={{ margin: '7px 0' }}/>
           </Basic.LabelWrapper>
 
-          <Basic.TextField ref="topic" label={this.i18n('entity.Notification.topic')} readOnly={!isNew} />
+          <Basic.TextField ref="topic" label={ this.i18n('entity.Notification.topic') } readOnly={ !isNew } hidden={ !showTopic }/>
 
           <Basic.SelectBox
             readOnly={!isNew}
@@ -306,12 +306,14 @@ NotificationDetail.propTypes = {
   notification: PropTypes.object,
   identityOnly: PropTypes.bool,
   isNew: PropTypes.bool,
-  userContext: PropTypes.object
+  userContext: PropTypes.object,
+  showTopic: PropTypes.bool
 };
 NotificationDetail.defaultProps = {
   identityOnly: false,
   showLoading: false,
-  userContext: null
+  userContext: null,
+  showTopic: true
 };
 
 function select(state) {

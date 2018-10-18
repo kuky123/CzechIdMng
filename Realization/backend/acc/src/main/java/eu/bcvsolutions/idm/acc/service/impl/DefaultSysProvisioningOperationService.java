@@ -23,6 +23,7 @@ import org.springframework.util.Assert;
 import com.google.common.collect.ImmutableMap;
 
 import eu.bcvsolutions.idm.acc.AccModuleDescriptor;
+import eu.bcvsolutions.idm.acc.config.domain.ProvisioningConfiguration;
 import eu.bcvsolutions.idm.acc.domain.AccResultCode;
 import eu.bcvsolutions.idm.acc.domain.ProvisioningContext;
 import eu.bcvsolutions.idm.acc.dto.ProvisioningAttributeDto;
@@ -84,6 +85,8 @@ public class DefaultSysProvisioningOperationService
 	private final SysSystemService systemService;
 	private final SecurityService securityService;
 	private final SysSystemEntityService systemEntityService;
+	//
+	@Autowired private ProvisioningConfiguration provisioningConfiguration;
 
 	@Autowired
 	public DefaultSysProvisioningOperationService(
@@ -336,7 +339,7 @@ public class DefaultSysProvisioningOperationService
 		LOG.error(resultModel.toString(), ex);
 		//
 		operation.increaseAttempt();
-		operation.setMaxAttempts(6); // TODO: from configuration
+		operation.setMaxAttempts(provisioningConfiguration.getRetryMaxAttempts());
 		operation.setResult(new OperationResult
 				.Builder(OperationState.EXCEPTION)
 				.setCode(resultModel.getStatusEnum())
@@ -526,7 +529,7 @@ public class DefaultSysProvisioningOperationService
 	public long deleteOperations(UUID systemId) {
 		Assert.notNull(systemId);
 		//
-		long deleted = repository.deleteBySystem_Id(systemId);
+		long deleted = repository.deleteBySystem(systemId);
 		LOG.warn("Deleted [{}] operations from provisioning queue of target system [{}], executed by identity [{}].",
 				deleted, systemId, securityService.getCurrentId());
 		//

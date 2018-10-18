@@ -5,7 +5,6 @@ import java.util.UUID;
 import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.Email;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.joda.time.DateTime;
 import org.springframework.hateoas.core.Relation;
 
@@ -37,8 +36,7 @@ import io.swagger.annotations.ApiModelProperty;
 public class IdmIdentityDto extends FormableDto implements Disableable, Codeable, ExternalCodeable, ExternalIdentifiable {
 
 	private static final long serialVersionUID = 1L;
-	@NotEmpty
-	@Size(min = 1, max = DefaultFieldLengths.NAME)
+	@Size(max = DefaultFieldLengths.NAME)
 	@ApiModelProperty(required = true, notes = "Unique identity username. Could be used as identifier in rest endpoints")
 	private String username;	
 	@Size(max = DefaultFieldLengths.NAME)

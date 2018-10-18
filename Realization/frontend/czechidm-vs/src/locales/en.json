@@ -75,6 +75,14 @@
         "label": "Roles of implementers",
         "placeholder": "Users in the IdM who have assigned these roles will implement requests"
       },
+      "createDefaultRole": {
+        "label": "Create default role",
+        "placeholder": "As part of the creation of the virtual system, a new role will be created to assign this system."
+      },
+      "roleName": {
+        "label": "Code of default role",
+        "placeholder": "If the role for that code already exists, then existing role will be used to map this system."
+      },
       "label": "List",
       "title": "Virtual systems",
       "action": {

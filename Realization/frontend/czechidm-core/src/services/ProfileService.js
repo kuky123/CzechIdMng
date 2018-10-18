@@ -13,7 +13,7 @@ class ProfileService extends AbstractService {
   }
 
   getApiPath() {
-    return '/';
+    return '/profiles';
   }
 
   supportsPatch() {

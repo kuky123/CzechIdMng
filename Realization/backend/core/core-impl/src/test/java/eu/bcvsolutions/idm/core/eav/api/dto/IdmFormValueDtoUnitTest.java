@@ -165,6 +165,17 @@ public class IdmFormValueDtoUnitTest extends AbstractUnitTest {
 	}
 	
 	@Test
+	public void attachmentAsString() {
+		IdmFormValueDto formValue = new IdmFormValueDto();
+		formValue.setPersistentType(PersistentType.ATTACHMENT);
+		UUID uuid = UUID.randomUUID();
+		
+		formValue.setValue(uuid.toString());
+		
+		Assert.assertEquals(uuid, formValue.getValue());
+	}
+	
+	@Test
 	public void testLongValueAsString() {
 		IdmFormValueDto formValue = new IdmFormValueDto();
 		formValue.setPersistentType(PersistentType.LONG);

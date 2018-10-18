@@ -104,10 +104,10 @@ export class ProvisioningOperationTable extends Advanced.AbstractTableContent {
         this.context.store.dispatch(manager.deleteAll(systemField.getValue(), uiKey, (entity, error) => {
           if (!error) {
             this.addMessage({ level: 'success', message: this.i18n('action.deleteAll.success')});
-            this.reload();
           } else {
             this.addError(error);
           }
+          this.reload();
         }));
       }
     }, () => {
@@ -215,7 +215,7 @@ export class ProvisioningOperationTable extends Advanced.AbstractTableContent {
                 key="delete-all-button"
                 className="btn-xs"
                 onClick={ this._deleteAll.bind(this) }
-                rendered={ Managers.SecurityManager.hasAnyAuthority('APP_ADMIN') && !isArchive }
+                rendered={ Managers.SecurityManager.hasAnyAuthority(['APP_ADMIN']) && !isArchive }
                 title={ this.i18n('action.deleteAll.button.title') }
                 titlePlacement="bottom"
                 icon="fa:trash">
@@ -226,7 +226,7 @@ export class ProvisioningOperationTable extends Advanced.AbstractTableContent {
                 key="cancel-all-button"
                 className="btn-xs"
                 onClick={ this._cancelAll.bind(this) }
-                rendered={ Managers.SecurityManager.hasAnyAuthority('SYSTEM_ADMIN') && !isArchive }
+                rendered={ Managers.SecurityManager.hasAnyAuthority(['SYSTEM_ADMIN']) && !isArchive }
                 title={ this.i18n('action.cancelAll.button.title') }
                 titlePlacement="bottom"
                 icon="fa:ban"

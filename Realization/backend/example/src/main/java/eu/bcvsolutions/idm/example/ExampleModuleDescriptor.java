@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import eu.bcvsolutions.idm.core.api.domain.PropertyModuleDescriptor;
 import eu.bcvsolutions.idm.core.api.domain.ResultCode;
 import eu.bcvsolutions.idm.core.notification.api.dto.NotificationConfigurationDto;
-import eu.bcvsolutions.idm.core.notification.entity.IdmWebsocketLog;
+import eu.bcvsolutions.idm.core.notification.entity.IdmConsoleLog;
 import eu.bcvsolutions.idm.core.security.api.domain.GroupPermission;
 import eu.bcvsolutions.idm.example.domain.ExampleGroupPermission;
 import eu.bcvsolutions.idm.example.domain.ExampleResultCode;
@@ -49,7 +49,7 @@ public class ExampleModuleDescriptor extends PropertyModuleDescriptor {
 		configs.add(new NotificationConfigurationDto(
 				TOPIC_EXAMPLE, 
 				null, 
-				IdmWebsocketLog.NOTIFICATION_TYPE,
+				IdmConsoleLog.NOTIFICATION_TYPE,
 				"Example notification", 
 				null));
 		return configs;

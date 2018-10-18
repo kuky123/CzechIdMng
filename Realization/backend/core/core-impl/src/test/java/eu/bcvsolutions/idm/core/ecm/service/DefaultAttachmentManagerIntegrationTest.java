@@ -17,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import eu.bcvsolutions.idm.core.api.domain.Identifiable;
 import eu.bcvsolutions.idm.core.ecm.api.config.AttachmentConfiguration;
 import eu.bcvsolutions.idm.core.ecm.api.dto.IdmAttachmentDto;
+import eu.bcvsolutions.idm.core.ecm.api.dto.filter.IdmAttachmentFilter;
 import eu.bcvsolutions.idm.core.ecm.api.entity.AttachableEntity;
+import eu.bcvsolutions.idm.core.ecm.api.service.AttachmentManager;
 import eu.bcvsolutions.idm.core.ecm.service.impl.DefaultAttachmentManager;
 import eu.bcvsolutions.idm.test.api.AbstractIntegrationTest;
 
@@ -29,6 +31,7 @@ import eu.bcvsolutions.idm.test.api.AbstractIntegrationTest;
  * @author Radek Tomiška
  *
  */
+@Transactional
 public class DefaultAttachmentManagerIntegrationTest extends AbstractIntegrationTest {
 
 	@Autowired private ApplicationContext context;
@@ -42,7 +45,6 @@ public class DefaultAttachmentManagerIntegrationTest extends AbstractIntegration
 	}	
 	
 	@Test
-	@Transactional
 	public void testCreateAttachment() throws IOException {
 		Identifiable owner = new TestOwnerEntity(UUID.randomUUID());
 		String content = "test data";
@@ -76,9 +78,7 @@ public class DefaultAttachmentManagerIntegrationTest extends AbstractIntegration
 		Assert.assertEquals(0, attachmentManager.getAttachments(owner, null).getTotalElements());
 	}
 	
-	
 	@Test
-	@Transactional
 	public void testAttachmentVersions() throws IOException {
 		Identifiable owner = new TestOwnerEntity(UUID.randomUUID());
 		String contentOne = "test data 1";
@@ -129,7 +129,6 @@ public class DefaultAttachmentManagerIntegrationTest extends AbstractIntegration
 	}
 	
 	@Test
-	@Transactional
 	public void testAttachmentVersionsWithSameName() throws IOException {
 		Identifiable owner = new TestOwnerEntity(UUID.randomUUID());
 		String contentOne = "test data 1";
@@ -180,7 +179,6 @@ public class DefaultAttachmentManagerIntegrationTest extends AbstractIntegration
 	}
 	
 	@Test
-	@Transactional
 	public void testUpdateAttachment() {
 		Identifiable owner = new TestOwnerEntity(UUID.randomUUID());
 		String contentOne = "test data 1";
@@ -216,13 +214,12 @@ public class DefaultAttachmentManagerIntegrationTest extends AbstractIntegration
 	}
 	
 	@Test
-	@Transactional
-	public void testCreateAndPurgeTemFiles() {
+	public void testCreateAndPurgeTempFiles() {
 		long ttl = attachmentConfiguration.getTempTtl();
 		try {
 			// cleanup and disable
 			attachmentConfiguration.setTempTtl(1);
-			attachmentManager.purgeTempFiles();
+			attachmentManager.purgeTemp();
 			Assert.assertEquals(0, countTempFiles());
 			attachmentConfiguration.setTempTtl(0);
 			//
@@ -231,16 +228,41 @@ public class DefaultAttachmentManagerIntegrationTest extends AbstractIntegration
 			attachmentManager.createTempFile();
 			attachmentManager.createTempFile();
 			//
-			attachmentManager.purgeTempFiles();
+			attachmentManager.purgeTemp();
 			Assert.assertEquals(3, countTempFiles());
 			//
 			attachmentConfiguration.setTempTtl(100000000);
-			attachmentManager.purgeTempFiles();
+			attachmentManager.purgeTemp();
 			Assert.assertEquals(3, countTempFiles());
 			//
 			attachmentConfiguration.setTempTtl(1);
-			attachmentManager.purgeTempFiles();
+			attachmentManager.purgeTemp();
 			Assert.assertEquals(0, countTempFiles());
+		} finally {
+			attachmentConfiguration.setTempTtl(ttl);
+		}
+	}
+	
+	@Test
+	public void testCreateAndPurgeTempAttachments() {
+		long ttl = attachmentConfiguration.getTempTtl();
+		try {
+			UUID ownerId = UUID.randomUUID();
+			IdmAttachmentFilter filter = new IdmAttachmentFilter();
+			filter.setOwnerId(ownerId);
+			filter.setOwnerType(AttachmentManager.TEMPORARY_ATTACHMENT_OWNER_TYPE);
+			//
+			createDto(ownerId);
+			getHelper().waitForResult(null, 20, 1);
+			Assert.assertEquals(1, attachmentManager.find(filter, null).getContent().size());
+			//
+			attachmentConfiguration.setTempTtl(10000);
+			attachmentManager.purgeTemp();
+			Assert.assertEquals(1, attachmentManager.find(filter, null).getContent().size());
+			
+			attachmentConfiguration.setTempTtl(19);
+			attachmentManager.purgeTemp();
+			Assert.assertTrue(attachmentManager.find(filter, null).getContent().isEmpty());
 		} finally {
 			attachmentConfiguration.setTempTtl(ttl);
 		}
@@ -259,6 +281,28 @@ public class DefaultAttachmentManagerIntegrationTest extends AbstractIntegration
 		File temp = new File(attachmentConfiguration.getTempPath());
 		//
 		return temp.listFiles().length;
+	}
+	
+	private IdmAttachmentDto createDto(UUID ownerId) {
+		IdmAttachmentDto dto = prepareDto();
+		dto.setOwnerId(ownerId);
+		//
+		return attachmentManager.save(dto);
+	}
+	
+	public static IdmAttachmentDto prepareDto() {
+		IdmAttachmentDto dto = new IdmAttachmentDto();
+		dto.setOwnerType(AttachmentManager.TEMPORARY_ATTACHMENT_OWNER_TYPE);
+		dto.setName("name-" + UUID.randomUUID());
+		dto.setMimetype(AttachableEntity.DEFAULT_MIMETYPE);
+		dto.setVersionNumber(1);
+		dto.setVersionLabel("1.0");
+		dto.setContentId(UUID.randomUUID());
+		dto.setContentPath("mock");
+		dto.setEncoding(AttachableEntity.DEFAULT_ENCODING);
+		dto.setFilesize(1L);
+		//
+		return dto;
 	}
 	
 	private class TestOwnerEntity implements AttachableEntity {

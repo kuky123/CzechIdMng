@@ -8,8 +8,9 @@ import eu.bcvsolutions.idm.core.notification.api.dto.filter.IdmNotificationFilte
  * Websocket log service
  * 
  * @author Radek Tomiška
- *
+ * @deprecated @since 9.2.0 websocket notification will be removed
  */
+@Deprecated
 public interface IdmWebsocketLogService extends 
 		ReadWriteDtoService<IdmWebsocketLogDto, IdmNotificationFilter> {
 

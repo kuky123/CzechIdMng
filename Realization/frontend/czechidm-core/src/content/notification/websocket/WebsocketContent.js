@@ -8,7 +8,9 @@ import NotificationDetail from '../NotificationDetail';
 const manager = new WebsocketManager();
 
 /**
- * Email audit log detail content
+ * Websockert audit log detail content
+ *
+ * @deprecated @since 9.2.0 websocket notification will be removed
  */
 class WebsocketContent extends Basic.AbstractContent {
 

@@ -263,7 +263,7 @@ AuditTable.propTypes = {
   // id of entity
   entityId: PropTypes.number,
   // flag for detail
-  isDetail: PropTypes.boolean,
+  isDetail: PropTypes.bool
 };
 
 AuditTable.defaultProps = {

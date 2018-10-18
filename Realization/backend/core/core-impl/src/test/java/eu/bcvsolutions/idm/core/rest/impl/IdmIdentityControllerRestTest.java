@@ -8,24 +8,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Lists;
 
 import eu.bcvsolutions.idm.core.api.bulk.action.dto.IdmBulkActionDto;
 import eu.bcvsolutions.idm.core.api.config.domain.PrivateIdentityConfiguration;
 import eu.bcvsolutions.idm.core.api.domain.ConfigurationMap;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto;
+import eu.bcvsolutions.idm.core.api.dto.IdmProfileDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmRoleDto;
 import eu.bcvsolutions.idm.core.api.rest.AbstractReadWriteDtoController;
 import eu.bcvsolutions.idm.core.api.rest.AbstractReadWriteDtoControllerRestTest;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityService;
+import eu.bcvsolutions.idm.core.api.service.IdmProfileService;
 import eu.bcvsolutions.idm.core.bulk.action.impl.IdentityDisableBulkAction;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormAttributeDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormDefinitionDto;
@@ -33,6 +40,8 @@ import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormInstanceDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormValueDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.filter.IdmFormAttributeFilter;
 import eu.bcvsolutions.idm.core.eav.api.service.FormService;
+import eu.bcvsolutions.idm.core.ecm.api.dto.IdmAttachmentDto;
+import eu.bcvsolutions.idm.core.ecm.api.service.AttachmentManager;
 import eu.bcvsolutions.idm.core.model.domain.CoreGroupPermission;
 import eu.bcvsolutions.idm.core.model.entity.IdmIdentity;
 import eu.bcvsolutions.idm.core.model.entity.eav.IdmIdentityFormValue;
@@ -47,6 +56,7 @@ import eu.bcvsolutions.idm.test.api.TestHelper;
  * - CRUD
  * - bulk actions
  * - eav attributes with authorization policies
+ * - profile CRUD
  * 
  * - TODO: move filters here
  * 
@@ -58,6 +68,9 @@ public class IdmIdentityControllerRestTest extends AbstractReadWriteDtoControlle
 	@Autowired private IdmIdentityController controller;
 	@Autowired private PrivateIdentityConfiguration identityConfiguration;
 	@Autowired private FormService formService;
+	@Autowired private IdmIdentityService identityService;
+	@Autowired private AttachmentManager attachmentManager;
+	@Autowired private IdmProfileService profileService;
 	
 	@Override
 	protected AbstractReadWriteDtoController<IdmIdentityDto, ?> getController() {
@@ -524,5 +537,120 @@ public class IdmIdentityControllerRestTest extends AbstractReadWriteDtoControlle
 		IdmFormInstanceDto formInstance = getFormInstance(owner.getId(), TestHelper.ADMIN_USERNAME, formDefinition.getCode());
 		Assert.assertEquals(owner.getId().toString(), formInstance.getOwnerId());
 		Assert.assertEquals(0, formInstance.getValues().size());
+	}
+	
+	@Test
+	public void testProfile() throws UnsupportedEncodingException, IOException, Exception {
+		IdmIdentityDto owner = getHelper().createIdentity((GuardedString) null);
+		//
+		// profile image
+		getMockMvc().perform(MockMvcRequestBuilders.get(getDetailUrl(owner.getId()) + "/profile")
+        		.with(authentication(getAdminAuthentication())))
+				.andExpect(status().isNotFound());
+		getMockMvc().perform(MockMvcRequestBuilders.get(getDetailUrl(owner.getId()) + "/profile/image")
+        		.with(authentication(getAdminAuthentication())))
+				.andExpect(status().isNotFound());
+		//
+		String fileName = "file.png";
+		String content = "some image";
+		String response = getMockMvc().perform(MockMvcRequestBuilders.fileUpload(getDetailUrl(owner.getId()) + "/profile/image")
+				.file("data", IOUtils.toByteArray(IOUtils.toInputStream(content)))
+        		.param("fileName", fileName)
+        		.with(authentication(getAdminAuthentication())))
+				.andExpect(status().isOk())
+                .andExpect(content().contentType(TestHelper.HAL_CONTENT_TYPE))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+		IdmProfileDto createdProfile = (IdmProfileDto) getMapper().readValue(response, IdmProfileDto.class);
+		//
+		Assert.assertNotNull(createdProfile);
+		Assert.assertNotNull(createdProfile.getId());
+		Assert.assertNotNull(createdProfile.getImage());
+		IdmAttachmentDto image = attachmentManager.get(createdProfile.getImage());
+		Assert.assertEquals(content.length(), image.getFilesize().intValue());
+		Assert.assertEquals(createdProfile.getId(), image.getOwnerId());
+		Assert.assertEquals(attachmentManager.getOwnerType(createdProfile), image.getOwnerType());
+		Assert.assertEquals(fileName, image.getName());
+		Assert.assertEquals(content, IOUtils.toString(attachmentManager.getAttachmentData(image.getId())));
+		//
+		// get profile
+		response = getMockMvc().perform(MockMvcRequestBuilders.get(getDetailUrl(owner.getId()) + "/profile")
+        		.with(authentication(getAdminAuthentication())))
+				.andExpect(status().isOk())
+                .andExpect(content().contentType(TestHelper.HAL_CONTENT_TYPE))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+		createdProfile = (IdmProfileDto) getMapper().readValue(response, IdmProfileDto.class);
+		Assert.assertEquals(image.getId(), createdProfile.getImage());
+		//
+		// get profile image
+		response = getMockMvc().perform(MockMvcRequestBuilders.get(getDetailUrl(owner.getId()) + "/profile/image")
+        		.with(authentication(getAdminAuthentication())))
+				.andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+		Assert.assertEquals(content, response);
+		//
+		// get profile permissions
+		response = getMockMvc().perform(get(getDetailUrl(owner.getId()) + "/profile/permissions")
+        		.with(authentication(getAdminAuthentication()))
+                .contentType(TestHelper.HAL_CONTENT_TYPE))
+				.andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+		//
+		// convert embedded object to list of strings
+		List<String> permissions = getMapper().readValue(response, new TypeReference<List<String>>(){});
+		Assert.assertNotNull(permissions);
+		Assert.assertFalse(permissions.isEmpty());
+		Assert.assertTrue(permissions.stream().anyMatch(p -> p.equals(IdmBasePermission.ADMIN.getName())));
+		//
+		// delete image		
+		response = getMockMvc().perform(MockMvcRequestBuilders.delete(getDetailUrl(owner.getId()) + "/profile/image")
+        		.with(authentication(getAdminAuthentication())))
+				.andExpect(status().isOk())
+				.andReturn()
+                .getResponse()
+                .getContentAsString();
+		createdProfile = (IdmProfileDto) getMapper().readValue(response, IdmProfileDto.class);
+		Assert.assertNull(createdProfile.getImage());
+		//
+		// get profile without image
+		getMockMvc().perform(MockMvcRequestBuilders.get(getDetailUrl(owner.getId()) + "/profile/image")
+        		.with(authentication(getAdminAuthentication())))
+				.andExpect(status().isNotFound());
+		//
+		identityService.delete(owner);
+		//
+		// profile is deleted
+		getMockMvc().perform(MockMvcRequestBuilders.get(getDetailUrl(owner.getId()) + "/profile/image")
+        		.with(authentication(getAdminAuthentication())))
+				.andExpect(status().isNotFound());
+		// attachment is deleted
+		Assert.assertNull(attachmentManager.get(image));
+		Assert.assertNull(profileService.get(createdProfile));
+	}
+	
+	@Test
+	public void testPatchProfile() throws UnsupportedEncodingException, IOException, Exception {
+		IdmIdentityDto owner = getHelper().createIdentity((GuardedString) null);
+		//
+		// create + patch profile
+		String response = getMockMvc().perform(MockMvcRequestBuilders.patch(getDetailUrl(owner.getId()) + "/profile")
+        		.with(authentication(getAdminAuthentication()))
+				.content("{ \"preferredLanguage\": \"en\" }") // PATCH => lookout, mappar cannot be used (maps even null attrs).
+                .contentType(TestHelper.HAL_CONTENT_TYPE))
+				.andExpect(status().isOk())
+                .andExpect(content().contentType(TestHelper.HAL_CONTENT_TYPE))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+		IdmProfileDto createdProfile = (IdmProfileDto) getMapper().readValue(response, IdmProfileDto.class);
+		Assert.assertEquals(owner.getId(), createdProfile.getIdentity());
+		Assert.assertEquals("en", createdProfile.getPreferredLanguage());
 	}
 }

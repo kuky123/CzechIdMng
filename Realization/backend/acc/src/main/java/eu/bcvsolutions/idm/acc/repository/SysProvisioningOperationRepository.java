@@ -4,7 +4,9 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import eu.bcvsolutions.idm.acc.dto.filter.SysProvisioningOperationFilter;
 import eu.bcvsolutions.idm.acc.entity.SysProvisioningOperation;
@@ -46,6 +48,16 @@ public interface SysProvisioningOperationRepository extends AbstractEntityReposi
 	 * 
 	 * @param systemId
 	 * @return
+	 * @deprecated @since 9.2.1 this method calls select + delete for each row => use {@link #deleteBySystem(UUID)} which calls delete directly.
 	 */
 	long deleteBySystem_Id(UUID systemId);
+	
+	/**
+	 * Delete operations by given system id
+	 * 
+	 * @param systemId @Modifying has to return int or Integer only
+	 */
+	@Modifying
+	@Query("delete from #{#entityName} e where e.system.id = :systemId")
+	int deleteBySystem(@Param("systemId") UUID systemId);
 }

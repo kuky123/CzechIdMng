@@ -12,6 +12,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.util.Assert;
@@ -32,16 +33,29 @@ import eu.bcvsolutions.idm.core.security.api.utils.PermissionUtils;
  *
  * @param <E> evaluated {@link Identifiable} type - evaluator is designed for one domain type. 
  */
-public abstract class AbstractAuthorizationEvaluator<E extends Identifiable> implements AuthorizationEvaluator<E> {
+public abstract class AbstractAuthorizationEvaluator<E extends Identifiable> implements 
+		AuthorizationEvaluator<E>,
+		BeanNameAware {
 
 	private final Class<E> entityClass;
-	
+	private String beanName; // spring bean name - used as id
+	//
 	@Autowired(required = false)
 	private ConfigurationService configurationService; // optional internal dependency - checks for processor is enabled
 
 	@SuppressWarnings({ "unchecked" })
 	public AbstractAuthorizationEvaluator() {
 		this.entityClass = (Class<E>) GenericTypeResolver.resolveTypeArgument(getClass(), AuthorizationEvaluator.class);
+	}
+	
+	@Override
+	public void setBeanName(String name) {
+		this.beanName = name;
+	}
+	
+	@Override
+	public String getId() {
+		return beanName;
 	}
 
 	@Override

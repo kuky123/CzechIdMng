@@ -31,7 +31,7 @@ export default class PasswordPolicyGenerateTypeEnum extends AbstractEnum {
         return 'default';
       }
       case this.PASSPHRASE: {
-        return 'default';
+        return 'info';
       }
       default: {
         return 'default';

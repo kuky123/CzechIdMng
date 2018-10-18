@@ -1,4 +1,5 @@
 import EntityManager from './EntityManager';
+//
 import { ProfileService } from '../../services';
 
 /**

@@ -29,6 +29,7 @@ import eu.bcvsolutions.idm.core.api.domain.DefaultFieldLengths;
 import eu.bcvsolutions.idm.core.api.entity.AbstractEntity;
 import eu.bcvsolutions.idm.core.eav.api.domain.PersistentType;
 import eu.bcvsolutions.idm.core.eav.api.entity.FormableEntity;
+import eu.bcvsolutions.idm.core.ecm.api.entity.AttachableEntity;
 
 /**
  * Super class for "extended" attribute values, which can be added to custom
@@ -39,7 +40,7 @@ import eu.bcvsolutions.idm.core.eav.api.entity.FormableEntity;
  * @param <O> Owner entity class
  */
 @MappedSuperclass
-public abstract class AbstractFormValue<O extends FormableEntity> extends AbstractEntity {
+public abstract class AbstractFormValue<O extends FormableEntity> extends AbstractEntity implements AttachableEntity {
 
 	private static final long serialVersionUID = -5914285774914667917L;
 

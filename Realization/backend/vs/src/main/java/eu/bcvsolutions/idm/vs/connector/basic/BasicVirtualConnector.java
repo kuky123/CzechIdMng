@@ -601,6 +601,7 @@ public class BasicVirtualConnector implements VsVirtualConnector {
 		case BYTEARRAY: {
 			return byte[].class.getName();
 		}
+		case ATTACHMENT:
 		case UUID: {
 			return UUID.class.getName();
 		}

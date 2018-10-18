@@ -47,7 +47,7 @@ export default class AuthorizationPolicyManager extends AbstractRequestManager {
             let evaluators = new Immutable.Map();
             if (json._embedded && json._embedded.authorizationEvaluators) {
               json._embedded.authorizationEvaluators.forEach(item => {
-                evaluators = evaluators.set(item.id, item);
+                evaluators = evaluators.set(item.evaluatorType, item);
               });
             }
             dispatch(this.dataManager.receiveData(uiKey, evaluators));

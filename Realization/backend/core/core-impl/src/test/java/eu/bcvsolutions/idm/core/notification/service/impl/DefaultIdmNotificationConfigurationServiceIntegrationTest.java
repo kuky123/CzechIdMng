@@ -1,5 +1,7 @@
 package eu.bcvsolutions.idm.core.notification.service.impl;
 
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +14,10 @@ import eu.bcvsolutions.idm.core.api.entity.BaseEntity;
 import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
 import eu.bcvsolutions.idm.core.api.service.ConfigurationService;
 import eu.bcvsolutions.idm.core.notification.api.dto.IdmNotificationDto;
+import eu.bcvsolutions.idm.core.notification.api.dto.IdmNotificationRecipientDto;
+import eu.bcvsolutions.idm.core.notification.api.dto.NotificationConfigurationDto;
 import eu.bcvsolutions.idm.core.notification.api.service.NotificationSender;
+import eu.bcvsolutions.idm.core.notification.entity.IdmEmailLog;
 import eu.bcvsolutions.idm.core.notification.entity.IdmNotification;
 import eu.bcvsolutions.idm.test.api.AbstractIntegrationTest;
 
@@ -72,6 +77,34 @@ public class DefaultIdmNotificationConfigurationServiceIntegrationTest extends A
 		} finally {
 			configurationService.setValue(sender.getConfigurationPropertyName(ConfigurationService.PROPERTY_IMPLEMENTATION), null);
 		}
+	}
+	
+	@Test
+	public void testGetRecipients() {
+		NotificationConfigurationDto config = new NotificationConfigurationDto();
+		List<IdmNotificationRecipientDto> recipients = service.getRecipients(config);
+		Assert.assertTrue(recipients.isEmpty());
+		//
+		config.setRecipients("  one , two   ");
+		recipients = service.getRecipients(config);
+		Assert.assertEquals(2, recipients.size());
+		Assert.assertTrue(recipients.stream().anyMatch(r -> r.getRealRecipient().equals("one")));
+		Assert.assertTrue(recipients.stream().anyMatch(r -> r.getRealRecipient().equals("two")));
+		//
+		config.setRecipients("  one , one   ");
+		recipients = service.getRecipients(config);
+		Assert.assertEquals(1, recipients.size());
+		Assert.assertTrue(recipients.stream().anyMatch(r -> r.getRealRecipient().equals("one")));
+	}
+	
+	@Test(expected = ResultCodeException.class)
+	public void testSaveEmptyRecipientsWithRedirect() {
+		NotificationConfigurationDto config = new NotificationConfigurationDto();
+		config.setTopic(getHelper().createName());
+		config.setNotificationType(IdmEmailLog.NOTIFICATION_TYPE);
+		config.setRedirect(true);
+		//
+		service.save(config);
 	}
 	
 	private static class MockSender extends AbstractNotificationSender<IdmNotificationDto> {

@@ -221,7 +221,6 @@ class AdvancedTable extends Basic.AbstractContextComponent {
           });
         } else {
           this.addMessage({ level: 'info', message: this.i18n('bulkAction.created', { longRunningTaskId: processBulkAction.longRunningTaskId, name: this.i18n(processBulkAction.module + ':eav.bulk-action.' + processBulkAction.name + '.label')})});
-
           this.setState({
             selectedRows: [],
             removedRows: new Immutable.Set(),
@@ -529,6 +528,7 @@ class AdvancedTable extends Basic.AbstractContextComponent {
               entityIdentifier={ backendBulkAction.longRunningTaskId }
               header={ this.i18n(backendBulkAction.module + ':eav.bulk-action.' + backendBulkAction.name + '.label')}
               showProperties={ false }
+              onComplete={ () => this.reload() }
               footerButtons={
                 <Basic.Button
                   level="link"
