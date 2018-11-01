@@ -95,6 +95,7 @@
   "eav": {
     "bulk-action": {
       "identity-log-example-bulk-action": {
+        "icon": "fa:info-circle",
         "label": "Logování identit",
         "attributes": {
           "exampletext": {
@@ -115,6 +116,22 @@
           }
         }
       }
+    },
+    "value-generator": {
+      "example-contract-position-name-value-generator": {
+        "label": "Příklad generátoru názvu pozice",
+        "help": "Generuje název pozice přidáním prefixu a sufixu k uživatelskému jménu.",
+        "attributes": {
+          "positionnamesuffix": {
+            "label": "Sufix názvu pozice",
+            "help": "Sufix je přidáván k uživatelskému jménu nakonec. Sufix nemusí být vyplněn."
+          },
+          "positionnameprefix": {
+            "label": "Prefix názvu pozice",
+            "help": "Prefix je přidáván k uživatelskému jménu nazačátek. Prefix nemusí být vyplněn."
+          }
+        }
+      }
     }
   },
   "error": {
@@ -131,24 +148,6 @@
     "log-identity-update-async-processor": {
       "title": "Logging - ukázka",
       "description": "Zaloguje uživatelské jméno, když je identita upravena."
-    }
-  },
-  "eav": {
-    "value-generator": {
-      "example-contract-position-name-value-generator": {
-        "label": "Příklad generátoru názvu pozice",
-        "help": "Generuje název pozice přidáním prefixu a sufixu k uživatelskému jménu.",
-        "attributes": {
-          "positionnamesuffix": {
-            "label": "Sufix názvu pozice",
-            "help": "Sufix je přidáván k uživatelskému jménu nakonec. Sufix nemusí být vyplněn."
-          },
-          "positionnameprefix": {
-            "label": "Prefix názvu pozice",
-            "help": "Prefix je přidáván k uživatelskému jménu nazačátek. Prefix nemusí být vyplněn."
-          }
-        }
-      }
     }
   }
 }

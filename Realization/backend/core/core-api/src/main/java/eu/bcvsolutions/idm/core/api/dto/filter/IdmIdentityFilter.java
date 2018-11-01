@@ -69,6 +69,10 @@ public class IdmIdentityFilter extends DataFilter implements CorrelationFilter, 
 	 */
 	public static final String PARAMETER_GUARANTEES_FOR_ROLE = "guaranteesForRole";
 	/**
+	 * Identities by email
+	 */
+	public static final String PARAMETER_EMAIL = "email";
+	/**
 	 * roles - OR
 	 */
 	private List<UUID> roles;	
@@ -305,5 +309,21 @@ public class IdmIdentityFilter extends DataFilter implements CorrelationFilter, 
 	
 	public void setGuaranteesForRole(UUID guaranteesForRole) {
 		data.set(PARAMETER_GUARANTEES_FOR_ROLE, guaranteesForRole);
-	}	
+	}
+	
+	/**
+	 * @since 9.3.0
+	 * @return
+	 */
+	public String getEmail() {
+		return (String) data.getFirst(PARAMETER_EMAIL);
+	}
+	
+	/**
+	 * @since 9.3.0
+	 * @param email
+	 */
+	public void setEmail(String email) {
+		data.set(PARAMETER_EMAIL, email);
+	}
 }

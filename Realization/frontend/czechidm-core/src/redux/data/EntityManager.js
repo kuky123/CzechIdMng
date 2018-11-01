@@ -361,7 +361,12 @@ export default class EntityManager {
    * @param  {string} uiKey - ui key for loading indicator etc.
    */
   queueFetchPermissions(id, uiKey = null, cb = null) {
-    return (dispatchOuter) => {
+    return (dispatchOuter, getStateOuter) => {
+      if (getStateOuter().security.userContext.isExpired) {
+        return dispatchOuter({
+          type: EMPTY
+        });
+      }
       dispatchOuter({
         id,
         queue: 'FETCH_PERMISSION',
@@ -855,26 +860,12 @@ export default class EntityManager {
   receiveError(entity, uiKey = null, error = null, cb = null) {
     uiKey = this.resolveUiKey(uiKey, entity ? entity.id : null);
     return (dispatch) => {
-      if (error && error.name === 'SyntaxError' && error.message && error.message.indexOf('JSON.parse') === 0) {
-        const syntaxError = {
-          key: 'syntax-error',
-          level: 'warning',
-          message: LocalizationService.i18n('content.error.syntax-error.message')
-        };
-
-        if (cb) {
-          cb(null, syntaxError);
-        } else {
-          dispatch(this.flashMessagesManager.addMessage(syntaxError));
-        }
+      if (cb) {
+        cb(null, error);
       } else {
-        if (cb) {
-          cb(null, error);
-        } else {
-          dispatch(this.flashMessagesManager.addErrorMessage({
-            key: 'error-' + this.getEntityType()
-          }, error));
-        }
+        dispatch(this.flashMessagesManager.addErrorMessage({
+          key: 'error-' + this.getEntityType()
+        }, error));
       }
       dispatch({
         type: RECEIVE_ERROR,
@@ -1033,7 +1024,12 @@ export default class EntityManager {
    * @param  {string} uiKey - ui key for loading indicator etc.
    */
   queueAutocompleteEntityIfNeeded(id, uiKey = null, cb = null) {
-    return (dispatchOuter) => {
+    return (dispatchOuter, getStateOuter) => {
+      if (getStateOuter().security.userContext.isExpired) {
+        return dispatchOuter({
+          type: EMPTY
+        });
+      }
       dispatchOuter(this.requestEntity(id, uiKey));
       dispatchOuter({
         id,

@@ -41,7 +41,10 @@ export default class DataManager {
    * @param  {object} error - received error
    * @return {action}
    */
-  stopRequest(uiKey, error = null) {
+  stopRequest(uiKey, error = null, cb = null) {
+    if (cb) {
+      cb(null, error);
+    }
     return {
       type: STOP_REQUEST,
       uiKey,

@@ -151,7 +151,7 @@ export default class AttachmentFormAttributeRenderer extends UuidFormAttributeRe
       formValue = values;
     }
     const result = [];
-    if (formValue === null) {
+    if (formValue === null || !formValue.uuidValue) {
       const value = super.getPlaceholder();
       if (value) {
         result.push(<span>{ value }</span>);
@@ -188,7 +188,10 @@ export default class AttachmentFormAttributeRenderer extends UuidFormAttributeRe
     });
     //
     return (
-      <Basic.LabelWrapper label={ this.getLabel() } className={ className }>
+      <Basic.LabelWrapper
+        label={ this.getLabel() }
+        className={ className }
+        helpBlock={ this.getHelpBlock() }>
         <Dropzone
           ref="dropzone"
           multiple={ false }

@@ -41,6 +41,16 @@ public class HrEndContractProcess extends AbstractHrProcess {
 		super(skipAutomaticRoleRecalculation);
 	}
 	
+	@Override
+	public boolean continueOnException() {
+		return true;
+	}
+	
+	@Override
+	public boolean requireNewTransaction() {
+		return true;
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 * 

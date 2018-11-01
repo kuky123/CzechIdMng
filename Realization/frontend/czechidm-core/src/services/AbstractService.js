@@ -75,6 +75,16 @@ export default class AbstractService {
   }
 
   /**
+  * Resolve JSON parse exception. Replaces it for syntax error localized exception.
+  */
+  _resolveException(ex) {
+    if (ex && ex.stack && ex.stack.indexOf('SyntaxError') === 0) {
+      return {message: 'JSON parse error', module: 'core', statusEnum: 'SYNTAX_ERROR', statusCode: 300};
+    }
+    return ex;
+  }
+
+  /**
    * Returns resource by given id
    *
    * @param  {string|number} id resource identifier
@@ -91,6 +101,8 @@ export default class AbstractService {
           throw Utils.Response.getFirstError(json);
         }
         return json;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 
@@ -117,6 +129,8 @@ export default class AbstractService {
           throw Utils.Response.getFirstInfo(jsonResponse);
         }
         return jsonResponse;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 
@@ -134,6 +148,8 @@ export default class AbstractService {
           throw Utils.Response.getFirstInfo(json);
         }
         return json;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 
@@ -154,6 +170,8 @@ export default class AbstractService {
           throw Utils.Response.getFirstInfo(json);
         }
         return json;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 
@@ -171,6 +189,8 @@ export default class AbstractService {
           throw Utils.Response.getFirstInfo(jsonResponse);
         }
         return jsonResponse;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 
@@ -185,6 +205,8 @@ export default class AbstractService {
           throw Utils.Response.getFirstError(jsonResponse);
         }
         return jsonResponse;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 
@@ -207,6 +229,8 @@ export default class AbstractService {
           throw Utils.Response.getFirstError(json);
         }
         return json;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 
@@ -229,6 +253,8 @@ export default class AbstractService {
           throw Utils.Response.getFirstError(json);
         }
         return json;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 
@@ -300,6 +326,8 @@ export default class AbstractService {
         throw Utils.Response.getFirstError(json);
       }
       return json;
+    }).catch(ex => {
+      throw this._resolveException(ex);
     });
   }
 
@@ -321,6 +349,8 @@ export default class AbstractService {
         throw Utils.Response.getFirstError(json);
       }
       return json;
+    }).catch(ex => {
+      throw this._resolveException(ex);
     });
   }
 
@@ -340,6 +370,8 @@ export default class AbstractService {
         throw Utils.Response.getFirstError(json);
       }
       return json;
+    }).catch(ex => {
+      throw this._resolveException(ex);
     });
   }
 
@@ -368,6 +400,8 @@ export default class AbstractService {
           throw Utils.Response.getFirstInfo(json);
         }
         return json;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 
@@ -387,6 +421,8 @@ export default class AbstractService {
           throw Utils.Response.getFirstError(json);
         }
         return json;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 
@@ -411,6 +447,8 @@ export default class AbstractService {
           cb(json);
         }
         return json;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 
@@ -435,6 +473,8 @@ export default class AbstractService {
           cb(json);
         }
         return json;
+      }).catch(ex => {
+        throw this._resolveException(ex);
       });
   }
 }

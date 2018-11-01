@@ -340,7 +340,7 @@ AbstractFormComponent.propTypes = {
   onChange: PropTypes.func,
   validation: PropTypes.object,
   validate: PropTypes.func, // function for custom validation (input is value and result from previous validations)
-  style: PropTypes.string, // form-group element style
+  style: PropTypes.object, // form-group element style
   notControlled: PropTypes.bool // if true, then is component not controlled by AbstractForm
 };
 

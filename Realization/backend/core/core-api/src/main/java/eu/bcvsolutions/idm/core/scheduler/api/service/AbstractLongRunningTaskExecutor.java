@@ -315,7 +315,7 @@ public abstract class AbstractLongRunningTaskExecutor<V> implements
 			opResult = new OperationResult.Builder(OperationState.EXECUTED).build();
 		}
 		//
-		return itemService.createLogItem(item, opResult, this.getLongRunningTaskService().get(this.getLongRunningTaskId()));
+		return itemService.createLogItem(item, opResult, this.getLongRunningTaskId());
 	}
 	
 	@Override

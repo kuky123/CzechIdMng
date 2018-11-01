@@ -39,6 +39,10 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
     return 'content.scheduler.schedule-tasks';
   }
 
+  getNavigationKey() {
+    return 'scheduler-schedule-tasks';
+  }
+
   getManager() {
     return manager;
   }
@@ -48,7 +52,8 @@ class ScheduleTasks extends Advanced.AbstractTableContent {
   }
 
   componentDidMount() {
-    this.selectNavigationItems(['system', 'scheduler', 'scheduler-schedule-tasks']);
+    super.componentDidMount();
+    //
     this.context.store.dispatch(manager.fetchSupportedTasks());
   }
 

@@ -262,6 +262,7 @@
     "removedRecord_2": "Do zpracování hromadné úlohy nebudou započítány tyto entity: <b>[{{entities}}]</b>.",
     "removedRecord_5": "Do zpracování hromadné úlohy nebudou započítány tyto entity: <b>[{{entities}}]</b>.",
     "created": "Hromadná úloha [{{name}}] byla úspěšně spuštěna v dlouhotrvající úloze s id: [{{longRunningTaskId}}]",
+    "message_empty": "Provádíte hromadnou úlohu [{{name}}].",
     "message_1": "Provádíte hromadnou úlohu [{{name}}] nad vybraným záznamem: <b>[{{entities}}]</b>.",
     "message_2": "Provádíte hromadnou úlohu [{{name}}] nad {{count}} záznamy: <b>[{{entities}}]</b>",
     "message_5": "Provádíte hromadnou úlohu [{{name}}] nad {{count}} záznamy: <b>[{{entities}}]</b>",
@@ -408,8 +409,8 @@
       },
       "Table": {
         "bulk-action": {
-          "selection_empty": "Vyberte záznamy ...",
-          "selection_0": "Vyberte záznamy ...",
+          "selection_empty": "Vyberte akci nebo záznamy ...",
+          "selection_0": "Vyberte akci nebo záznamy ...",
           "selection_1": "Operace s vybraným záznamem:",
           "selection_2": "Operace s vybranými záznamy ({{count}}):",
           "selection_5": "Operace s vybranými záznamy ({{count}}):",
@@ -2185,7 +2186,7 @@
           "header": "Napřímo přiřazené role"
         },
         "subRoles": {
-          "header": "Role přiřazené dle rolí napřímo"
+          "header": "Role přiřazené dle business rolí"
         }
       },
       "authorities": {
@@ -4258,10 +4259,12 @@
   "eav": {
     "bulk-action": {
       "identity-disable-bulk-action": {
-        "label": "Deaktivovat - (manuálně)"
+        "label": "Deaktivovat - (manuálně)",
+        "icon": "fa:square-o"
       },
       "identity-enable-bulk-action": {
-        "label": "Aktivovat - (manuálně)"
+        "label": "Aktivovat - (manuálně)",
+        "icon": "fa:check-square-o"
       },
       "identity-delete-bulk-action": {
         "label": "Odebrat",
@@ -4270,6 +4273,7 @@
       },
       "identity-add-role-bulk-action": {
         "label": "Přidělení rolí",
+        "icon": "fa:plus-square",
         "attributes": {
           "role": {
             "label": "Role",
@@ -4295,6 +4299,7 @@
       },
       "identity-remove-role-bulk-action": {
         "label": "Odebrání rolí",
+        "icon": "fa:minus-square",
         "attributes": {
           "role": {
             "label": "Role",
@@ -4312,6 +4317,7 @@
       },
       "identity-save-bulk-action": {
         "label": "Přeuložit uživatele",
+        "icon": "fa:save",
         "attributes": {
           "onlynotify": {
             "label": "Vyvolat pouze událost NOTIFY",
@@ -4699,6 +4705,10 @@
     "LONG_RUNNING_TASK_FAILED": {
       "title": "Zpracování úlohy selhalo",
       "message": "Zpracování úlohy [{{taskType}}] na instanci [{{instanceId}}] selhalo."
+    },
+    "LONG_RUNNING_TASK_ITEM_FAILED": {
+      "title": "Zpracování položky selhalo",
+      "message": "Zpracování položky pro kandidáta [{{referencedEntityId}}] selhalo."
     },
     "SCHEDULER_INVALID_CRON_EXPRESSION": {
       "title": "Chybný cron výraz",
@@ -5299,6 +5309,10 @@
     "REQUEST_EXECUTED_CANNOT_DELETE": {
       "title": "Žádost o změnu oprávnění nemohla být smazána",
       "message": "Žádost ve stavu 'Provedeno' nemůže být smazána!"
+    },
+    "SYNTAX_ERROR": {
+      "title": "Chyba komunikace se serverem",
+      "message": "Chyba komunikace se serverem, zkuste operaci opakovat. Pokud potíže přetrvají, kontaktujte prosím správce aplikace."
     }
   },
   "validationError": {

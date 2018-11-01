@@ -38,17 +38,17 @@ import eu.bcvsolutions.idm.core.security.exception.IdmAuthenticationException;
 @ControllerAdvice
 public class ExceptionControllerAdvice {
 
-	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ExceptionControllerAdvice.class);
+	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(ExceptionControllerAdvice.class);
 	
 	@ExceptionHandler(ResultCodeException.class)
     ResponseEntity<ResultModels> handle(ResultCodeException ex) {
 		if (ex.getStatus().is5xxServerError()) {
-			log.error("[" + ex.getId() + "] ", ex);
+			LOG.error("[" + ex.getId() + "] ", ex);
 		} else if(ex.getStatus().is2xxSuccessful()) {
 			// nothing
 			// TODO: refactor restApplicationException to different types or reimplement 2xx event throwing mechanism
 		} else {
-			log.warn("[" + ex.getId() + "] ", ex);
+			LOG.warn("[" + ex.getId() + "] ", ex);
 		}
 		return new ResponseEntity<>(ex.getError(), new HttpHeaders(), ex.getStatus());
 	}
@@ -57,7 +57,7 @@ public class ExceptionControllerAdvice {
 	ResponseEntity<ResultModels> handle(IdmAuthenticationException ex) {
 		ErrorModel errorModel = new DefaultErrorModel(CoreResultCode.AUTH_FAILED);
 		 // source exception message is shown only in log 
-		log.warn("[" + errorModel.getId() + "] ", ex);
+		LOG.warn("[" + errorModel.getId() + "] ", ex);
         return new ResponseEntity<>(new ResultModels(errorModel), new HttpHeaders(), errorModel.getStatus());
     }
 	
@@ -67,14 +67,14 @@ public class ExceptionControllerAdvice {
 				ImmutableMap.of( //
 						"errorMethod", ex.getMethod(), //
 						"supportedMethods", StringUtils.join(ex.getSupportedMethods(), ", ")));
-		log.warn("[" + errorModel.getId() + "] ", ex);
+		LOG.warn("[" + errorModel.getId() + "] ", ex);
 		return new ResponseEntity<>(new ResultModels(errorModel), new HttpHeaders(), errorModel.getStatus());
 	}
 	
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	ResponseEntity<ResultModels> handle(HttpMessageNotReadableException ex) {
 		ErrorModel errorModel = new DefaultErrorModel(CoreResultCode.METHOD_NOT_ALLOWED, ex.getMessage());
-		log.warn("[" + errorModel.getId() + "] ", ex);
+		LOG.warn("[" + errorModel.getId() + "] ", ex);
         return new ResponseEntity<>(new ResultModels(errorModel), new HttpHeaders(), errorModel.getStatus());
     }
 	
@@ -82,7 +82,7 @@ public class ExceptionControllerAdvice {
 	ResponseEntity<ResultModels> handle(RepositoryConstraintViolationException ex) {
 		List<ErrorModel> errorModels = ex.getErrors().getFieldErrors().stream()
 			.map(fieldError -> new FieldErrorModel(fieldError))
-			.peek(errorModel -> log.warn("[" + errorModel.getId() + "] ", ex))
+			.peek(errorModel -> LOG.warn("[" + errorModel.getId() + "] ", ex))
 			.collect(Collectors.toList());
 		// TODO: global errors
 		// TODO: better errorModel logging - move source exception to errorModel?		
@@ -93,7 +93,7 @@ public class ExceptionControllerAdvice {
 	ResponseEntity<ResultModels> handle(MethodArgumentNotValidException ex) {		
 		List<ErrorModel> errorModels = ex.getBindingResult().getFieldErrors().stream()
 			.map(fieldError -> new FieldErrorModel(fieldError))
-			.peek(errorModel -> log.warn("[" + errorModel.getId() + "] ", ex))
+			.peek(errorModel -> LOG.warn("[" + errorModel.getId() + "] ", ex))
 			.collect(Collectors.toList());
 		// TODO: global errors
 		// TODO: better errorModel logging - move source exception to errorModel?	
@@ -104,7 +104,7 @@ public class ExceptionControllerAdvice {
 	ResponseEntity<ResultModels> handle(javax.validation.ConstraintViolationException ex) {		
 		List<ErrorModel> errorModels = ex.getConstraintViolations().stream()
 			.map(constraintViolation -> new FieldErrorModel(constraintViolation))
-			.peek(errorModel -> log.warn("[" + errorModel.getId() + "] ", ex))
+			.peek(errorModel -> LOG.warn("[" + errorModel.getId() + "] ", ex))
 			.collect(Collectors.toList());
 		// TODO: global errors
 		// TODO: better errorModel logging - move source exception to errorModel?
@@ -130,7 +130,7 @@ public class ExceptionControllerAdvice {
 		} else {
 			errorModel = new DefaultErrorModel(CoreResultCode.CONFLICT, ex.getMostSpecificCause().getMessage());
 		}
-		log.error("[" + errorModel.getId() + "] ", ex);
+		LOG.error("[" + errorModel.getId() + "] ", ex);
 		return new ResponseEntity<>(new ResultModels(errorModel), new HttpHeaders(), errorModel.getStatus());
     }
 	
@@ -151,21 +151,21 @@ public class ExceptionControllerAdvice {
 		} else {
 			errorModel = new DefaultErrorModel(CoreResultCode.CONFLICT, ex.getMessage());
 		}
-		log.error("[" + errorModel.getId() + "] ", ex);
+		LOG.error("[" + errorModel.getId() + "] ", ex);
 		return new ResponseEntity<>(new ResultModels(errorModel), new HttpHeaders(), errorModel.getStatus());
 	}
 	
 	@ExceptionHandler(AccessDeniedException.class)
 	ResponseEntity<ResultModels> handle(AccessDeniedException ex) {	
 		ErrorModel errorModel = new DefaultErrorModel(CoreResultCode.FORBIDDEN, ex.getMessage());
-		log.warn("[" + errorModel.getId() + "] ", ex);
+		LOG.warn("[" + errorModel.getId() + "] ", ex);
         return new ResponseEntity<>(new ResultModels(errorModel), new HttpHeaders(), errorModel.getStatus());
     }
 	
 	@ExceptionHandler(CoreException.class)
 	ResponseEntity<ResultModels> handle(CoreException ex) {	
 		ErrorModel errorModel = new DefaultErrorModel(CoreResultCode.INTERNAL_SERVER_ERROR, ex.getMessage(), ex.getDetails());
-		log.error("[" + errorModel.getId() + "] ", ex);
+		LOG.error("[" + errorModel.getId() + "] ", ex);
         return new ResponseEntity<>(new ResultModels(errorModel), new HttpHeaders(), errorModel.getStatus());
     }
 	
@@ -174,11 +174,11 @@ public class ExceptionControllerAdvice {
 		Throwable cause = Throwables.getRootCause(ex);
 		// If is cause instance of ResultCodeException, then we will log catched exception and throw only ResultCodeException (for better show on frontend)
 		if (cause instanceof ResultCodeException){
-			log.error(ex.getLocalizedMessage(), ex);
+			LOG.error(ex.getLocalizedMessage(), ex);
 			return handle((ResultCodeException)cause);
 		} else {
 			ErrorModel errorModel = new DefaultErrorModel(CoreResultCode.INTERNAL_SERVER_ERROR, ex.getMessage());
-			log.error("[" + errorModel.getId() + "] ", ex);
+			LOG.error("[" + errorModel.getId() + "] ", ex);
 			return new ResponseEntity<>(new ResultModels(errorModel), new HttpHeaders(), errorModel.getStatus());
 		}
     }

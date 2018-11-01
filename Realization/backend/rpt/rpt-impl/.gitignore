@@ -8,3 +8,4 @@
 /bin/
 /**target/
 /received-emails/
+/.apt_generated_tests/

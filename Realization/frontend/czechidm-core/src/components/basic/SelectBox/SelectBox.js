@@ -33,6 +33,8 @@ class SelectBox extends AbstractFormComponent {
       error: null,
       actualPage: 0
     };
+    // Timer identifier
+    this.typingTimeoutId = null;
   }
 
   getComponentKey() {
@@ -400,11 +402,21 @@ class SelectBox extends AbstractFormComponent {
   }
 
   onInputChange(value) {
+    // Clears the previously set timer.
+    clearTimeout(this.typingTimeoutId);
+
     // after change input set actualPage to zero, we want start from begin
     this.setState({
       actualPage: 0
     });
-    this.getOptions(value, this.props.forceSearchParameters);
+
+    // Reset the timer, to make the http call of the search after 200ms
+    // We need this for IE11 and for prevent redundant call of search
+    this.typingTimeoutId = setTimeout(() => {
+      this.getOptions(value, this.props.forceSearchParameters);
+      this.typingTimeoutId = null;
+    }, 200);
+
     return value;
   }
 
@@ -478,13 +490,18 @@ class SelectBox extends AbstractFormComponent {
       return placeholder;
     }
     // default placeholder
-    return this.i18n('label.searchSelect', { defaultValue: 'Select or type to search ...' });
+    return this.i18n('label.searchSelect');
   }
 
   /**
    * Load first page on input is opened
    */
   onOpen() {
+    // OnOpen function is called for first change in the input.
+    // This call invokes redundant search. We skip that call (if some typing timeout exists)
+    if (this.typingTimeoutId) {
+      return;
+    }
     // it is neccessary set actualPage to zero and remove all options, after open
     this.setState({
       actualPage: 0,

@@ -342,7 +342,7 @@ class Configurations extends Advanced.AbstractTableContent {
             buttons={
               [
                 <span>
-                  <span style={{marginRight: '3px'}}>
+                  <span style={{ marginRight: 3 }}>
                   <Basic.Button
                     level="success"
                     key="add_button"
@@ -383,10 +383,10 @@ class Configurations extends Advanced.AbstractTableContent {
                   );
                 }
               }/>
-            <Advanced.Column property="name" sort width="250px"/>
+            <Advanced.Column property="name" sort width={ 250 }/>
             <Advanced.Column property="value" sort/>
-            <Advanced.Column property="confidential" sort face="bool" width="150px"/>
-            <Advanced.Column property="public" face="bool" width="150px"/>
+            <Advanced.Column property="confidential" sort face="bool" width={ 150 }/>
+            <Advanced.Column property="public" face="bool" width={ 150 }/>
           </Advanced.Table>
         </Basic.Panel>
 
@@ -514,7 +514,7 @@ class Configurations extends Advanced.AbstractTableContent {
               property=""
               header=""
               className="edit-button"
-              width="20px"
+              width={ 20 }
               cell={
                 ({ rowIndex, data }) => {
                   return (
@@ -526,18 +526,18 @@ class Configurations extends Advanced.AbstractTableContent {
                   );
                 }
               }/>
-            <Basic.Column property="name" header={this.i18n('entity.Configuration.name')} width="250px"/>
+            <Basic.Column property="name" header={this.i18n('entity.Configuration.name')} width={ 250 }/>
             <Basic.Column property="value" header={this.i18n('entity.Configuration.value')} />
             <Basic.Column
               property="confidential"
               header={<Basic.Cell className="column-face-bool">{this.i18n('entity.Configuration.confidential')}</Basic.Cell>}
               cell={<Basic.BooleanCell className="column-face-bool"/>}
-              width="150px"/>
+              width={ 150 }/>
             <Basic.Column
               property="public"
               header={<Basic.Cell className="column-face-bool">{this.i18n('entity.Configuration.public')}</Basic.Cell>}
               cell={<Basic.BooleanCell className="column-face-bool"/>}
-              width="150px"/>
+              width={ 150 }/>
           </Basic.Table>
         </Basic.Panel>
 
@@ -576,6 +576,7 @@ Configurations.defaultProps = {
 
 function select(state) {
   return {
+    i18nReady: state.config.get('i18nReady'),
     _searchParameters: Utils.Ui.getSearchParameters(state, uiKey),
     _showLoading: Utils.Ui.isShowLoading(state, `${uiKey}-detail`),
     fileConfigurations: DataManager.getData(state, ConfigurationManager.FILE_CONFIGURATIONS),

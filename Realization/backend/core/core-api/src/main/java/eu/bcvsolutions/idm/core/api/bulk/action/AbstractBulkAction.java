@@ -81,7 +81,7 @@ public abstract class AbstractBulkAction<DTO extends AbstractDto, F extends Base
 	public void validate() {
 		Assert.notNull(action, "Action can't be null");
 		//
-		if (action.getIdentifiers().isEmpty() && action.getFilter() == null) {
+		if (!showWithoutSelection() && action.getIdentifiers().isEmpty() && action.getFilter() == null) {
 			throw new ResultCodeException(CoreResultCode.BULK_ACTION_ENTITIES_ARE_NOT_SPECIFIED);
 		}
 		//
@@ -143,19 +143,21 @@ public abstract class AbstractBulkAction<DTO extends AbstractDto, F extends Base
 		IdmLongRunningTaskDto task = getLongRunningTaskService().get(getLongRunningTaskId());
 		IdmBulkActionDto action = getAction();
 		//
-		IdmIdentityDto identityDto = identityService.get(task.getCreatorId());
-		if (identityDto != null) {
-			// TODO: coreModuleDescriptor is in impl
-			notificationManager.send("core:bulkActionEnd",
-					new IdmMessageDto.Builder()
-					.addParameter("action", action)
-					.addParameter("task", task)
-					.addParameter("owner", identityDto)
-					.addParameter("result", end)
-					.addParameter("detailUrl", configurationService.getFrontendUrl(String.format("scheduler/all-tasks/%s/detail", task.getId())))
-					.addParameter("processItemslUrl", configurationService.getFrontendUrl(String.format("scheduler/all-tasks/%s/items", task.getId())))
-					.build(),
-					identityDto);
+		if (task.getCreatorId() != null) {
+			IdmIdentityDto identityDto = identityService.get(task.getCreatorId());
+			if (identityDto != null) {
+				// TODO: coreModuleDescriptor is in impl
+				notificationManager.send("core:bulkActionEnd",
+						new IdmMessageDto.Builder()
+						.addParameter("action", action)
+						.addParameter("task", task)
+						.addParameter("owner", identityDto)
+						.addParameter("result", end)
+						.addParameter("detailUrl", configurationService.getFrontendUrl(String.format("scheduler/all-tasks/%s/detail", task.getId())))
+						.addParameter("processItemslUrl", configurationService.getFrontendUrl(String.format("scheduler/all-tasks/%s/items", task.getId())))
+						.build(),
+						identityDto);
+			}
 		}
 		//
 		return end;
@@ -196,7 +198,7 @@ public abstract class AbstractBulkAction<DTO extends AbstractDto, F extends Base
 			//
 			description.append(System.lineSeparator());
 			description.append("For filtering is used list of ID's.");
-		} else {
+		} else if (action.getTransformedFilter() != null) {
 			// is necessary find entities with given base permission
 			List<UUID> content = getService().findIds(this.transformFilter(action.getTransformedFilter()), null,
 					getPermissionForEntity()).getContent();
@@ -209,6 +211,10 @@ public abstract class AbstractBulkAction<DTO extends AbstractDto, F extends Base
 			description.append(System.lineSeparator());
 			String filterAsString = Arrays.toString(action.getFilter().entrySet().toArray());
 			description.append(filterAsString);
+		} else if (showWithoutSelection()) {
+			entities = getAllEntities(action, description);
+		} else {
+			throw new ResultCodeException(CoreResultCode.BULK_ACTION_ENTITIES_ARE_NOT_SPECIFIED);
 		}
 		//
 		// remove given ids
@@ -216,6 +222,20 @@ public abstract class AbstractBulkAction<DTO extends AbstractDto, F extends Base
 			entities.removeAll(action.getRemoveIdentifiers());
 		}
 		return entities;
+	}
+	
+	/**
+	 * Returns all entities to be process, if {@link #showWithoutSelection()} is enabled.
+	 * All entities are processed, if no filter and no identifiers was given.
+	 * Override this method, if {@link #showWithoutSelection()} is enabled for your action.
+	 * 
+	 * @param action
+	 * @param description
+	 * @return
+	 * @throws ResultCodeException if action supports {@link #showWithoutSelection()} and this method is not implemented.
+	 */
+	protected List<UUID> getAllEntities(IdmBulkActionDto action, StringBuilder description) {
+		throw new ResultCodeException(CoreResultCode.BULK_ACTION_ENTITIES_ARE_NOT_SPECIFIED);
 	}
 
 	/**
@@ -316,10 +336,13 @@ public abstract class AbstractBulkAction<DTO extends AbstractDto, F extends Base
 
 	/**
 	 * Get required permissions for process entity.
+	 * Returns empty permissions by default, override if needed.
 	 *
 	 * @return
 	 */
-	protected abstract List<String> getAuthoritiesForEntity();
+	protected List<String> getAuthoritiesForEntity() {
+		return new ArrayList<>();
+	}
 	
 	/**
 	 * Process one of DTO in queue

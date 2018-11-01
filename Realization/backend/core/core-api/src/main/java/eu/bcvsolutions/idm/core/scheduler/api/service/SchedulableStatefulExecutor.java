@@ -48,6 +48,22 @@ public interface SchedulableStatefulExecutor<DTO extends AbstractDto, V> extends
 	Optional<OperationResult> processItem(DTO dto);
 	
 	/**
+	 * Each item will be processed in new transaction
+	 * 
+	 * @return
+	 * @since 9.3.0
+	 */
+	boolean requireNewTransaction();
+	
+	/**
+	 * If process of one item fails on exception, then continue with the next item.
+	 *  
+	 * @return true - continue with next item, false - end on the first exception
+	 * @since 9.3.0
+	 */
+	boolean continueOnException();
+	
+	/**
 	 * Returns all entity references (of type {@link AbstractDto#getId()}
 	 * from processed items queue, including items that were processed in earlier
 	 * runs of this executor.

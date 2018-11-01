@@ -14,6 +14,6 @@ import eu.bcvsolutions.idm.core.model.entity.IdmRole;
  */
 public interface IdmRoleRepository extends AbstractEntityRepository<IdmRole> {
 	
-	@Query(value = "select e from #{#entityName} e where e.name = :code")
+	@Query(value = "select e from #{#entityName} e where e.code = :code")
 	IdmRole findOneByCode(@Param("code") String code);
 }

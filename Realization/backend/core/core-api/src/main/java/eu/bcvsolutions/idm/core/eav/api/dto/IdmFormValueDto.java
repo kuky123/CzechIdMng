@@ -526,7 +526,7 @@ public class IdmFormValueDto extends AbstractDto implements Requestable {
 	 * Sets all filled values from given value
 	 * 
 	 * @param value
-	 * @since 9.3.0
+	 * @since 9.2.2
 	 */
 	public void setValues(IdmFormValueDto value) {
 		this.booleanValue = value.getBooleanValue();

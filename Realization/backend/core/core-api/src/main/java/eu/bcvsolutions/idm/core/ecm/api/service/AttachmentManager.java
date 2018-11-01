@@ -105,7 +105,7 @@ public interface AttachmentManager extends
 	 * @param permission permissions to evaluate (AND)
 	 * @return
 	 * @throws ForbiddenEntityException if authorization policies doesn't met
-	 * @since 9.3.0
+	 * @since 9.2.2
 	 */
 	Page<IdmAttachmentDto> getAttachments(UUID ownerId, String ownerType, Pageable pageable, BasePermission... permission);
 	
@@ -166,7 +166,7 @@ public interface AttachmentManager extends
 	 * @param ownerType
 	 * @param permission permissions to evaluate (AND)
 	 * @throws ForbiddenEntityException if authorization policies doesn't met
-	 * @since 9.3.0
+	 * @since 9.2.2
 	 */
 	void deleteAttachments(UUID ownerId, String ownerType, BasePermission... permission);
 	
@@ -182,7 +182,7 @@ public interface AttachmentManager extends
 	 * 
 	 * @param owner
 	 * @return
-	 * @since 9.0.0
+	 * @since 9.2.2
 	 */
 	String getOwnerType(Identifiable owner);
 	
@@ -191,7 +191,7 @@ public interface AttachmentManager extends
 	 * 
 	 * @param ownerType
 	 * @return
-	 * @since 9.3.0
+	 * @since 9.2.2
 	 */
 	String getOwnerType(Class<? extends Identifiable> ownerType);
 }

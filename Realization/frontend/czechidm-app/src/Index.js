@@ -83,8 +83,6 @@ function adapter(storage) {
           // prevent to persist react elements
           // FIXME: restore react fragment from text
           message.children = null;
-          // messages are hidden automatically after F5
-          message.hidden = true;
         });
         callback(null, storage.setItem(key, JSON.stringify(value)));
       } catch (e) {
@@ -192,7 +190,17 @@ function reduxQueue({ dispatch, getState }) {
   }
   //
   return next => action => {
-    const { queue: key, callback, id } = action || {};
+    const { queue: key, callback, id, type } = action || {};
+    if (type === 'RECEIVE_LOGIN') {
+      // its needed to clear the queues after login (queues can contain incomplete requests)
+      for (const queueKey in running) {
+        if (!running.hasOwnProperty(queueKey)) {
+          continue;
+        }
+        running[queueKey] = new Immutable.Set();
+      }
+    }
+    //
     if (key) {
       if (typeof callback !== 'function') {
         throw new Error('Queued actions must have a <callback> property');

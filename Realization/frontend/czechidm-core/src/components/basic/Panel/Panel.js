@@ -104,7 +104,10 @@ PanelHeader.propTypes = {
   /**
    * link to help
    */
-  help: PropTypes.string
+  help: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.object
+  ])
 };
 PanelHeader.defaultProps = {
   ...AbstractComponent.defaultProps

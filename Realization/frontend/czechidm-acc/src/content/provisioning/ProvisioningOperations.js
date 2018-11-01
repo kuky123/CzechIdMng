@@ -117,7 +117,7 @@ class ProvisioningOperations extends Basic.AbstractContent {
   }
 
   render() {
-    const { forceSearchParameters, columns, uiKey } = this.props;
+    const { forceSearchParameters, columns, uiKey, showDeleteAllButton } = this.props;
     const { detail, retryDialog } = this.state;
     // accountObject to table
     const accountData = [];
@@ -160,6 +160,7 @@ class ProvisioningOperations extends Basic.AbstractContent {
               showRowSelection={Managers.SecurityManager.hasAnyAuthority(['SYSTEM_ADMIN'])}
               forceSearchParameters={forceSearchParameters}
               columns={columns}
+              showDeleteAllButton={ showDeleteAllButton }
               actions={
                 [
                   { value: 'retry', niceLabel: this.i18n('action.retry.action'), action: this.showRetryDialog.bind(this) },
@@ -338,11 +339,16 @@ ProvisioningOperations.propTypes = {
   /**
    * Force searchparameters - system id
    */
-  forceSearchParameters: PropTypes.object
+  forceSearchParameters: PropTypes.object,
+  /**
+   * Show delete all button
+   */
+  showDeleteAllButton: PropTypes.bool
 };
 ProvisioningOperations.defaultProps = {
   forceSearchParameters: null,
-  columns: ProvisioningOperationTable.defaultProps.columns
+  columns: ProvisioningOperationTable.defaultProps.columns,
+  showDeleteAllButton: true
 };
 
 function select() {

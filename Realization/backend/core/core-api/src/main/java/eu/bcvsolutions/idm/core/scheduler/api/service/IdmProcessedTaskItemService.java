@@ -41,8 +41,18 @@ public interface IdmProcessedTaskItemService extends
 	 * Find all referenced entity identifiers by scheduled tasks.
 	 * @param dto
 	 * @return
+	 * @deprecated @since 9.3.0 use {@link #findAllRefEntityIdsInQueueByScheduledTaskId(UUID)}
 	 */
+	@Deprecated
 	List<UUID> findAllRefEntityIdsInQueueByScheduledTask(IdmScheduledTaskDto dto);
+	
+	/**
+	 * Find all referenced entity identifiers by scheduled tasks.
+	 * 
+	 * @param scheduledTaskId
+	 * @return
+	 */
+	List<UUID> findAllRefEntityIdsInQueueByScheduledTaskId(UUID scheduledTaskId);
 	
 	/**
 	 * Find all queue items of given scheduled tasks.
@@ -67,8 +77,20 @@ public interface IdmProcessedTaskItemService extends
 	 * @param result
 	 * @param lrt
 	 * @return
+	 * @deprecated @since 9.3.0 use {@link #createLogItem(AbstractDto, OperationResult, UUID)}
 	 */
+	@Deprecated
 	<DTO extends AbstractDto> IdmProcessedTaskItemDto createLogItem(DTO processedItem, OperationResult result, IdmLongRunningTaskDto lrt);
+	
+	/**
+	 * Persist processed item in new transaction
+	 * 
+	 * @param processedItem
+	 * @param result
+	 * @param lrtId
+	 * @return
+	 */
+	<DTO extends AbstractDto> IdmProcessedTaskItemDto createLogItem(DTO processedItem, OperationResult result, UUID lrtId);
 	
 	/**
 	 * Persist item into queue
@@ -77,7 +99,19 @@ public interface IdmProcessedTaskItemService extends
 	 * @param result
 	 * @param st
 	 * @return
+	 * @deprecated @since 9.3.0 use {@link #createQueueItem(AbstractDto, OperationResult, UUID)}
 	 */
+	@Deprecated
 	<DTO extends AbstractDto> IdmProcessedTaskItemDto createQueueItem(DTO processedItem, OperationResult result, IdmScheduledTaskDto st);
+	
+	/**
+	 * Persist item into queue
+	 * 
+	 * @param processedItem
+	 * @param result
+	 * @param scheduledTaskId
+	 * @return
+	 */
+	<DTO extends AbstractDto> IdmProcessedTaskItemDto createQueueItem(DTO processedItem, OperationResult result, UUID scheduledTaskId);
 
 }

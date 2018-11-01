@@ -86,6 +86,7 @@ export default class FlashMessagesManager {
     if (message.level && (message.level === 'error' /* || message.level === 'warning' */) && !message.position) {
       message.position = 'tc';
     }
+
     // add default
     message = _.merge({}, _DEFAULT_MESSAGE, message);
     if (!message.title && !message.message) {
@@ -168,6 +169,14 @@ export default class FlashMessagesManager {
         }*/
       };
     }
+    if (this.isSyntaxError(error)) {
+      return {
+        key: 'syntax-error',
+        level: 'warning',
+        message: LocalizationService.i18n('content.error.syntax-error.message')
+      };
+    }
+
     //
     let errorMessage;
     if (error.statusEnum) { // our error message
@@ -302,6 +311,20 @@ export default class FlashMessagesManager {
     if (error
         && error.message
         && (error.message.indexOf('NetworkError') > -1 || error.message.indexOf('Failed to fetch') > -1 || (error.statusCode && (error.statusCode === '400' || error.statusCode === '503')))) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Returns true, if SyntaxError
+   */
+  isSyntaxError(error) {
+    if (error
+        && error.message
+        && (error.name === 'SyntaxError' && error.message.indexOf('JSON.parse') === 0 )) {
+      return true;
+    } else if (error && error.stack && error.stack.indexOf('SyntaxError') === 0) {
       return true;
     }
     return false;

@@ -519,18 +519,28 @@ public abstract class AbstractProvisioningExecutor<DTO extends AbstractDto> impl
 				}).findFirst();
 				if (conflictAttributeOptional.isPresent()) {
 					AttributeMapping conflictAttribute = conflictAttributeOptional.get();
-					
+
+					IdmRoleDto roleParent = this.getRole(parentAttribute);
+					IdmRoleDto roleConflict = this.getRole(conflictAttribute);
+
 					throw new ProvisioningException(AccResultCode.PROVISIONING_ATTRIBUTE_STRATEGY_CONFLICT,
 							ImmutableMap.of("strategyParent", parentAttribute.getStrategyType(), //
 									"strategyConflict",	conflictAttribute.getStrategyType(), //
 									"attribute", conflictAttribute.getName(), //
-					"roleParent",	this.getRole(parentAttribute) != null ? getRole(parentAttribute).getCode() : "-", //
-					"roleConflict",	this.getRole(conflictAttribute) != null ? getRole(conflictAttribute).getCode() : "-")); //
+					"roleParent",	roleParent != null ? roleParent.getCode() : "-", //
+					"roleConflict",	roleConflict != null ? roleConflict.getCode() : "-")); //
 				}
 			}
 		});
 	}
 
+	/**
+	 * Get {@link IdmRoleDto} for attribute mapping. Attribute mapping must be instance of {@link SysRoleSystemAttributeDto}.
+	 * And attribute must have role system connection.
+	 *
+	 * @param attribute
+	 * @return
+	 */
 	private IdmRoleDto getRole(AttributeMapping attribute) {
 		if (attribute instanceof SysRoleSystemAttributeDto) {
 			SysRoleSystemAttributeDto conflictRoleAttribute = (SysRoleSystemAttributeDto) attribute;

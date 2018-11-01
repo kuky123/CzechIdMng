@@ -27,6 +27,11 @@ class RunningTasks extends Basic.AbstractContent {
   }
 
   getNavigationKey() {
+    const { creatorId } = this.props;
+    if (creatorId) {
+      // FIXME: this content is reused on dashboard - refactor to two route contents
+      return null;
+    }
     return 'scheduler-running-tasks';
   }
 

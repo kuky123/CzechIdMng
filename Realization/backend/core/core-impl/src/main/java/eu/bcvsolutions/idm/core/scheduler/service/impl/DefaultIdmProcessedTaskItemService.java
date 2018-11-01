@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -125,7 +126,15 @@ public class DefaultIdmProcessedTaskItemService
 	public List<UUID> findAllRefEntityIdsInQueueByScheduledTask(IdmScheduledTaskDto dto) {
 		Assert.notNull(dto);
 		//
-		return repository.findAllRefEntityIdsByScheduledTaskId(dto.getId());
+		return findAllRefEntityIdsInQueueByScheduledTaskId(dto.getId());
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public List<UUID> findAllRefEntityIdsInQueueByScheduledTaskId(UUID scheduledTaskId) {
+		Assert.notNull(scheduledTaskId);
+		//
+		return repository.findAllRefEntityIdsByScheduledTaskId(scheduledTaskId);
 	}
 
 	@Override
@@ -150,32 +159,48 @@ public class DefaultIdmProcessedTaskItemService
 	
 	@Override
 	@Transactional
-	public <E extends AbstractDto> IdmProcessedTaskItemDto createLogItem(E processedItem, OperationResult result,
-			IdmLongRunningTaskDto lrt) {
-		//
-		Assert.notNull(processedItem);
-		Assert.notNull(result);
+	@Deprecated
+	public <E extends AbstractDto> IdmProcessedTaskItemDto createLogItem(E processedItem, OperationResult result, IdmLongRunningTaskDto lrt) {
 		Assert.notNull(lrt);
 		//
+		return createLogItem(processedItem, result, lrt.getId());
+	}
+	
+	@Override
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public <E extends AbstractDto> IdmProcessedTaskItemDto createLogItem(E processedItem, OperationResult result, UUID lrtId) {
+		Assert.notNull(processedItem);
+		Assert.notNull(result);
+		Assert.notNull(lrtId);
+		//
 		IdmProcessedTaskItemDto item = createProcessedItemDto(processedItem, result);
-		item.setLongRunningTask(lrt.getId());
+		item.setLongRunningTask(lrtId);
+		//
 		return this.saveInternal(item);
 	}
 
 	@Override
 	@Transactional
-	public <E extends AbstractDto> IdmProcessedTaskItemDto createQueueItem(E processedItem, OperationResult result,
-			IdmScheduledTaskDto st) {
-		//
-		Assert.notNull(processedItem);
-		Assert.notNull(result);
+	@Deprecated
+	public <E extends AbstractDto> IdmProcessedTaskItemDto createQueueItem(E processedItem, OperationResult result, IdmScheduledTaskDto st) {
 		Assert.notNull(st);
 		//
-		IdmProcessedTaskItemDto item = createProcessedItemDto(processedItem, result);
-		item.setScheduledTaskQueueOwner(st.getId());
-		return this.saveInternal(item);
+		return createQueueItem(processedItem, result, st.getId());
 	}
 
+	@Override
+	@Transactional
+	public <E extends AbstractDto> IdmProcessedTaskItemDto createQueueItem(E processedItem, OperationResult result, UUID scheduledTaskId) {
+		Assert.notNull(processedItem);
+		Assert.notNull(result);
+		Assert.notNull(scheduledTaskId);
+		//
+		IdmProcessedTaskItemDto item = createProcessedItemDto(processedItem, result);
+		item.setScheduledTaskQueueOwner(scheduledTaskId);
+		//
+		return this.saveInternal(item);
+	}
+	
 	private <E extends AbstractDto> IdmProcessedTaskItemDto createProcessedItemDto(E dto, OperationResult opResult) {
 		IdmProcessedTaskItemDto item = new IdmProcessedTaskItemDto();
 		item.setReferencedEntityId(dto.getId());

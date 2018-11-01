@@ -95,9 +95,9 @@ New virtual system request (for realization) was created and send to implementer
               #else
                   <td ><span style="font-size: 12pt;"><strong>$attribute.getName()</strong></span></td>
                   #if($showNewColumn)
-                    <td ><span style="font-size: 12pt;"><span style="#getLevelColor($attribute.getValue().getChange())">#if($attribute.getValue().getValue())$attribute.getValue().getValue()#end</span></td>
+                    <td ><span style="font-size: 12pt;"><span style="#getLevelColor($attribute.getValue().getChange())">$!attribute.getValue().getValue()</span></td>
                   #end
-                  <td ><span style="font-size: 12pt;"><span>#if($attribute.getValue().getOldValue())$attribute.getValue().getOldValue()#end</span></td>
+                  <td ><span style="font-size: 12pt;"><span>$!attribute.getValue().getOldValue()</span></td>
               #end
             </tr>
           #end
@@ -127,8 +127,8 @@ New virtual system request (for realization) was created and send to implementer
 		#else
 			Telefon: 
 		#end
-		<b>$identity.getPhone()</b><br />
-		Email: <b>$identity.getEmail()</b><br />
+		<b>$!identity.getPhone()</b><br />
+		Email: <b>$!identity.getEmail()</b><br />
 	 #end
     #end
 
@@ -170,7 +170,7 @@ New virtual system request (for realization) was created and send to implementer
     <br />
 
     <div style="display: block; margin: 30px auto; max-width: 400px;">
-        CzechIdM © 2017&nbsp;BCV Solutions s.r.o.&nbsp;
+        CzechIdM © 2018&nbsp;BCV Solutions s.r.o.&nbsp;
     </div>
     
     <div style="display: block; margin: 30px auto; max-width: 800px;">
@@ -215,7 +215,7 @@ New virtual system request (for realization) was created and send to implementer
     <br />
 
     <div style="display: block; margin: 30px auto; max-width: 400px;">
-        CzechIdM © 2017&nbsp;BCV Solutions s.r.o.&nbsp;
+        CzechIdM © 2018&nbsp;BCV Solutions s.r.o.&nbsp;
     </div>
   </body>
 </html>

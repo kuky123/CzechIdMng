@@ -59,6 +59,16 @@ public class HrEnableContractProcess extends AbstractHrProcess {
 	}
 	
 	@Override
+	public boolean continueOnException() {
+		return true;
+	}
+	
+	@Override
+	public boolean requireNewTransaction() {
+		return true;
+	}
+	
+	@Override
 	public Optional<OperationResult> processItem(IdmIdentityContractDto dto) {
 		if (!StringUtils.isEmpty(getWorkflowName())) { 
 			// wf is configured - execute wf instance

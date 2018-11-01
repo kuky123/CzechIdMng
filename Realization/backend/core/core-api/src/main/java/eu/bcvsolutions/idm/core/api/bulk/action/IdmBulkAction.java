@@ -85,4 +85,26 @@ public interface IdmBulkAction<DTO extends AbstractDto, F extends BaseFilter>
 	 * @return
 	 */
 	ResultModels prevalidate();
+	
+	/**
+	 * Returns {@code true}, when action can be executed without items are selected.
+	 * Returns {@code false} by default.
+	 * 
+	 * @return
+	 * @since 9.2.2
+	 */
+	default boolean showWithoutSelection() {
+		return false;
+	}
+	
+	/**
+	 * Returns {@code true}, when action can be executed with items are selected (items identifiers or filter is given).
+	 * Returns {@code true} by default.
+	 * 
+	 * @return
+	 * @since 9.2.2
+	 */
+	default boolean showWithSelection() {
+		return true;
+	}
 }

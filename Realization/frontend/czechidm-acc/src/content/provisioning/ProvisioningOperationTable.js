@@ -116,7 +116,17 @@ export class ProvisioningOperationTable extends Advanced.AbstractTableContent {
   }
 
   render() {
-    const { uiKey, manager, showRowSelection, actions, showDetail, forceSearchParameters, columns, isArchive } = this.props;
+    const {
+      uiKey,
+      manager,
+      showRowSelection,
+      actions,
+      showDetail,
+      forceSearchParameters,
+      columns,
+      isArchive,
+      showDeleteAllButton
+    } = this.props;
     const { filterOpened } = this.state;
     let systemId = null;
     if (forceSearchParameters && forceSearchParameters.getFilters().has('systemId')) {
@@ -215,7 +225,7 @@ export class ProvisioningOperationTable extends Advanced.AbstractTableContent {
                 key="delete-all-button"
                 className="btn-xs"
                 onClick={ this._deleteAll.bind(this) }
-                rendered={ Managers.SecurityManager.hasAnyAuthority(['APP_ADMIN']) && !isArchive }
+                rendered={ showDeleteAllButton && Managers.SecurityManager.hasAnyAuthority(['APP_ADMIN']) && !isArchive }
                 title={ this.i18n('action.deleteAll.button.title') }
                 titlePlacement="bottom"
                 icon="fa:trash">
@@ -369,12 +379,17 @@ ProvisioningOperationTable.propTypes = {
    * Rendered columns
    */
   columns: PropTypes.arrayOf(PropTypes.string),
+  /**
+   * Show delete all button
+   */
+  showDeleteAllButton: PropTypes.bool
 };
 ProvisioningOperationTable.defaultProps = {
   showRowSelection: false,
   actions: [],
   forceSearchParameters: null,
-  columns: ['resultState', 'created', 'operationType', 'entityType', 'entityIdentifier', 'system', 'systemEntityUid']
+  columns: ['resultState', 'created', 'operationType', 'entityType', 'entityIdentifier', 'system', 'systemEntityUid'],
+  showDeleteAllButton: true
 };
 
 function select(state, component) {

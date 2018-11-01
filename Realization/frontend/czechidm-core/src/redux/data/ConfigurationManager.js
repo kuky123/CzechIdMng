@@ -149,17 +149,28 @@ export default class ConfigurationManager extends EntityManager {
   }
 
   /**
-   * Returns setting value
+   * Returns public setting value
+   *
+   * @deprecated @since 9.2.2 use getValue
    */
   static getPublicValue(state, key) {
-    const publicConfigurations = state.config.get(Properties.PROPERTIES);
-    if (!publicConfigurations) {
+    return ConfigurationManager.getValue(state, key);
+  }
+
+  /**
+   * Returns setting value from loaded properties
+   *
+   * @since 9.2.2
+   */
+  static getValue(state, key) {
+    const loadedProperties = state.config.get(Properties.PROPERTIES);
+    if (!loadedProperties) {
       return null;
     }
-    if (!publicConfigurations.has(key)) {
+    if (!loadedProperties.has(key)) {
       return null;
     }
-    return publicConfigurations.get(key).value;
+    return loadedProperties.get(key).value;
   }
 
   /**

@@ -1,5 +1,6 @@
 package eu.bcvsolutions.idm.core.workflow.rest;
 
+import java.io.Serializable;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import eu.bcvsolutions.idm.core.api.rest.AbstractReadDtoController;
 import eu.bcvsolutions.idm.core.api.rest.BaseController;
 import eu.bcvsolutions.idm.core.api.rest.BaseDtoController;
 import eu.bcvsolutions.idm.core.model.domain.CoreGroupPermission;
+import eu.bcvsolutions.idm.core.security.api.domain.IdmBasePermission;
 import eu.bcvsolutions.idm.core.workflow.model.dto.FormDataWrapperDto;
 import eu.bcvsolutions.idm.core.workflow.model.dto.WorkflowFilterDto;
 import eu.bcvsolutions.idm.core.workflow.model.dto.WorkflowTaskInstanceDto;
@@ -124,5 +126,14 @@ public class WorkflowTaskInstanceController extends AbstractReadDtoController<Wo
 			@PathVariable String backendId) {
 		WorkflowTaskInstanceDto taskInstanceDto = workflowTaskInstanceService.get(backendId);
 		return workflowTaskInstanceService.getPermissions(taskInstanceDto);
+	}
+	
+	@Override
+	// We need override that method (#1320). Parent using lookup service for get DTO. Lookup
+	// service get DTO without permissions and after that check permission on READ.
+	// Without permissions is loaded Task with all buttons (canExecute is true). We
+	// need call direct service with Permission.READ!
+	public WorkflowTaskInstanceDto getDto(Serializable backendId) {
+		return getService().get(backendId, IdmBasePermission.READ);
 	}
 }

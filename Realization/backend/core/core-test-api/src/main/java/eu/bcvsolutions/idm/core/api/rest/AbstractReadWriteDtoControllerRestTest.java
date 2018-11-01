@@ -26,7 +26,6 @@ import org.junit.Test;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.core.Relation;
-import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -48,7 +47,6 @@ import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
 import eu.bcvsolutions.idm.core.api.dto.filter.DataFilter;
 import eu.bcvsolutions.idm.core.api.exception.CoreException;
 import eu.bcvsolutions.idm.core.api.exception.DuplicateExternalIdException;
-import eu.bcvsolutions.idm.core.api.service.IdmIdentityService;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormAttributeDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormDefinitionDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormInstanceDto;
@@ -56,8 +54,6 @@ import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormValueDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.filter.IdmFormAttributeFilter;
 import eu.bcvsolutions.idm.core.eav.api.service.FormService;
 import eu.bcvsolutions.idm.core.security.api.domain.IdmBasePermission;
-import eu.bcvsolutions.idm.core.security.api.domain.IdmJwtAuthentication;
-import eu.bcvsolutions.idm.core.security.api.service.GrantedAuthoritiesFactory;
 import eu.bcvsolutions.idm.test.api.AbstractRestTest;
 import eu.bcvsolutions.idm.test.api.TestHelper;
 
@@ -87,7 +83,6 @@ public abstract class AbstractReadWriteDtoControllerRestTest<DTO extends Abstrac
 	
 	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(AbstractReadWriteDtoControllerRestTest.class);
 	//
-	@Autowired private GrantedAuthoritiesFactory grantedAuthoritiesFactory;
 	@Autowired private FormService formService;
 	
 	@Before
@@ -642,30 +637,6 @@ public abstract class AbstractReadWriteDtoControllerRestTest<DTO extends Abstrac
 	 */
 	protected ObjectMapper getMapper() {
 		return getController().getMapper();
-	}
-	
-	/**
-	 * Login as admin
-	 * 
-	 * @return
-	 */
-	protected Authentication getAdminAuthentication() {
-		return getAuthentication(TestHelper.ADMIN_USERNAME);
-	}
-	
-	/**
-	 * Login identity
-	 * 
-	 * TODO: move to test helper
-	 * 
-	 * @return
-	 */
-	protected Authentication getAuthentication(String username) {
-		return new IdmJwtAuthentication(
-				getHelper().getService(IdmIdentityService.class).getByUsername(username), 
-				null, 
-				grantedAuthoritiesFactory.getGrantedAuthorities(username), 
-				"test");
 	}
 	
 	/**

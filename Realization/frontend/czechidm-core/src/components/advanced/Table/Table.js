@@ -29,9 +29,16 @@ class AdvancedTable extends Basic.AbstractContextComponent {
     const { manager, actions } = this.props;
     let _actions = [];
     if (!manager.supportsBulkAction() && actions !== null && actions.length > 0) {
-      _actions = actions.filter(action => {
-        return action.rendered === undefined || action.rendered === true || action.rendered === null;
-      });
+      _actions = actions
+        .filter(action => {
+          return action.rendered === undefined || action.rendered === true || action.rendered === null;
+        })
+        .map(action => {
+          action.showWithSelection = action.showWithSelection === null || action.showWithSelection === undefined ? true : action.showWithSelection;
+          action.showWithoutSelection = action.showWithoutSelection === null || action.showWithoutSelection === undefined ? false : action.showWithoutSelection;
+          //
+          return action;
+        });
     }
     //
     this.state = {
@@ -83,7 +90,9 @@ class AdvancedTable extends Basic.AbstractContextComponent {
                     { this.i18n(backendBulkAction.module + ':eav.bulk-action.' + backendBulkAction.name + '.label') }
                   </span>),
                 action: this.showBulkActionDetail.bind(this, backendBulkAction),
-                disabled: !SecurityManager.hasAllAuthorities(backendBulkAction.authorities)
+                disabled: !SecurityManager.hasAllAuthorities(backendBulkAction.authorities),
+                showWithSelection: backendBulkAction.showWithSelection,
+                showWithoutSelection: backendBulkAction.showWithoutSelection,
               });
             }
           }
@@ -576,7 +585,7 @@ class AdvancedTable extends Basic.AbstractContextComponent {
                   })}
                 rendered={isSelectedAll} />
               <Basic.Row rendered={!isSelectedAll} style={ { marginLeft: 0, marginRight: 0, marginBottom: 15 } }>
-                <span dangerouslySetInnerHTML={{ __html: this.i18n('bulkAction.message', {
+                <span dangerouslySetInnerHTML={{ __html: this.i18n('bulkAction.message' + (selectedRows.length === 0 ? '_empty' : ''), {
                   count: selectedRows.length,
                   entities: manager.getNiceLabels(selectedEntities).join(', '),
                   name: this.i18n(`${backendBulkAction.module}:eav.bulk-action.${backendBulkAction.name}.label`) }) }}/>
@@ -805,24 +814,33 @@ class AdvancedTable extends Basic.AbstractContextComponent {
       count = selectedRows.length;
     }
     //
+    const _actionsWithSelection = _actions.filter(action => { return action.showWithSelection; });
+    const _actionsWithoutSelection = _actions.filter(action => { return action.showWithoutSelection; });
+    let _actionClassName;
+    if (selectedRows.length <= 0) {
+      _actionClassName = _actionsWithoutSelection.length === 0 ? 'hidden' : 'bulk-action';
+    } else {
+      _actionClassName = _actionsWithSelection.length === 0 ? 'hidden' : 'bulk-action';
+    }
+    //
     return (
       <div className={ classnames('advanced-table', className) } style={ style }>
         {
           !filter && (_actions.length === 0 || !showRowSelection) && (buttons === null || buttons.length === 0)
           ||
-          <Basic.Toolbar container={this} viewportOffsetTop={filterViewportOffsetTop} rendered={showToolbar}>
+          <Basic.Toolbar container={ this } viewportOffsetTop={ filterViewportOffsetTop } rendered={ showToolbar }>
             <div className="advanced-table-heading">
               <div className="pull-left">
                 <Basic.EnumSelectBox
-                  onChange={this.onBulkAction.bind(this)}
+                  onChange={ this.onBulkAction.bind(this) }
                   ref="bulkActionSelect"
                   componentSpan=""
-                  className={selectedRows.length <= 0 ? 'hidden' : 'bulk-action'}
-                  multiSelect={false}
-                  options={ _actions }
-                  placeholder={this.i18n('bulk-action.selection' + (selectedRows.length === 0 ? '_empty' : ''), { count })}
-                  rendered={ _actions.length > 0 && showRowSelection}
-                  searchable={false}/>
+                  className={ _actionClassName }
+                  multiSelect={ false }
+                  options={ selectedRows.length <= 0 ? _actionsWithoutSelection : _actionsWithSelection }
+                  placeholder={ this.i18n('bulk-action.selection' + (selectedRows.length === 0 ? '_empty' : ''), { count }) }
+                  rendered={ _actions.length > 0 && showRowSelection }
+                  searchable={ false }/>
               </div>
               <div className="pull-right">
                 { buttons }

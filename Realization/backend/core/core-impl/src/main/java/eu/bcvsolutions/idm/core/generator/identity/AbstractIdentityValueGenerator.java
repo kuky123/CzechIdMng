@@ -121,7 +121,7 @@ public abstract class AbstractIdentityValueGenerator extends AbstractValueGenera
 	 */
 	protected Integer getFirstNameCharacterCount(IdmGenerateValueDto valueGenerator) {
 		Object value = valueGenerator.getGeneratorProperties().getOrDefault(FIRST_NAME_CHARACTERS_COUNT, null);
-		if (value == null) {
+		if (value == null || StringUtils.isEmpty(value.toString())) {
 			return null;
 		}
 		return Integer.valueOf(value.toString());
@@ -134,7 +134,7 @@ public abstract class AbstractIdentityValueGenerator extends AbstractValueGenera
 	 */
 	protected Integer getLastNameCharacterCount(IdmGenerateValueDto valueGenerator) {
 		Object value = valueGenerator.getGeneratorProperties().getOrDefault(LAST_NAME_CHARACTERS_COUNT, null);
-		if (value == null) {
+		if (value == null || StringUtils.isEmpty(value.toString())) {
 			return null;
 		}
 		return Integer.valueOf(value.toString());

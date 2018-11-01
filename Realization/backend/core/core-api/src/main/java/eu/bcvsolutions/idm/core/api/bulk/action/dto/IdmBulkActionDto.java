@@ -53,6 +53,8 @@ public class IdmBulkActionDto implements Serializable {
 	private Set<UUID> removeIdentifiers;
 	@JsonProperty(access = Access.READ_ONLY)
 	private List<IdmFormAttributeDto> formAttributes;
+	private boolean showWithoutSelection;
+	private boolean showWithSelection;
 
 	public UUID getLongRunningTaskId() {
 		return longRunningTaskId;
@@ -163,5 +165,21 @@ public class IdmBulkActionDto implements Serializable {
 
 	public void setAuthorities(List<String> authorities) {
 		this.authorities = authorities;
+	}
+
+	public boolean isShowWithoutSelection() {
+		return showWithoutSelection;
+	}
+
+	public void setShowWithoutSelection(boolean showWithoutSelection) {
+		this.showWithoutSelection = showWithoutSelection;
+	}
+
+	public boolean isShowWithSelection() {
+		return showWithSelection;
+	}
+
+	public void setShowWithSelection(boolean showWithSelection) {
+		this.showWithSelection = showWithSelection;
 	}
 }

@@ -1,5 +1,9 @@
 package eu.bcvsolutions.idm.core.model.service.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.beans.IntrospectionException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -320,5 +324,26 @@ public class DefaultIdmRoleServiceIntegrationTest extends AbstractIntegrationTes
 		Assert.assertEquals(2, roles.size());
 		Assert.assertTrue(roles.stream().anyMatch(r -> r.getId().equals(roleOne.getId())));
 		Assert.assertTrue(roles.stream().anyMatch(r -> r.getId().equals(roleTwo.getId())));
+	}
+
+	@Test
+	public void testGetByCode() {
+		String roleName = "role-name " + System.currentTimeMillis();
+		String roleCode = "roleCode" + System.currentTimeMillis();
+
+		IdmRoleDto role = new IdmRoleDto();
+		role.setName(roleName);
+		role.setCode(roleCode);
+		role = roleService.save(role);
+		
+		IdmRoleDto roleDto = roleService.getByCode("notRoleCode" + System.currentTimeMillis());
+		assertNull(roleDto);
+
+		roleDto = roleService.getByCode(roleName);
+		assertNull(roleDto);
+
+		roleDto = roleService.getByCode(roleCode);
+		assertNotNull(roleDto);
+		assertEquals(role.getId(), roleDto.getId());
 	}
 }

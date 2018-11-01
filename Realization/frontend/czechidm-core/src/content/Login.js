@@ -21,6 +21,10 @@ class Login extends Basic.AbstractContent {
     return 'content.login';
   }
 
+  getNavigationKey() {
+    return 'home';
+  }
+
   hideFooter() {
     return true;
   }
@@ -41,7 +45,6 @@ class Login extends Basic.AbstractContent {
     super.componentDidMount();
     //
     this._redirectIfIsAuthenticated();
-    this.selectNavigationItem('home');
     this.refs.form.setData({});
     this.refs.username.focus();
     this.context.store.dispatch(securityManager.remoteLogin());
@@ -106,15 +109,18 @@ class Login extends Basic.AbstractContent {
 }
 
 Login.propTypes = {
+  ...Basic.AbstractContent.propTypes,
   userContext: PropTypes.object
 };
 
 Login.defaultProps = {
+  ...Basic.AbstractContent.defaultProps,
   userContext: { isAuthenticated: false }
 };
 
 function select(state) {
   return {
+    i18nReady: state.config.get('i18nReady'),
     userContext: state.security.userContext
   };
 }

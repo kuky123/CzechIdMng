@@ -2,8 +2,6 @@ package eu.bcvsolutions.idm.core.api.service;
 
 import java.io.Serializable;
 
-import com.google.common.annotations.Beta;
-
 import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.dto.filter.BaseFilter;
 import eu.bcvsolutions.idm.core.api.exception.ForbiddenEntityException;
@@ -67,7 +65,6 @@ public interface ReadWriteDtoService<DTO extends BaseDto, F extends BaseFilter> 
 	 * @param entity
 	 * @return the saved DTO
 	 */
-	@Beta
 	DTO saveInternal(DTO dto);
 	
 	/**
@@ -76,7 +73,6 @@ public interface ReadWriteDtoService<DTO extends BaseDto, F extends BaseFilter> 
 	 * @param dto
 	 * @throws IllegalArgumentException in case the given DTO is {@literal null}.
 	 */
-	@Beta
 	void deleteInternal(DTO dto);
 	
 	/**
@@ -85,7 +81,6 @@ public interface ReadWriteDtoService<DTO extends BaseDto, F extends BaseFilter> 
 	 * @param dto id
 	 * @throws IllegalArgumentException in case the given DTO id is {@literal null}.
 	 */
-	@Beta
 	void deleteInternalById(Serializable id);
 
 	/**
@@ -94,6 +89,5 @@ public interface ReadWriteDtoService<DTO extends BaseDto, F extends BaseFilter> 
 	 * @param dto
 	 * @return
 	 */
-	@Beta
 	DTO validateDto(DTO dto);
 }

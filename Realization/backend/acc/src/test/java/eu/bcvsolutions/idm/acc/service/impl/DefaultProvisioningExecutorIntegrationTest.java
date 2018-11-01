@@ -6,10 +6,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.sql.DataSource;
 
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -48,6 +51,9 @@ import eu.bcvsolutions.idm.core.api.domain.OperationState;
 import eu.bcvsolutions.idm.core.api.entity.OperationResult;
 import eu.bcvsolutions.idm.core.api.service.ConfidentialStorage;
 import eu.bcvsolutions.idm.core.api.utils.DtoUtils;
+import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormDefinitionDto;
+import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormValueDto;
+import eu.bcvsolutions.idm.core.eav.api.service.FormService;
 import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmLongRunningTaskDto;
 import eu.bcvsolutions.idm.core.scheduler.api.service.LongRunningTaskManager;
 import eu.bcvsolutions.idm.core.security.api.domain.GuardedString;
@@ -81,6 +87,8 @@ public class DefaultProvisioningExecutorIntegrationTest extends AbstractIntegrat
 	@Autowired private LongRunningTaskManager longRunningTaskManager;
 	@Autowired private SysProvisioningBatchService provisioningBatchService;
 	@Autowired private TestProvisioningExceptionProcessor testProvisioningExceptionProcessor;
+	@Autowired private FormService formService;
+	@Autowired private DataSource dataSource;
 	//	
 	private SysProvisioningOperationService provisioningOperationService;
 	private ProvisioningExecutor provisioningExecutor;
@@ -460,6 +468,72 @@ public class DefaultProvisioningExecutorIntegrationTest extends AbstractIntegrat
 		} finally {
 			testProvisioningExceptionProcessor.setDisabled(true);
 		}
+	}
+	
+	@Test
+	public void testRetryProvisioningAfterPrepareConnectorObjectFailed() {
+		SysSystemDto system = helper.createTestResourceSystem(true);
+		// set the wrong password
+		IdmFormDefinitionDto savedFormDefinition = systemService.getConnectorFormDefinition(system.getConnectorInstance());
+		List<IdmFormValueDto> values = new ArrayList<>();
+		IdmFormValueDto password = new IdmFormValueDto(savedFormDefinition.getMappedAttributeByCode("password"));
+		password.setValue("wrong");
+		values.add(password);
+		formService.saveValues(system, savedFormDefinition, values);
+		//
+		SysProvisioningOperationDto provisioningOperation = createProvisioningOperation(system, "firstname");
+		Map<ProvisioningAttributeDto, Object> accoutObject = provisioningOperation.getProvisioningContext().getAccountObject();
+		String uid = (String) accoutObject.get(getProvisioningAttribute(TestHelper.ATTRIBUTE_MAPPING_NAME));
+		DateTime now = new DateTime();
+		//
+		// publish event
+		// publish event
+		provisioningExecutor.execute(provisioningOperation); // 1 - create
+		// is necessary to get again operation from service
+		SysProvisioningOperationFilter filter = new SysProvisioningOperationFilter();
+		filter.setSystemEntity(provisioningOperation.getSystemEntity());
+		filter.setSystemId(system.getId());
+		SysProvisioningOperationDto operation = provisioningOperationService.find(filter, null).getContent().get(0);
+		SysProvisioningBatchDto batch = provisioningBatchService.findBatch(operation.getSystemEntity());
+		Assert.assertEquals(OperationState.EXCEPTION, operation.getResultState());
+		Assert.assertEquals(AccResultCode.PROVISIONING_FAILED.name(), operation.getResult().getModel().getStatusEnum());
+		Assert.assertEquals(1, operation.getCurrentAttempt());
+		Assert.assertTrue(operation.getMaxAttempts() > 1);
+		Assert.assertTrue(batch.getNextAttempt().isAfter(now));
+		SysSystemEntityDto systemEntity = systemEntityService.getBySystemAndEntityTypeAndUid(system, SystemEntityType.IDENTITY, uid);
+		Assert.assertTrue(systemEntity.isWish());
+		Assert.assertNull(helper.findResource(uid));
+		//
+		batch.setNextAttempt(new DateTime());
+		provisioningBatchService.save(batch);
+		//
+		// retry - the same exception expected
+		RetryProvisioningTaskExecutor retryProvisioningTaskExecutor = new RetryProvisioningTaskExecutor();
+		Boolean result = longRunningTaskManager.executeSync(retryProvisioningTaskExecutor);
+		Assert.assertTrue(result);
+		operation = provisioningOperationService.get(operation.getId());
+		batch = provisioningBatchService.findBatch(systemEntity.getId());
+		Assert.assertEquals(2, operation.getCurrentAttempt());
+		Assert.assertNotNull(batch.getNextAttempt());
+		Assert.assertTrue(batch.getNextAttempt().isAfter(now));
+		//
+		batch.setNextAttempt(new DateTime());
+		provisioningBatchService.save(batch);
+		//
+		// retry - expected success now - set the good password
+		org.apache.tomcat.jdbc.pool.DataSource tomcatDataSource = ((org.apache.tomcat.jdbc.pool.DataSource) dataSource);
+		password.setValue(tomcatDataSource.getPoolProperties().getPassword());
+		formService.saveValues(system, savedFormDefinition, values);
+		//
+		retryProvisioningTaskExecutor = new RetryProvisioningTaskExecutor();
+		result = longRunningTaskManager.executeSync(retryProvisioningTaskExecutor);
+		Assert.assertTrue(result);
+		//
+		systemEntity = systemEntityService.getBySystemAndEntityTypeAndUid(system, SystemEntityType.IDENTITY, uid);
+		Assert.assertFalse(systemEntity.isWish());
+		Assert.assertNotNull(helper.findResource(uid));
+		batch = provisioningBatchService.get(batch.getId());
+		Assert.assertNull(batch.getNextAttempt());
 	}
 	
 	@Test

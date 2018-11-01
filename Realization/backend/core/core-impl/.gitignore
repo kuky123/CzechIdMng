@@ -9,3 +9,4 @@
 /**target/
 /received-emails/
 /@swagger.output.dir@/
+/.apt_generated_tests/

@@ -50,7 +50,8 @@ class IdentityProvisioningOperations extends Advanced.AbstractTableContent {
         <ProvisioningOperations
           uiKey="identity-provisioning-operation-table"
           forceSearchParameters={ forceSearchParameters }
-          columns={ columns }/>
+          columns={ columns }
+          showDeleteAllButton={ false }/>
       </div>
     );
   }

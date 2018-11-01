@@ -6,7 +6,10 @@ import Immutable from 'immutable';
 import _ from 'lodash';
 import moment from 'moment';
 //
-import { LOGOUT } from '../security/SecurityManager';
+import {
+  LOGOUT,
+  RECEIVE_LOGIN_EXPIRED
+} from '../security/SecurityManager';
 import {
   REQUEST_ENTITIES,
   RECEIVE_ENTITIES,
@@ -276,6 +279,10 @@ export function data(state = INITIAL_STATE, action) {
         }),
         ui: merge({}, state.ui, ui)
       });
+    }
+    case RECEIVE_LOGIN_EXPIRED: {
+      // clear whole state - except configurations (clear showloading is needed)
+      return merge({}, INITIAL_STATE);
     }
     case LOGOUT: {
       // clear whole state - except configurations

@@ -23,6 +23,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
 import eu.bcvsolutions.idm.core.api.rest.BaseController;
+import eu.bcvsolutions.idm.core.api.service.IdmIdentityService;
+import eu.bcvsolutions.idm.core.security.api.domain.IdmJwtAuthentication;
+import eu.bcvsolutions.idm.core.security.api.service.GrantedAuthoritiesFactory;
 
 /**
  * Abstract rest test - using mock mvc
@@ -36,8 +39,8 @@ public abstract class AbstractRestTest extends AbstractIntegrationTest {
 	private MockMvc mockMvc;
 	private static String CONTENT_TYPE = "application/hal+json";
 	//
-	@Autowired 
-	private WebApplicationContext webApplicationContext;
+	@Autowired private WebApplicationContext webApplicationContext;
+	@Autowired private GrantedAuthoritiesFactory grantedAuthoritiesFactory;
 
 	@Before
 	public void setup() throws Exception {
@@ -76,6 +79,30 @@ public abstract class AbstractRestTest extends AbstractIntegrationTest {
 
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.readValue(listString, new TypeReference<List<LinkedHashMap<String, Object>>>() {});
+	}
+	
+	/**
+	 * Login as admin
+	 * 
+	 * @return
+	 */
+	protected Authentication getAdminAuthentication() {
+		return getAuthentication(TestHelper.ADMIN_USERNAME);
+	}
+	
+	/**
+	 * Login identity
+	 * 
+	 * TODO: move to test helper
+	 * 
+	 * @return
+	 */
+	protected Authentication getAuthentication(String username) {
+		return new IdmJwtAuthentication(
+				getHelper().getService(IdmIdentityService.class).getByUsername(username), 
+				null, 
+				grantedAuthoritiesFactory.getGrantedAuthorities(username), 
+				"test");
 	}
 
 	private String getPageableAndParameters(String anotherParameters, Long size, Long page, String sort, String order) {

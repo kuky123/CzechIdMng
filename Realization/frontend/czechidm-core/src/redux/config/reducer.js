@@ -4,7 +4,7 @@ import { getNavigationItem } from './actions';
 import { Actions, Properties } from './constants';
 
 const INITIAL_STATE = new Immutable.Map({
-  [Properties.PROPERTIES]: null, // public configuration propereties
+  [Properties.PROPERTIES]: null, // configuration propereties
   [Properties.NAVIGATION]: null,  // all navigation items from enabled modules as Map
   selectedNavigationItems: ['home'], // homepage by default
   i18nReady: null,              // localization language is ready
@@ -91,6 +91,11 @@ export function config(state = INITIAL_STATE, action) {
       return newState;
     }
     case Actions.CONFIGURATION_RECEIVED: {
+      const configs = state.get(Properties.PROPERTIES);
+      if (configs) {
+        // put new values
+        return state.set(Properties.PROPERTIES, configs.merge(action.data));
+      }
       return state.set(Properties.PROPERTIES, action.data);
     }
     case Actions.HIDE_FOOTER: {

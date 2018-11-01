@@ -52,15 +52,10 @@ import eu.bcvsolutions.idm.acc.service.api.SysSystemEntityService;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemMappingService;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemService;
 import eu.bcvsolutions.idm.core.api.domain.OperationState;
-import eu.bcvsolutions.idm.core.api.dto.DefaultResultModel;
-import eu.bcvsolutions.idm.core.api.dto.ResultModel;
-import eu.bcvsolutions.idm.core.api.entity.OperationResult;
 import eu.bcvsolutions.idm.core.api.event.AbstractEntityEventProcessor;
 import eu.bcvsolutions.idm.core.api.event.DefaultEventResult;
 import eu.bcvsolutions.idm.core.api.event.EntityEvent;
 import eu.bcvsolutions.idm.core.api.event.EventResult;
-import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
-import eu.bcvsolutions.idm.core.notification.api.dto.IdmMessageDto;
 import eu.bcvsolutions.idm.core.notification.api.service.NotificationManager;
 import eu.bcvsolutions.idm.core.security.api.domain.Enabled;
 import eu.bcvsolutions.idm.ic.api.IcAttribute;
@@ -90,7 +85,6 @@ public class PrepareConnectorObjectProcessor extends AbstractEntityEventProcesso
 	private final SysSystemAttributeMappingService attributeMappingService;
 	private final IcConnectorFacade connectorFacade;
 	private final SysSystemService systemService;
-	private final NotificationManager notificationManager;
 	private final SysProvisioningOperationService provisioningOperationService;
 	private final SysSchemaAttributeService schemaAttributeService;
 	private final SysProvisioningArchiveService provisioningArchiveService;
@@ -102,7 +96,7 @@ public class PrepareConnectorObjectProcessor extends AbstractEntityEventProcesso
 			IcConnectorFacade connectorFacade,
 			SysSystemService systemService,
 			SysSystemEntityService systemEntityService,
-			NotificationManager notificationManager,
+			NotificationManager notificationManager, // @deprecated @since 9.2.2
 			SysProvisioningOperationService provisioningOperationService,
 			SysSystemMappingService systemMappingService,
 			SysSystemAttributeMappingService attributeMappingService,
@@ -128,7 +122,6 @@ public class PrepareConnectorObjectProcessor extends AbstractEntityEventProcesso
 		this.attributeMappingService = attributeMappingService;
 		this.connectorFacade = connectorFacade;
 		this.systemService = systemService;
-		this.notificationManager = notificationManager;
 		this.provisioningOperationService = provisioningOperationService;
 		this.schemaAttributeService = schemaAttributeService;
 		this.provisioningArchiveService = provisioningArchiveService;
@@ -193,26 +186,7 @@ public class PrepareConnectorObjectProcessor extends AbstractEntityEventProcesso
 			event.setContent(provisioningOperation);
 			return new DefaultEventResult<>(event, this);
 		} catch (Exception ex) {
-			ResultModel resultModel;
-			if (ex instanceof ResultCodeException) {
-				resultModel = ((ResultCodeException) ex).getError().getError();
-			} else {
-				resultModel = new DefaultResultModel(AccResultCode.PROVISIONING_PREPARE_ACCOUNT_ATTRIBUTES_FAILED, 
-					ImmutableMap.of(
-							"name", uid, 
-							"system", system.getName(),
-							"operationType", provisioningOperation.getOperationType(),
-							"objectClass", objectClass.getType()));
-			}
-			LOG.error(resultModel.toString(), ex);
-			provisioningOperation.setResult(new OperationResult.Builder(OperationState.EXCEPTION).setModel(resultModel).setCause(ex).build());
-			//
-			provisioningOperation = provisioningOperationService.save(provisioningOperation);
-			//
-			notificationManager.send(
-					AccModuleDescriptor.TOPIC_PROVISIONING, new IdmMessageDto.Builder()
-					.setModel(resultModel)
-					.build());
+			provisioningOperationService.handleFailed(provisioningOperation, ex);
 			// set back to event content
 			event.setContent(provisioningOperation);
 			return new DefaultEventResult<>(event, this, true);

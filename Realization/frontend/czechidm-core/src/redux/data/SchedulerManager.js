@@ -89,10 +89,7 @@ export default class SchedulerManager extends EntityManager {
       dispatch(this.dataManager.requestData(uiKey));
       this.getService().runTask(taskId)
         .then(() => {
-          if (cb) {
-            cb();
-          }
-          dispatch(this.dataManager.stopRequest(uiKey));
+          dispatch(this.dataManager.stopRequest(uiKey, null, cb));
         })
         .catch(error => {
           // TODO: data uiKey
@@ -108,10 +105,7 @@ export default class SchedulerManager extends EntityManager {
       dispatch(this.dataManager.requestData(uiKey));
       this.getService().dryRunTask(taskId)
         .then(() => {
-          if (cb) {
-            cb();
-          }
-          dispatch(this.dataManager.stopRequest(uiKey));
+          dispatch(this.dataManager.stopRequest(uiKey, null, cb));
         })
         .catch(error => {
           // TODO: data uiKey
@@ -134,9 +128,7 @@ export default class SchedulerManager extends EntityManager {
       dispatch(this.dataManager.requestData(uiKey));
       this.getService().deleteTrigger(trigger)
         .then(() => {
-          if (cb) {
-            cb();
-          }
+          dispatch(this.dataManager.stopRequest(uiKey, null, cb));
         })
         .catch(error => {
           // TODO: data uiKey
@@ -159,9 +151,7 @@ export default class SchedulerManager extends EntityManager {
       dispatch(this.dataManager.requestData(uiKey));
       this.getService().createTrigger(trigger)
         .then(() => {
-          if (cb) {
-            cb();
-          }
+          dispatch(this.dataManager.stopRequest(uiKey, null, cb));
         })
         .catch(error => {
           // TODO: data uiKey

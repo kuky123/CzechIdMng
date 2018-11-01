@@ -157,7 +157,7 @@ public class DefaultWorkflowTaskInstanceService extends
 	 * @return
 	 */
 	private boolean canExecute(WorkflowTaskInstanceDto task, BasePermission[] permission) {
-		return permission == null || permission.length == 0 || this.getPermissions(task).contains(IdmBasePermission.EXECUTE.getName());
+		return permission == null || permission.length == 0  || this.getPermissions(task).contains(IdmBasePermission.EXECUTE.getName());
 	}
 
 	@Override

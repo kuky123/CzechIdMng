@@ -32,10 +32,13 @@ class PasswordChange extends Basic.AbstractContent {
     return 'content.password.change';
   }
 
+  getNavigationKey() {
+    return 'password-change';
+  }
+
   componentDidMount() {
     super.componentDidMount();
     //
-    this.selectNavigationItem('password-change');
     const data = {};
     const { query } = this.props.location;
     //
@@ -87,7 +90,7 @@ class PasswordChange extends Basic.AbstractContent {
       let error;
       if (Utils.Response.getFirstError(json)) {
         error = Utils.Response.getFirstError(json);
-      } else {
+      } else if (json._errors) {
         error = json._errors.pop();
       }
 
@@ -319,14 +322,17 @@ class PasswordChange extends Basic.AbstractContent {
 }
 
 PasswordChange.propTypes = {
+  ...Basic.AbstractContent.propTypes,
   userContext: React.PropTypes.object
 };
 PasswordChange.defaultProps = {
+  ...Basic.AbstractContent.defaultProps,
   userContext: null
 };
 
 function select(state) {
   return {
+    i18nReady: state.config.get('i18nReady'),
     userContext: state.security.userContext,
     passwordChangeType: ConfigurationManager.getPublicValue(state, 'idm.pub.core.identity.passwordChange'),
     enabledPasswordChangeForIdm: ConfigurationManager.getPublicValueAsBoolean(state, 'idm.pub.core.identity.passwordChange.public.idm.enabled', true)

@@ -33,10 +33,8 @@ import eu.bcvsolutions.idm.core.api.rest.AbstractReadWriteDtoController;
 import eu.bcvsolutions.idm.core.api.rest.BaseDtoController;
 import eu.bcvsolutions.idm.core.model.domain.CoreGroupPermission;
 import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmProcessedTaskItemDto;
-import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmScheduledTaskDto;
 import eu.bcvsolutions.idm.core.scheduler.api.dto.filter.IdmProcessedTaskItemFilter;
 import eu.bcvsolutions.idm.core.scheduler.api.service.IdmProcessedTaskItemService;
-import eu.bcvsolutions.idm.core.scheduler.api.service.IdmScheduledTaskService;
 import eu.bcvsolutions.idm.core.security.api.domain.BasePermission;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -62,16 +60,13 @@ public class IdmLongRunningTaskItemController extends AbstractReadWriteDtoContro
 	protected static final String TAG = "Long running task items";
 	//
 	private final IdmProcessedTaskItemService itemService;
-	private final IdmScheduledTaskService scheduledTaskService;
 
 	@Autowired
-	public IdmLongRunningTaskItemController(IdmProcessedTaskItemService itemService, IdmScheduledTaskService scheduledTaskService) {
+	public IdmLongRunningTaskItemController(IdmProcessedTaskItemService itemService) {
 		super(itemService);
 		//
 		Assert.notNull(itemService);
-		Assert.notNull(scheduledTaskService);
 		//
-		this.scheduledTaskService = scheduledTaskService;
 		this.itemService = itemService;
 	}
 
@@ -181,9 +176,8 @@ public class IdmLongRunningTaskItemController extends AbstractReadWriteDtoContro
 	public ResponseEntity<?> addToQueue(
 			@ApiParam(value = "Records's uuid identifier", required = true)
 			@PathVariable @NotNull String backendId, @Valid @RequestBody UUID scheduledTask) {
-		IdmScheduledTaskDto task = scheduledTaskService.get(scheduledTask);
 		IdmProcessedTaskItemDto itemDto = itemService.get(backendId);
-		itemService.createQueueItem(itemDto, new OperationResult(OperationState.EXECUTED), task);
+		itemService.createQueueItem(itemDto, new OperationResult(OperationState.EXECUTED), scheduledTask);
 		//
 		return new ResponseEntity<>(HttpStatus.CREATED);
 	}
