@@ -7,6 +7,9 @@ import AbstractContextComponent from '../AbstractContextComponent/AbstractContex
 import Icon from '../Icon/Icon';
 import HelpIcon from '../HelpIcon/HelpIcon';
 
+/**
+ * @author Vít Švanda
+ */
 class AbstractFormComponent extends AbstractContextComponent {
 
   constructor(props, context) {
@@ -294,6 +297,7 @@ class AbstractFormComponent extends AbstractContextComponent {
 
   render() {
     const { hidden, className, rendered } = this.props;
+    //
     if (!rendered) {
       return null;
     }

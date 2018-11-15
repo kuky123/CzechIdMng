@@ -316,6 +316,12 @@ public class DefaultIdmIdentityContractService
 		return toDtos(this.repository.findAllValidContracts(identityId, date, onlyExterne), false);
 	}
 
+	@Override
+	public IdmIdentityContractDto findLastExpiredContract(UUID identityId, LocalDate expiration) {
+		List<IdmIdentityContract> contracts = repository.findExpiredContracts(expiration, null).getContent();
+		IdmIdentityContract lastValidContract = contracts.stream().max(Comparator.comparing(IdmIdentityContract::getValidTill)).orElse(null);
+		return lastValidContract == null ? null : toDto(lastValidContract);
+	}
 	/**
 	 * Returns contracts sorted by priority:
 	 * - 1. main

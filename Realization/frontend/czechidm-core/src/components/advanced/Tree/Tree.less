@@ -1,0 +1,80 @@
+@import '../../variables.less';
+
+.advanced-tree {
+
+  .basic-toolbar.tree-header {
+    display: flex;
+    margin-bottom: 0;
+
+    .tree-header-text {
+      flex: 1;
+      word-break: break-all;
+      line-height: 22px;
+    }
+
+    .tree-header-buttons {
+      text-align: right;
+    }
+  }
+
+  .tree-body {
+    padding: 10px 0;
+    overflow-x: auto;
+  }
+
+  .btn.parent-link {
+    padding-left: 15px;
+
+    .parent-icon {
+      color: #000;
+      width: 12px;
+      margin-right: 5px;
+    }
+  }
+
+  .alert.no-data {
+    margin: 0 15px;
+  }
+
+  .tree-node-row {
+    padding-left: 15px;
+    white-space: nowrap;
+
+    &.selected {
+      background-color: #eee;
+      border-left: 3px solid #5cb85c;
+      padding-left: 12px;
+    }
+
+    .expand-icon {
+      width: 12px;
+      color: #7898b5;
+      cursor: pointer;
+      visibility: hidden;
+
+      &.visible {
+        visibility: visible;
+      }
+    }
+
+    .node-icon {
+
+      color: #000;
+      margin-right: 2px;
+      width: 15px;
+
+      &.folder {
+        color: #faf094;
+        text-shadow: -1px 0 #e1cc50, 0 1px #e1cc50, 1px 0 #e1cc50, 0 -1px #e1cc50;
+
+        &.showLoading {
+          color: #ccc;
+          text-shadow: none;
+        }
+      }
+
+      &.file {
+      }
+    }
+  }
+}

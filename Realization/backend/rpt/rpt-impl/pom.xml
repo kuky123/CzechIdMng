@@ -37,6 +37,50 @@
 			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!--
+			Tests dependencies for create LDAP server.
+			I tried another version than 1.5.4 but newer version doesn't work as I expect.
+			Excluded version of shared and server dependencies is because in this version exists conflict between it.
+		 -->
+		<dependency>
+			<groupId>org.apache.directory.server</groupId>
+			<artifactId>apacheds-all</artifactId>
+			<version>1.5.4</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.directory.shared</groupId>
+					<artifactId>shared-ldap-schema</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	
+		<dependency>
+			<groupId>org.apache.directory.server</groupId>
+			<artifactId>apacheds-server-integ</artifactId>
+			<version>1.5.4</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.directory.server</groupId>
+					<artifactId>apacheds-bootstrap-partition</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	
+		<dependency>
+			<groupId>org.apache.directory.server</groupId>
+			<artifactId>apacheds-core-integ</artifactId>
+			<version>1.5.4</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.directory.server</groupId>
+					<artifactId>apacheds-bootstrap-partition</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 	</dependencies>
 
 	<build>

@@ -75,6 +75,10 @@ public class SysSystemAttributeMapping extends AbstractEntity {
 	@Audited
 	@Column(name = "confidential_attribute", nullable = false)
 	private boolean confidentialAttribute = false;
+	
+	@Audited
+	@Column(name = "password_attribute", nullable = false)
+	private boolean passwordAttribute = false;
 
 	@Audited
 	@Column(name = "uid", nullable = false)
@@ -115,6 +119,10 @@ public class SysSystemAttributeMapping extends AbstractEntity {
 	@Audited
 	@Column(name = "attribute_cached", nullable = false)
 	private boolean cached = true;
+	
+	@Audited
+	@Column(name = "evict_contr_values_cache")
+	private boolean evictControlledValuesCache = true;
 	
 	public String getIdmPropertyName() {
 		return idmPropertyName;
@@ -250,5 +258,21 @@ public class SysSystemAttributeMapping extends AbstractEntity {
 
 	public void setCached(boolean cached) {
 		this.cached = cached;
+	}
+
+	public boolean isEvictControlledValuesCache() {
+		return evictControlledValuesCache;
+	}
+
+	public void setEvictControlledValuesCache(boolean evictControlledValuesCache) {
+		this.evictControlledValuesCache = evictControlledValuesCache;
+	}
+
+	public boolean isPasswordAttribute() {
+		return passwordAttribute;
+	}
+
+	public void setPasswordAttribute(boolean passwordAttribute) {
+		this.passwordAttribute = passwordAttribute;
 	}
 }

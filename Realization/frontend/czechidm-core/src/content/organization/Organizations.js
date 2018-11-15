@@ -46,7 +46,7 @@ class Organizations extends Basic.AbstractContent {
     if (showLoading) {
       return (
         <div>
-          {this.renderPageHeader()}
+          { this.renderPageHeader() }
 
           <Basic.Panel>
             <Basic.Loading isStatic show/>
@@ -57,7 +57,7 @@ class Organizations extends Basic.AbstractContent {
     //
     return (
       <div>
-        {this.renderPageHeader()}
+        { this.renderPageHeader() }
 
         {
           !defaultTreeType
@@ -69,12 +69,16 @@ class Organizations extends Basic.AbstractContent {
                 level="info"
                 rendered={ SecurityManager.hasAuthority('TREETYPE_CREATE') }
                 onClick={ this.showTreeTypes.bind(this) }>
-                {this.i18n('defaultTreeType.empty.button')}
+                { this.i18n('defaultTreeType.empty.button') }
               </Basic.Button>
             ]}>
           </Basic.Alert>
           :
-          <NodeTable uiKey="organization-table" type={defaultTreeType} treeNodeManager={this.treeNodeManager} showTreeTypeSelect={false}/>
+          <NodeTable
+            uiKey="organization-table"
+            type={ defaultTreeType }
+            treeNodeManager={ this.treeNodeManager }
+            showTreeTypeSelect={ false }/>
         }
 
       </div>

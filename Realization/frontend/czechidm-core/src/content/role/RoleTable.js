@@ -9,10 +9,9 @@ import * as Advanced from '../../components/advanced';
 import * as Utils from '../../utils';
 import RoleTypeEnum from '../../enums/RoleTypeEnum';
 //
-import {RoleManager, RequestManager, SecurityManager, RoleCatalogueManager, ConfigurationManager } from '../../redux';
+import { RoleManager, RequestManager, SecurityManager, RoleCatalogueManager, ConfigurationManager } from '../../redux';
 
 // Table uiKey
-const rootsKey = 'role-catalogue-tree-roots';
 const requestManager = new RequestManager();
 
 /**
@@ -25,9 +24,7 @@ class RoleTable extends Advanced.AbstractTableContent {
   constructor(props, context) {
     super(props, context);
     this.state = {
-      filterOpened: this.props.filterOpened,
-      showLoading: true,
-      rootNodes: null
+      filterOpened: this.props.filterOpened
     };
     this.roleCatalogueManager = new RoleCatalogueManager();
   }
@@ -35,30 +32,11 @@ class RoleTable extends Advanced.AbstractTableContent {
   componentDidMount() {
     super.componentDidMount();
     //
-    this._loadCatalogue();
     this.refs.text.focus();
   }
 
   getContentKey() {
     return 'content.roles';
-  }
-
-  _loadCatalogue() {
-    if (!SecurityManager.hasAuthority('ROLECATALOGUE_AUTOCOMPLETE')) {
-      this.setState({
-        showLoading: false
-      });
-      return;
-    }
-    //
-    const searchParametersRoots = this.roleCatalogueManager.getService().getRootSearchParameters();
-    this.context.store.dispatch(this.roleCatalogueManager.fetchEntities(searchParametersRoots, rootsKey, (loadedRoots) => {
-      const rootNodes = loadedRoots._embedded[this.roleCatalogueManager.getCollectionType()];
-      this.setState({
-        rootNodes,
-        showLoading: false
-      });
-    }));
   }
 
   useFilter(event) {
@@ -168,9 +146,6 @@ class RoleTable extends Advanced.AbstractTableContent {
       // After click on link node, we want only filtering ... not node expand.
       event.stopPropagation();
     }
-    if (!nodeId) {
-      return;
-    }
     const data = {
       ... this.refs.filterForm.getData(),
       roleCatalogue: nodeId
@@ -179,70 +154,38 @@ class RoleTable extends Advanced.AbstractTableContent {
     this.refs.table.getWrappedInstance().useFilterData(data);
   }
 
-  /**
-   * Decorator for Role cataloue tree. Custom icons
-   */
-  _roleTreeHeaderDecorator(props) {
-    const style = props.style;
-    const icon = props.node.isLeaf ? 'file-text' : 'folder';
-    return (
-      <div style={style.base}>
-        <div style={style.title}>
-          <Basic.Icon type="fa" icon={icon} style={{ marginRight: '5px' }}/>
-          <Basic.Button level="link" onClick={this._useFilterByTree.bind(this, props.node.id)} style={{padding: '0px 0px 0px 0px'}}>
-            { props.node.name }
-            {
-              !props.node.childrenCount
-              ||
-              <small style={{ color: '#aaa' }}>{' '}({props.node.childrenCount})</small>
-            }
-          </Basic.Button>
-        </div>
-      </div>
-    );
-  }
-
   render() {
     const { uiKey, roleManager, columns, showCatalogue, forceSearchParameters, _requestsEnabled, className } = this.props;
-    const { filterOpened, showLoading, rootNodes } = this.state;
-    const showTree = showCatalogue && !showLoading && rootNodes && rootNodes.length !== 0;
+    const { filterOpened, showLoading } = this.state;
+    const _showTree = showCatalogue && SecurityManager.hasAuthority('ROLECATALOGUE_AUTOCOMPLETE');
+    //
     return (
       <Basic.Row>
         <Basic.Confirm ref="confirm-new-request" level="success">
-            <Basic.AbstractForm ref="new-request-form" uiKey="confirm-new-request" >
-              <Basic.TextField
-                label={this.i18n('content.roles.action.createRequest.name')}
-                ref="role-name"
-                placeholder={this.i18n('content.roles.action.createRequest.message')}
-                required/>
-            </Basic.AbstractForm>
+          <Basic.AbstractForm ref="new-request-form" uiKey="confirm-new-request" >
+            <Basic.TextField
+              label={this.i18n('content.roles.action.createRequest.name')}
+              ref="role-name"
+              placeholder={this.i18n('content.roles.action.createRequest.message')}
+              required/>
+          </Basic.AbstractForm>
         </Basic.Confirm>
-        {
-          !showTree
-          ||
-          <Basic.Col lg={ 3 } style={{ paddingRight: 0, paddingLeft: 0, marginLeft: 15, marginRight: -15 }}>
-            <div className="basic-toolbar">
-              <div className="pull-left">
-                <h3 style={{ margin: 0 }}>{this.i18n('content.roles.roleCataloguePick')}</h3>
-              </div>
-              <div className="clearfix"></div>
-            </div>
-            <div style={{ paddingLeft: 15, paddingRight: 15, paddingTop: 15 }}>
-              <Basic.Button level="link" className="btn-xs" onClick={ this.cancelFilter.bind(this) }>
-                { this.i18n('button.allRoles') }
-              </Basic.Button>
-              <Advanced.Tree
-                ref="roleCatalogueTree"
-                rootNodes={ rootNodes }
-                headerDecorator={this._roleTreeHeaderDecorator.bind(this)}
-                uiKey="roleCatalogueTree"
-                manager={this.roleCatalogueManager}
-                />
-            </div>
-          </Basic.Col>
-        }
 
-        <Basic.Col lg={!showTree ? 12 : 9 }>
+        {/* FIXME: resposive design - wrong wrapping on mobile */}
+        <Basic.Col
+          lg={ 3 }
+          style={{ paddingRight: 0, marginLeft: 0, marginRight: -15 }}
+          rendered={ _showTree }>
+          <Advanced.Tree
+            ref="roleCatalogueTree"
+            uiKey="role-catalogue-tree"
+            manager={ this.roleCatalogueManager }
+            onSelect={ this._useFilterByTree.bind(this) }
+            header={ this.i18n('content.roles.roleCataloguePick') }
+            rendered={ _showTree }/>
+        </Basic.Col>
+
+        <Basic.Col lg={ !_showTree ? 12 : 9 }>
           <Basic.Confirm ref="confirm-delete" level="danger"/>
 
           <Advanced.Table
@@ -253,12 +196,12 @@ class RoleTable extends Advanced.AbstractTableContent {
             filterOpened={ filterOpened }
             forceSearchParameters={ forceSearchParameters }
             showRowSelection={ SecurityManager.hasAuthority('ROLE_DELETE') }
-            style={ !showTree ? {} : { borderLeft: '1px solid #ddd' } }
+            style={ !_showTree ? {} : { borderLeft: '1px solid #ddd' } }
             showLoading={ showLoading }
             filter={
               <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
                 <Basic.AbstractForm ref="filterForm">
-                  <Basic.Row className={ showTree ? '' : 'last'}>
+                  <Basic.Row className={ _showTree ? '' : 'last'}>
                     <Basic.Col lg={ 8 }>
                       <Advanced.Filter.TextField
                         ref="text"
@@ -275,19 +218,20 @@ class RoleTable extends Advanced.AbstractTableContent {
                       <Advanced.Filter.FilterButtons cancelFilter={this.cancelFilter.bind(this)}/>
                     </Basic.Col>
                   </Basic.Row>
-                  <Basic.Row className={ classnames('last', { 'hidden': !showTree })}>
-                    <div className="col-lg-4">
-                      <Advanced.Filter.SelectBox
+                  <Basic.Row className={ classnames('last', { 'hidden': !_showTree })}>
+                    <Basic.Col lg={ 4 }>
+                      <Advanced.Filter.RoleCatalogueSelect
                         ref="roleCatalogue"
-                        placeholder={this.i18n('entity.Role.roleCatalogue.name')}
-                        manager={ this.roleCatalogueManager }/>
-                    </div>
+                        label={ null }
+                        placeholder={ this.i18n('entity.Role.roleCatalogue.name') }
+                        header={ this.i18n('entity.Role.roleCatalogue.name') }/>
+                    </Basic.Col>
                   </Basic.Row>
                 </Basic.AbstractForm>
               </Advanced.Filter>
             }
-            buttons={
-              [<span>
+            buttons={[
+              <span>
                 <Basic.Button
                   level="success"
                   key="add_button"
@@ -309,8 +253,7 @@ class RoleTable extends Advanced.AbstractTableContent {
                   {this.i18n('button.add')}
                 </Basic.Button>
               </span>
-              ]
-            }
+            ]}
             _searchParameters={ this.getSearchParameters() }
             className={ className }>
 

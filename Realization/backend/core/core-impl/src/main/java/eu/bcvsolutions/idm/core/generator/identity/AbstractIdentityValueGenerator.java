@@ -24,7 +24,8 @@ public abstract class AbstractIdentityValueGenerator extends AbstractValueGenera
 	public static String LAST_NAME_CHARACTERS_COUNT = "lastNameCharacterCount";
 	public static String CONNECTING_CHARACTER = "connectionCharacter";
 	public static String FIRST_NAME_FIRST = "firstNameFirst";
-	
+	public static String REPLACE_WHITE_SPACES_CHARACTER = "replaceWhiteSpacesCharacter";
+
 	@Override
 	public List<String> getPropertyNames() {
 		List<String> properties = new ArrayList<>();
@@ -32,6 +33,7 @@ public abstract class AbstractIdentityValueGenerator extends AbstractValueGenera
 		properties.add(FIRST_NAME_CHARACTERS_COUNT);
 		properties.add(LAST_NAME_CHARACTERS_COUNT);
 		properties.add(FIRST_NAME_FIRST);
+		properties.add(REPLACE_WHITE_SPACES_CHARACTER);
 		return properties;
 	}
 
@@ -59,8 +61,8 @@ public abstract class AbstractIdentityValueGenerator extends AbstractValueGenera
 	 * @return
 	 */
 	protected String generateUsername(IdmIdentityDto dto, IdmGenerateValueDto valueGenerator) {
-		String transformedFirstName = StringUtils.stripAccents(StringUtils.trimToEmpty(dto.getFirstName()));
-		String transformedLastName = StringUtils.stripAccents(StringUtils.trimToEmpty(dto.getLastName()));
+		String transformedFirstName = StringUtils.stripAccents(dto.getFirstName());
+		String transformedLastName = StringUtils.stripAccents(dto.getLastName());
 		//
 		if (StringUtils.isEmpty(transformedFirstName) || StringUtils.isEmpty(transformedLastName)) {
 			// firstname and lastname is required
@@ -102,9 +104,33 @@ public abstract class AbstractIdentityValueGenerator extends AbstractValueGenera
 			// TODO: found better solution
 			resultUsername = resultUsername.substring(0, DefaultFieldLengths.NAME);
 		}
-		return resultUsername;
+
+		return replaceAllWhiteSpaces(valueGenerator, resultUsername);
 	}
 
+	/**
+	 * Replace all white spaces with character/s given in parameters bulk action. If
+	 * whiteSpacesCharacter parameter is null all white spaces will be removed.
+	 *
+	 * @param valueGenerator
+	 * @param string
+	 * @return
+	 */
+	protected String replaceAllWhiteSpaces(IdmGenerateValueDto valueGenerator, String string) {
+		if (StringUtils.isEmpty(string)) {
+			return string;
+		}
+		// Check if result string contains white space and remove it.
+		String whiteSpacesCharacter = getRemoveWhiteSpacesCharacter(valueGenerator);
+		if (StringUtils.isEmpty(whiteSpacesCharacter)) {
+			// Empty white spaces, just trim
+			return StringUtils.deleteWhitespace(string);
+		} else {
+			// Replace white spaces with character
+			return string.replaceAll("\\s", whiteSpacesCharacter);
+		}
+	}
+	
 	/**
 	 * Get connection characters
 	 *
@@ -148,5 +174,16 @@ public abstract class AbstractIdentityValueGenerator extends AbstractValueGenera
 	 */
 	protected boolean isFirstNameFirst(IdmGenerateValueDto valueGenerator) {
 		return valueGenerator.getGeneratorProperties().getBoolean(FIRST_NAME_FIRST);
+	}
+
+	/**
+	 * Remove white spaces character/s.
+	 * It is possible that method return null, in this case, just trim all white spaces.
+	 *
+	 * @param valueGenerator
+	 * @return
+	 */
+	protected String getRemoveWhiteSpacesCharacter(IdmGenerateValueDto valueGenerator) {
+		return valueGenerator.getGeneratorProperties().getString(REPLACE_WHITE_SPACES_CHARACTER);
 	}
 }

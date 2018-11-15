@@ -21,6 +21,7 @@ import ProvisioningBreakConfigService from './ProvisioningBreakConfigService';
 import ProvisioningBreakRecipientService from './ProvisioningBreakRecipientService';
 import ContractAccountService from './ContractAccountService';
 import ContractSliceAccountService from './ContractSliceAccountService';
+import AttributeControlledValueService from './AttributeControlledValueService';
 
 const ServiceRoot = {
   SystemService,
@@ -45,7 +46,8 @@ const ServiceRoot = {
   ProvisioningBreakConfigService,
   ProvisioningBreakRecipientService,
   ContractAccountService,
-  ContractSliceAccountService
+  ContractSliceAccountService,
+  AttributeControlledValueService
 };
 
 ServiceRoot.version = '0.1.0';

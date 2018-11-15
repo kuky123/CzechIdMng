@@ -5,6 +5,8 @@ import RoleCatalogueTable from './RoleCatalogueTable';
 
 /**
  * List of roles catalogues
+ *
+ * @author Ondřej Kopr
  */
 export default class RoleCatalogues extends Basic.AbstractContent {
 

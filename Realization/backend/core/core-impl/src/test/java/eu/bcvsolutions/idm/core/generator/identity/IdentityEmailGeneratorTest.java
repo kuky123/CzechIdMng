@@ -249,6 +249,86 @@ public class IdentityEmailGeneratorTest extends AbstractGeneratorTest {
 		assertEquals(username + "@" + emailSuffix, generatedDto.getEmail());
 	}
 
+	@Test
+	public void testWhiteSpacesInUsername() {
+		String firstName = "  first name-test   ";
+		String lastName = "l    astNa me";
+		String firstNameResult = "firstname-test";
+		String lastNameResult = "lastname";
+
+		String emailSuffix = "@example.tld";
+
+		IdmIdentityDto identityDto = new IdmIdentityDto();
+		identityDto.setFirstName(firstName);
+		identityDto.setLastName(lastName);
+		
+		ValueGeneratorDto generator = getGenerator();
+
+		this.createGenerator(getDtoType(), getGeneratorType(),
+				this.createConfiguration(generator.getFormDefinition(), ImmutableMap.of(
+						IdentityEmailGenerator.EMAIL_SUFFIX, emailSuffix,
+						IdentityEmailGenerator.GENERATE_FROM_USERNAME, Boolean.FALSE.toString())), 1, null);
+
+		IdmIdentityDto generatedDto = valueGeneratorManager.generate(identityDto);
+		assertNotNull(generatedDto.getEmail());
+		assertEquals(lastNameResult + firstNameResult + emailSuffix, generatedDto.getEmail());
+	}
+
+	@Test
+	public void testWhiteSpacesInEmailuSuffix() {
+		String firstName = "firstname-test";
+		String lastName = "lastName";
+		String username = " userna me--";
+		String finalUsername = "username--";
+
+		String emailSuffix = " @exam ple.tld";
+		String emailSuffixResult = "@example.tld";
+
+		IdmIdentityDto identityDto = new IdmIdentityDto();
+		identityDto.setFirstName(firstName);
+		identityDto.setLastName(lastName);
+		identityDto.setUsername(username);
+		
+		ValueGeneratorDto generator = getGenerator();
+
+		this.createGenerator(getDtoType(), getGeneratorType(),
+				this.createConfiguration(generator.getFormDefinition(), ImmutableMap.of(
+						IdentityEmailGenerator.EMAIL_SUFFIX, emailSuffix,
+						IdentityEmailGenerator.GENERATE_FROM_USERNAME, Boolean.TRUE.toString())), 1, null);
+
+		IdmIdentityDto generatedDto = valueGeneratorManager.generate(identityDto);
+		assertNotNull(generatedDto.getEmail());
+		assertEquals(finalUsername + emailSuffixResult, generatedDto.getEmail());
+	}
+
+	@Test
+	public void testWhiteSpacesInEmailuSuffixWithReplaceCharacter() {
+		String firstName = "firstname-test";
+		String lastName = "lastName";
+		String username = " use  rna me--";
+		String finalUsername = "..use....rna..me--";
+
+		String emailSuffix = " @exam ple.tld";
+		String emailSuffixResult = "..@exam..ple.tld";
+
+		IdmIdentityDto identityDto = new IdmIdentityDto();
+		identityDto.setFirstName(firstName);
+		identityDto.setLastName(lastName);
+		identityDto.setUsername(username);
+		
+		ValueGeneratorDto generator = getGenerator();
+
+		this.createGenerator(getDtoType(), getGeneratorType(),
+				this.createConfiguration(generator.getFormDefinition(), ImmutableMap.of(
+						IdentityEmailGenerator.EMAIL_SUFFIX, emailSuffix,
+						IdentityEmailGenerator.GENERATE_FROM_USERNAME, Boolean.TRUE.toString(),
+						IdentityEmailGenerator.REPLACE_WHITE_SPACES_CHARACTER, "..")), 1, null);
+
+		IdmIdentityDto generatedDto = valueGeneratorManager.generate(identityDto);
+		assertNotNull(generatedDto.getEmail());
+		assertEquals(finalUsername + emailSuffixResult, generatedDto.getEmail());
+	}
+
 	@Override
 	protected Class<? extends AbstractDto> getDtoType() {
 		return IdmIdentityDto.class;

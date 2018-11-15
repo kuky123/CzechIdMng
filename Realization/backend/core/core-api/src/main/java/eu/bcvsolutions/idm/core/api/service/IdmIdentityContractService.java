@@ -117,4 +117,14 @@ public interface IdmIdentityContractService extends
 	 */
 	IdmIdentityContractDto getPrimeValidContract(UUID identityId);
 
+	/**
+	 * If given identity has any expired contract, it returns the latest expired (according to validTill).
+	 * Otherwise returns null.
+	 * 
+	 * @param identityId
+	 * @param expiration
+	 * @return
+	 */
+	IdmIdentityContractDto findLastExpiredContract(UUID identityId, LocalDate expiration);
+
 }

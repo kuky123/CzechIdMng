@@ -1,5 +1,7 @@
 package eu.bcvsolutions.idm.acc.event.processor.provisioning;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Description;
 import org.springframework.stereotype.Component;
@@ -13,6 +15,7 @@ import eu.bcvsolutions.idm.acc.service.api.SysSystemEntityService;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemService;
 import eu.bcvsolutions.idm.core.api.event.EntityEvent;
 import eu.bcvsolutions.idm.core.notification.api.service.NotificationManager;
+import eu.bcvsolutions.idm.ic.api.IcAttribute;
 import eu.bcvsolutions.idm.ic.api.IcConnectorConfiguration;
 import eu.bcvsolutions.idm.ic.api.IcConnectorObject;
 import eu.bcvsolutions.idm.ic.api.IcUidAttribute;
@@ -54,8 +57,11 @@ public class ProvisioningUpdateProcessor extends AbstractProvisioningProcessor {
 		IcConnectorObject connectorObject = provisioningOperation.getProvisioningContext().getConnectorObject();
 		if (!connectorObject.getAttributes().isEmpty()) { 
 			SysSystemDto system = systemService.get(provisioningOperation.getSystem());
+			//
+			// Transform last guarded string into classic string
+			List<IcAttribute> transformedIcAttributes = transformGuardedStringToString(provisioningOperation, connectorObject.getAttributes());
 			return connectorFacade.updateObject(systemService.getConnectorInstance(system), connectorConfig,
-					connectorObject.getObjectClass(), uidAttribute, connectorObject.getAttributes());
+					connectorObject.getObjectClass(), uidAttribute, transformedIcAttributes);
 		} else {
 			// TODO: appropriate message - provisioning is not executed - attributes don't change
 			// Operation was logged only. Provisioning was not executes, because attributes does'nt change.

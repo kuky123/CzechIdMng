@@ -9,6 +9,7 @@ public class DecisionFormTypeDto {
 	private String tooltip;
 	private String premissions;
 	private String warningMessage;
+	private boolean skipValidation = false;
 
 	public String getId() {
 		return id;
@@ -64,5 +65,13 @@ public class DecisionFormTypeDto {
 
 	public void setWarningMessage(String warningMessage) {
 		this.warningMessage = warningMessage;
+	}
+
+	public boolean isSkipValidation() {
+		return skipValidation;
+	}
+
+	public void setSkipValidation(boolean skipValidation) {
+		this.skipValidation = skipValidation;
 	}
 }

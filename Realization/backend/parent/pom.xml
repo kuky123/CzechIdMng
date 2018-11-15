@@ -110,6 +110,10 @@
 			<url>https://nexus.bcvsolutions.eu/repository/maven-public-releases/</url>
 		</repository>
 		<repository>
+			<id>maven-snapshots</id>
+			<url>https://nexus.bcvsolutions.eu/repository/maven-snapshots/</url>
+		</repository>
+		<repository>
 			<id>jcenter-releases</id>
 			<url>http://jcenter.bintray.com</url>
 		</repository>

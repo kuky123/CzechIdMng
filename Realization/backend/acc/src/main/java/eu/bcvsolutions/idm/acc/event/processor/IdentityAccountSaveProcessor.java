@@ -60,7 +60,9 @@ public class IdentityAccountSaveProcessor extends CoreEventProcessor<AccIdentity
 		// If is account protected and new role for same account is creates, then we
 		// have to deactivate account protection and delete last protected
 		// identity-account
-		if (service.isNew(entity) && entity.isOwnership() && accountEntity.isInProtection()) {
+		
+		// TODO write test that creating account without identityRole failed
+		if (service.isNew(entity) && entity.isOwnership() && entity.getIdentityRole() != null && accountEntity.isInProtection()) {
 			AccIdentityAccountDto protectedIdentityAccount = findProtectedIdentityAccount(account);
 			// First we save new identity-account
 			event.setContent(service.saveInternal(entity));

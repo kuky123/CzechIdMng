@@ -18,6 +18,7 @@ public interface WorkflowHistoricTaskInstanceService extends ReadDtoService<Work
 	public static final String SORT_BY_CREATE_TIME = "createTime";
 	public static final String SORT_BY_END_TIME = "endTime";
 	public static final String TASK_COMPLETE_DECISION = "taskCompleteDecision";
+	public static final String TASK_COMPLETE_MESSAGE = "taskCompleteMessage";
 
 	/**
 	 * Search historic tasks

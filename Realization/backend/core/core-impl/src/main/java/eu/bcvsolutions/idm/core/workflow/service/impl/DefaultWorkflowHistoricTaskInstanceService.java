@@ -66,7 +66,7 @@ public class DefaultWorkflowHistoricTaskInstanceService extends AbstractBaseDtoS
 		String processDefinitionId = filter.getProcessDefinitionId();
 		String processInstanceId = filter.getProcessInstanceId();
 
-		HistoricTaskInstanceQuery query = historyService.createHistoricTaskInstanceQuery();
+		HistoricTaskInstanceQuery query = historyService.createHistoricTaskInstanceQuery().includeTaskLocalVariables();
 
 		query.includeProcessVariables();
 		
@@ -201,11 +201,17 @@ public class DefaultWorkflowHistoricTaskInstanceService extends AbstractBaseDtoS
 		WorkflowHistoricTaskInstanceDto dto = new WorkflowHistoricTaskInstanceDto();
 		// Not working ... variables are not local but global in process scope
 		// ... may be logged level?
-		// if(instance.getTaskLocalVariables() != null &&
-		// instance.getTaskLocalVariables().containsKey(WorkflowHistoricTaskInstanceService.TASK_COMPLETE_DECISION)){
-		// dto.setCompleteTaskDecision((String)
-		// instance.getTaskLocalVariables().get(WorkflowHistoricTaskInstanceService.TASK_COMPLETE_DECISION));
-		// }	
+		// TODO can be slow
+		if (instance.getTaskLocalVariables() != null) {
+			if(instance.getTaskLocalVariables().containsKey(WorkflowHistoricTaskInstanceService.TASK_COMPLETE_DECISION)) {
+				dto.setCompleteTaskDecision((String)
+						instance.getTaskLocalVariables().get(WorkflowHistoricTaskInstanceService.TASK_COMPLETE_DECISION));
+			}
+			if(instance.getTaskLocalVariables().containsKey(WorkflowHistoricTaskInstanceService.TASK_COMPLETE_MESSAGE)) {
+				dto.setCompleteTaskMessage((String)
+						instance.getTaskLocalVariables().get(WorkflowHistoricTaskInstanceService.TASK_COMPLETE_MESSAGE));
+			}
+		}
 		dto.setId(instance.getId());
 		dto.setName(instance.getName());
 		dto.setProcessDefinitionId(instance.getProcessDefinitionId());
@@ -218,7 +224,7 @@ public class DefaultWorkflowHistoricTaskInstanceService extends AbstractBaseDtoS
 		dto.setAssignee(instance.getAssignee());
 		dto.setCreateTime(instance.getCreateTime());
 		dto.setDueDate(instance.getDueDate());
-		
+
 		List<HistoricIdentityLink> identityLinks = historyService.getHistoricIdentityLinksForTask(instance.getId());
 		if (identityLinks != null && !identityLinks.isEmpty()) {
 			List<String> candicateUsers = new ArrayList<>();

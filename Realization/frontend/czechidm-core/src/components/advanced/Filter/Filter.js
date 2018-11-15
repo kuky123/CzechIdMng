@@ -12,6 +12,9 @@ import FilterSelectBox from './FilterSelectBox';
 import FilterDateTimePicker from './FilterDateTimePicker';
 import FilterCreatableSelectBox from './FilterCreatableSelectBox';
 import FilterDate from './FilterDate';
+import FilterTreeNodeSelect from './FilterTreeNodeSelect';
+import FilterRoleCatalogueSelect from './FilterRoleCatalogueSelect';
+import FilterRoleSelect from './FilterRoleSelect';
 
 /**
  * Filter mainly for advanced table
@@ -97,3 +100,6 @@ Filter.SelectBox = FilterSelectBox;
 Filter.DateTimePicker = FilterDateTimePicker;
 Filter.CreatableSelectBox = FilterCreatableSelectBox;
 Filter.FilterDate = FilterDate;
+Filter.TreeNodeSelect = FilterTreeNodeSelect;
+Filter.RoleCatalogueSelect = FilterRoleCatalogueSelect;
+Filter.RoleSelect = FilterRoleSelect;

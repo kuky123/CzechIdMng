@@ -1,49 +1,51 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import _ from 'lodash';
-import { Treebeard, decorators } from 'react-treebeard';
 import Immutable from 'immutable';
+import classNames from 'classnames';
 //
 import * as Basic from '../../basic';
-import defaultStyle from './styles';
-import DataManager from '../../../redux/data/DataManager';
+import * as Domain from '../../../domain';
+import DetailButton from '../Table/DetailButton';
 
-/**
- * TODO: set better constant, or check this in BE
- * @type {Number}
- */
-const MAX_NODES_IN_ROW = 100000;
+const BASE_ICON_WIDTH = 15; // TODO: how to get dynamic padding from css?
 
 /**
 * Advanced tree component
+*
+* TODO: support multiselect
+* TODO: use redux state to prevent reload whole tree after active operations
+* TODO: search
+*
+* @author Radek Tomiška
 */
-class AdvancedTree extends Basic.AbstractContextComponent {
+class Tree extends Basic.AbstractContextComponent {
 
   constructor(props, context) {
     super(props, context);
-    const { rootNodes, rootNodesCount } = props;
-    const data = rootNodes;
-    if (rootNodesCount && rootNodes.length < rootNodesCount) {
-      // data.push(this._createMoreLink(props, rootNodesCount - rootNodes.length));
-    }
     this.state = {
-      data,
-      cursors: []
+      selected: null,
+      nodes: new Immutable.Map(), // loaded node ids
+      ui: new Immutable.Map() // ui state (loading decorator, last search parameters, total)
     };
-    this.dataManager = new DataManager();
   }
 
-  _createMoreLink(props, count) {
-    const { propertyId, propertyChildrenCount } = props;
-    return {
-      [propertyId]: null,
-      name: '...',
-      [propertyChildrenCount]: count,
-      isMoreLink: true,
-      isLeaf: true,
-      toggled: true,
-      loading: false
-    };
+  componentDidMount() {
+    this._loadNodes(null);
+  }
+
+  componentWillReceiveProps(newProps) {
+    if (!Domain.SearchParameters.is(newProps.forceSearchParameters, this.props.forceSearchParameters)
+        || this.props.rendered !== newProps.rendered) {
+      this.reload();
+    }
+  }
+
+  getComponentKey() {
+    return 'component.advanced.Tree';
+  }
+
+  getUiKey() {
+    return this.props.uiKey;
   }
 
   /**
@@ -53,386 +55,600 @@ class AdvancedTree extends Basic.AbstractContextComponent {
     return this.props.manager;
   }
 
-  componentDidMount() {
-    this._reload();
-  }
-
-  _mergeSearchParameters(searchParameters) {
-    const { defaultSearchParameters, forceSearchParameters } = this.props;
-    let _forceSearchParameters = null;
-    if (forceSearchParameters) {
-      _forceSearchParameters = forceSearchParameters.setSize(null).setPage(null); // we dont want override setted pagination
-    }
-    return this.getManager().mergeSearchParameters(searchParameters || defaultSearchParameters || this.getManager().getDefaultSearchParameters(), _forceSearchParameters);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const { cursors, propertyId } = nextProps;
-    // cursors is different
-    if (cursors && !_.isEqual(this.props.cursors, cursors)) {
-      const { data } = this.state;
-      // We find same node in data and merge new cursor to him
-      cursors.forEach(cursor => {
-        const oldCursor = this._findNode(cursor[propertyId], { children: data } );
-        _.merge(oldCursor, cursor);
-      });
-      this.setState({
-        data
-      });
-    }
-  }
-
-  // TODO: this method is not tested .. just snippet
-  _reload() {
-    const { uiKey, rootNodes } = this.props;
-    //
-    this.context.store.dispatch(this.dataManager.receiveData(uiKey, new Immutable.Map({})));
-    if (!rootNodes || rootNodes.length === 0) {
-      return;
-    }
-    rootNodes.forEach(rootNode => {
-      if (!rootNode.isMoreLink && !this._isLeaf(rootNode) && rootNode.toggled) {
-        this._onToggle(rootNode, rootNode.toggled);
+  /**
+   * Reload tree
+   */
+  reload() {
+    this.setState({
+      selected: null,
+      nodes: new Immutable.Map(),
+      ui: new Immutable.Map()
+    }, () => {
+      const { onSelect } = this.props;
+      //
+      this._loadNodes();
+      if (onSelect) {
+        onSelect(null);
       }
     });
   }
 
+  onExpand(nodeId, event) {
+    if (event) {
+      event.preventDefault();
+    }
+    this._loadNodes(nodeId);
+  }
+
   /**
-   * Returns tree state - is immutable map - key is node id and value is node's children
+   * Hide node children
    *
-   * @param  {object} state redux state
-   * @param  {string} uiKey uiKey for whole tree
-   * @return {Immutable.Map}
+   * @param  {String} nodeId
+   * @param  {func} cb
+   * @param  {event} event
    */
-  _getTreeState(state, uiKey) {
-    const treeState = DataManager.getData(state, uiKey);
-    if (treeState == null) {
-      return new Immutable.Map({});
+  onCollapse(nodeId, event = null) {
+    if (event) {
+      event.preventDefault();
     }
-    return treeState;
+    //
+    let { nodes, ui } = this.state;
+    if (nodes.has(nodeId)) {
+      nodes = nodes.delete(nodeId);
+    }
+    if (ui.has(nodeId)) {
+      ui = ui.delete(nodeId);
+    }
+    //
+    this.setState({
+      nodes,
+      ui
+    });
   }
 
-  /**
-  * Is call after click on any node in tree
-  *
-  * @param  {object} node    selected node
-  * @param  {boolean} toggled
-  */
-  _onToggle(node, toggled) {
-    if (!node || node.isMoreLink) {
+  onNextPage(nodeId, event) {
+    if (event) {
+      event.preventDefault();
+    }
+    //
+    this._loadNodes(nodeId);
+  }
+
+  onSelect(nodeId, event) {
+    if (event) {
+      event.preventDefault();
+    }
+    //
+    // TODO: deselect node on click on selected node?
+    this.setState({
+      selected: nodeId
+    }, () => {
+      const { onSelect, traverse } = this.props;
+      const { nodes } = this.state;
+      const node = this._getNode(nodeId); // root can be given
+      if (traverse && (nodeId == null || node.childrenCount > 0) && !nodes.has(nodeId)) {
+        // reload
+        this._loadNodes(nodeId);
+      }
+      if (onSelect) {
+        onSelect(nodeId);
+      }
+    });
+  }
+
+  onDoubleClick(nodeId, event) {
+    if (event) {
+      event.preventDefault();
+    }
+    //
+    const { onDoubleClick } = this.props;
+    if (onDoubleClick) {
+      onDoubleClick(nodeId);
+    }
+  }
+
+  onDetail(nodeId, event) {
+    if (event) {
+      event.preventDefault();
+    }
+    const { onDetail } = this.props;
+    if (!onDetail) {
       return;
     }
-    const { propertyParent, propertyId, uiKey } = this.props;
-    const { cursors } = this.state;
-    const state = this.context.store.getState();
-    const treeState = this._getTreeState(state, uiKey);
     //
-    cursors.forEach(cursor => {
-      cursor.active = false;
-    });
-    const loaded = this._loadNode(node, state);
-    if (!loaded) {
-      node.loading = true;
-    }
-    node.active = true;
-    node.toggled = toggled;
-
-    // TODO: this is problem - just one node could be active now ...
-    cursors.splice(0, cursors.length);
-    cursors.push(node);
-
-    this.setState({ cursors }, () => {
-      if (!loaded) {
-        const filter = this.getManager().getService().getTreeSearchParameters().setFilter(propertyParent, node[propertyId]).setSort('name', true).setSize(MAX_NODES_IN_ROW);
-        this.context.store.dispatch(this.getManager().fetchEntities(filter, uiKey, (json, error) => {
-          if (!error) {
-            const data = json._embedded[this.getManager().getCollectionType()] || [];
-            // ids from childen - whole entity could be found in entities state, we dont want duplicates
-            const newTreeState = treeState.set(node[propertyId], data.map(item => { return item[propertyId]; }));
-            this.context.store.dispatch(this.dataManager.receiveData(uiKey, newTreeState));
-          } else {
-            this.addErrorMessage({
-              level: 'error',
-              key: 'error-tree-load'
-            }, error);
-          }
-        }));
-      }
-    });
+    onDetail(nodeId);
   }
 
-  /**
-  * Check if is node in Redux state. If is, then set loading attribute to false.
-  *
-  * @param  {object} node
-  * @param  {Immutable.Map} state in redux
-  * @return {boolean}  Is node loaded
-  */
-  _loadNode(node, state) {
-    const { uiKey, propertyId } = this.props;
-    const treeState = this._getTreeState(state, uiKey);
-
-    const containsParent = treeState.has(node[propertyId]);
-    if (containsParent && node.loading && !node.loading) {
-      return true;
+  _loadNodes(nodeId = null, props = null) {
+    const _props = props ? props : this.props;
+    const { forceSearchParameters } = _props;
+    if (!_props.rendered) {
+      // component is not rendered ... loading is not needed
+      return;
     }
-    if (containsParent) {
-      const childrenIds = treeState.get(node[propertyId]);
-      if (childrenIds.length !== 0) {
-        node.children = [];
-        childrenIds.forEach(nodeId => {
-          const nodeEntity = this.getManager().getEntity(this.context.store.getState(), nodeId);
-          // nodeEntity could not not be null, just for sure
-          if (!nodeEntity) {
-            // nodeEntity could be deleted
+    //
+    let searchParameters;
+    let uiState = {};
+    if (this.state.ui.has(nodeId)) {
+      uiState = this.state.ui.get(nodeId);
+    }
+    searchParameters = null;
+    if (uiState.searchParameters) {
+      // next page
+      searchParameters = uiState.searchParameters.setPage(uiState.searchParameters.getPage() + 1);
+    } else if (nodeId === null) {
+      // load roots
+      searchParameters = this.getManager().getService().getRootSearchParameters();
+    } else {
+      searchParameters = this.getManager().getService().getTreeSearchParameters().setFilter('parent', nodeId);
+    }
+    //
+    this.setState({
+      ui: this.state.ui.set(nodeId, {
+        ...uiState,
+        searchParameters,
+        showLoading: true
+      })
+    }, () => {
+      let _forceSearchParameters = null;
+      if (forceSearchParameters) {
+        _forceSearchParameters = forceSearchParameters.setSize(null).setPage(null); // we dont want override setted pagination
+      }
+      searchParameters = this.getManager().mergeSearchParameters(searchParameters, _forceSearchParameters);
+      this.context.store.dispatch(this.getManager().fetchEntities(searchParameters, nodeId === null ? this.getUiKey() : `${this.getUiKey()}-${nodeId}`, (json, error) => {
+        let { nodes, ui } = this.state;
+        if (!error) {
+          let data = json._embedded[this.getManager().getCollectionType()] || [];
+          data = data.map(node => node.id); // only ids are stored in state; TODO: move state to redux store (e.g. Data)
+          if (nodes.has(nodeId) && searchParameters.getPage() > 0) {
+            // push at end
+            nodes = nodes.set(nodeId, nodes.get(nodeId).concat(data));
           } else {
-            node.children.push(this.trimNode(nodeEntity));
+            nodes = nodes.set(nodeId, data); // parentId -> children
           }
-        });
-        for (const child of node.children) {
-          child.toggled = false;
-          this._isLeaf(child);
+          ui = ui.set(nodeId, {
+            searchParameters,
+            total: json.page ? json.page.totalElements : data.length,
+            showLoading: false
+          });
+        } else {
+          this.addErrorMessage({
+            level: 'error',
+            key: 'error-tree-load'
+          }, error);
         }
-      } else {
-        node.isLeaf = true;
-        delete node.children;
-      }
-      node.loading = false;
-      node.toggled = true;
-      return true;
-    }
-    return false;
+        this.setState({
+          nodes,
+          ui
+        });
+      }));
+    });
   }
 
   /**
-   * Trim nod and set nice label (for optimalization size of tree state)
+   * Get node from redux store
+   *
+   * @param  {string} nodeId
+   * @return {object}
    */
-  trimNode(node) {
-    const { propertyId, propertyChildrenCount, propertyParent, propertyName } = this.props;
-    if (!node) {
+  _getNode(nodeId) {
+    return this.getManager().getEntity(this.context.store.getState(), nodeId);
+  }
+
+  _getNoData() {
+    const { noData } = this.props;
+    //
+    if (noData) {
+      return noData;
+    }
+    // default noData
+    return this.i18n('noData', { defaultValue: 'No record found' });
+  }
+
+  _renderHeader() {
+    const { header } = this.props;
+    const { selected } = this.state;
+    //
+    if (selected) {
+      const selectedNode = this._getNode(selected);
+      const parents = [];
+      let _node = selectedNode;
+      while (_node !== null && _node.parent !== null) {
+        _node = this._getNode(_node.parent);
+        if (!_node) {
+          // just for sure - redux store doesn't contain parent node
+          break;
+        }
+        parents.push(_node);
+      }
+      //
+      return (
+        <ol
+          className="breadcrumb"
+          style={{
+            padding: '0px 2px',
+            marginBottom: 0,
+            marginRight: 3,
+            backgroundColor: 'transparent'
+          }}>
+          <li>
+            <Basic.Button
+              level="link"
+              className="embedded"
+              onClick={ this.onSelect.bind(this, null) }
+              title={ this.i18n('root.link.title') }
+              titlePlacement="bottom">
+              { this.i18n('root.link.label') }
+            </Basic.Button>
+          </li>
+          {
+            !parents.length > 0
+            ||
+            <li>
+              <Basic.Button
+                level="link"
+                className="embedded"
+                onClick={ this.onSelect.bind(this, parents[0].id) }>
+                <Basic.ShortText text={ this.getManager().getNiceLabel(parents[0]) }/>
+              </Basic.Button>
+            </li>
+          }
+          <li>
+            <Basic.ShortText text={ this.getManager().getNiceLabel(selectedNode) }/>
+          </li>
+        </ol>
+      );
+    }
+    //
+    if (header) {
+      return header;
+    }
+    return this.i18n('header');
+  }
+
+  /**
+   * Render parent's child nodes
+   *
+   * @param  {[type]} parentId node id (null is root)
+   */
+  _renderNodes(parentId = null, level = 0) {
+    const { traverse } = this.props;
+    const { nodes, ui, selected } = this.state;
+    //
+    if (!nodes.has(parentId)) {
       return null;
     }
-
-    const nodeLabel = this.getManager().getNiceLabel(node);
-    const trimmedNode = {};
-    trimmedNode._nodeNiceLable = nodeLabel;
-    trimmedNode[propertyId] = node[propertyId];
-    trimmedNode[propertyParent] = node[propertyParent];
-    trimmedNode[propertyChildrenCount] = node[propertyChildrenCount];
-    trimmedNode[propertyName] = node[propertyName];
-    trimmedNode.children = node.children;
-    trimmedNode.loading = node.loading;
-    trimmedNode.toggled = node.toggled;
-    trimmedNode.isLeaf = node.isLeaf;
-    trimmedNode.isMoreLink = node.isMoreLink;
-
-    return trimmedNode;
-  }
-
-  /**
-  * Find node with idNode in element (recursively by children)
-  *
-  * @param  {string} idNode
-  * @param  {object} element
-  */
-  _findNode(idNode, element) {
-    const { propertyId } = this.props;
+    let parentUiState = {};
+    if (ui.has(parentId)) {
+      parentUiState = ui.get(parentId);
+    }
     //
-    if (element[propertyId] === idNode) {
-      return element;
-    } else if (element.children != null) {
-      let result = null;
-      for (let i = 0; !result && i < element.children.length; i++) {
-        result = this._findNode(idNode, element.children[i]);
-      }
-      return result;
+    if (nodes.get(parentId).length === 0) {
+      return (
+        <Basic.Alert text={ this._getNoData() } className="no-data"/>
+      );
     }
-    return null;
-  }
-
-  /**
-   * Sets node isLeaf informations and returns true, if node is leaf
-   *
-   * @param  {object} node
-   * @return {Boolean}
-   */
-  _isLeaf(node) {
-    const { propertyChildrenCount } = this.props;
-    if (node[propertyChildrenCount] === undefined || node[propertyChildrenCount] === null || node[propertyChildrenCount] > 0) {
-      node.children = [];
-      return false;
-    }
-    node.isLeaf = true;
-    node.loading = false;
-    node.toggled = true;
-    return true;
-  }
-
-
-  _getLabel(node) {
-    const { propertyName, propertyChildrenCount } = this.props;
-    if (propertyName && !node.isMoreLink) {
-      return node[propertyName];
-    }
+    //
     return (
-      <span>
+      <div>
         {
-          node.isMoreLink
-          ?
-          node.name
-          :
-          node._nodeNiceLable
+          nodes.get(parentId).map(nodeId => {
+            const node = this._getNode(nodeId);
+            if (!node) {
+              return true;
+            }
+            //
+            let uiState = {};
+            if (ui.has(node.id)) {
+              uiState = ui.get(node.id);
+            }
+
+            const iconClassNames = classNames(
+              'node-icon',
+              { folder: node.childrenCount > 0 },
+              { file: node.childrenCount === 0 },
+              { showLoading: uiState.showLoading }
+            );
+
+            let icon = 'fa:file-o';
+            if (node.childrenCount > 0) {
+              if (nodes.has(node.id) && !traverse) {
+                icon = 'fa:folder-open';
+              } else {
+                icon = 'fa:folder';
+              }
+            }
+            // selected item decorator
+            const nodeClassNames = classNames(
+              'tree-node-row',
+              { selected: selected === node.id }
+            );
+            //
+            return (
+              <div>
+                <div className={ nodeClassNames }>
+                  {/* Expand button */}
+                  <Basic.Icon
+                    rendered={ !traverse }
+                    value={
+                      !nodes.has(node.id)
+                      ?
+                      'fa:plus-square-o'
+                      :
+                      'fa:minus-square-o'
+                    }
+                    onClick={
+                      !nodes.has(node.id)
+                      ?
+                      this.onExpand.bind(this, node.id)
+                      :
+                      this.onCollapse.bind(this, node.id)
+                    }
+                    className={ classNames(
+                      'expand-icon',
+                      { visible: node.childrenCount > 0 }
+                    )}
+                    style={{ marginLeft: 2 + (level * BASE_ICON_WIDTH) }}/> {/* dynamic margin by node level */}
+
+                  {/* Node icon + label */}
+                  <Basic.Button
+                    level="link"
+                    className="embedded"
+                    onClick={ this.onSelect.bind(this, node.id) }
+                    onDoubleClick={ this.onDoubleClick.bind(this, node.id) }>
+                    <Basic.Icon
+                      value={ icon }
+                      className={ iconClassNames }
+                      showLoading={ uiState.showLoading }/>
+                    {
+                      node.childrenCount
+                      ?
+                      `[${ this.getManager().getNiceLabel(node) }]`
+                      :
+                      this.getManager().getNiceLabel(node)
+                    }
+                  </Basic.Button>
+                  {
+                    !node.childrenCount
+                    ||
+                    <small style={{ marginLeft: 3 }}>({ node.childrenCount })</small>
+                  }
+                </div>
+                {
+                  traverse
+                  ||
+                  this._renderNodes(node.id, level + 1)
+                }
+              </div>
+            );
+          })
         }
         {
-          !node[propertyChildrenCount]
+          !parentUiState.total
           ||
-          <small style={{ color: '#aaa' }}>{' '}({node[propertyChildrenCount]})</small>
+          nodes.get(parentId).length >= parentUiState.total
+          ||
+          <Basic.Button
+            level="link"
+            className="embedded"
+            style={{
+              marginLeft: BASE_ICON_WIDTH + (level * BASE_ICON_WIDTH)
+            }}
+            showLoading={ parentUiState.showLoading }
+            showLoadingIcon
+            onClick={ this.onNextPage.bind(this, parentId) }>
+            <small>
+              { this.i18n('component.advanced.Tree.moreRecords', { counter: nodes.get(parentId).length, total: parentUiState.total, escape: false } ) }
+            </small>
+          </Basic.Button>
         }
-      </span>
+      </div>
     );
   }
 
-  /**
-  * Get decorators (default or custom form props)
-  *
-  * @return {object} Decorators
-  */
-  _getDecorators() {
-    const { loadingDecorator, toggleDecorator, headerDecorator } = this.props;
-    return {
-      Loading: (props) => {
-        if (loadingDecorator) {
-          return loadingDecorator(props);
-        }
-        return (
-          <div style={props.style}>
-            {this.i18n('component.advanced.Tree.loading')}
-          </div>
-        );
-      },
-      Toggle: (props) => {
-        if (toggleDecorator) {
-          return toggleDecorator(props);
-        }
-        return new decorators.Toggle(props);
-      },
-      Header: (headerProps) => {
-        if (headerDecorator) {
-          return headerDecorator(headerProps);
-        }
-        const style = headerProps.style;
-        const icon = headerProps.node.isLeaf ? 'file-text' : 'folder';
-        return (
-          <div style={ style.base }>
-            <div style={ style.title }>
-              <Basic.Icon type="fa" value={icon} style={{ marginRight: '5px' }}/>
-              { this._getLabel(headerProps.node) }
-            </div>
-          </div>
-        );
-      }
-    };
-  }
-
   render() {
-    const { data } = this.state;
-    const { style, showLoading, rendered } = this.props;
-    // I have problem with definition Container decorator. I override only Header, Loading and Toggle decorators in default "decorators"
-    const customDecorators = this._getDecorators();
+    const {
+      rendered,
+      showLoading,
+      traverse,
+      onDetail,
+      className,
+      style,
+      bodyStyle
+    } = this.props;
+    const {
+      nodes,
+      ui,
+      selected
+    } = this.state;
+    //
+    const selectedNode = this._getNode(selected);
+    let root = null; // root
+    let parent = null; // root
+    let uiState = {};
+    if (traverse && selectedNode) {
+      if (selectedNode.childrenCount > 0) {
+        root = selectedNode.id;
+        parent = selectedNode.parent;
+      } else {
+        root = selectedNode.parent; // parent or null as root
+        const parentNode = this._getNode(selectedNode.parent);
+        if (parentNode) {
+          parent = parentNode.parent;
+        } else {
+          parent = selectedNode.parent;
+        }
+      }
+      if (ui.has(selected)) {
+        uiState = ui.get(selected);
+      }
+    }
+    //
     if (!rendered) {
       return null;
     }
-    if (showLoading) {
-      return (
-        <Basic.Loading isStatic showLoading/>
-      );
-    }
+    const _showLoading = !nodes.has(null) || showLoading;
+    //
     return (
-      <div style={{ overflowX: 'auto' }}>
-        <Treebeard
-          data={data}
-          onToggle={this._onToggle.bind(this)}
-          style={ style || defaultStyle }
-          decorators={{ ...decorators, Header: customDecorators.Header, Loading: customDecorators.Loading}}/>
+      <div className={ classNames('advanced-tree', className) } style={ style }>
+        <div className="basic-toolbar tree-header">
+          <div className="tree-header-text">
+            { this._renderHeader() }
+          </div>
+          <div className="tree-header-buttons">
+            <DetailButton
+              rendered={ selectedNode !== null && onDetail ? true : false }
+              onClick={ this.onDetail.bind(this, selected) }
+              title={ this.i18n('detail.link.title') }/>
+
+            {/* RT: search prepare  */}
+            <Basic.Button
+              className="btn-xs hidden"
+              showLoading={ _showLoading }
+              icon="filter"
+              style={{ marginLeft: 3 }}/>
+
+            <Basic.Button
+              title={ this.i18n('reload') }
+              titlePlacement="bottom"
+              className="btn-xs"
+              onClick={ this.reload.bind(this) }
+              showLoading={ _showLoading }
+              icon="fa:refresh"
+              style={{ marginLeft: 3 }}/>
+          </div>
+        </div>
+        {/* RT: RT: search prepare */}
+        <div className="basic-toolbar hidden" style={{ display: 'flex', marginBottom: 0 }}>
+          <div style={{ flex: 1 }}>
+            <Basic.TextField
+              label={ null }
+              placeholder={ 'Search ...' }
+              className="small"
+              style={{ marginBottom: 0 }}/>
+          </div>
+          <div className="text-right">
+            <Basic.Button
+              className="btn-xs"
+              showLoading={ _showLoading }
+              icon="filter"
+              style={{ marginLeft: 3 }}/>
+            <Basic.Button
+              className="btn-xs"
+              showLoading={ _showLoading }
+              icon="remove"
+              style={{ marginLeft: 3 }}/>
+          </div>
+        </div>
+        <div className="tree-body" style={ bodyStyle }>
+          {
+            _showLoading
+            ?
+            <Basic.Loading isStatic show />
+            :
+            <div>
+              {
+                !traverse || !root
+                ||
+                <Basic.Button
+                  level="link"
+                  className="embedded parent-link"
+                  onClick={ this.onSelect.bind(this, parent) }
+                  showLoading={ uiState.showLoading }
+                  title={ this.i18n('parent.link.title') }>
+                  <Basic.Icon
+                    value="fa:level-down"
+                    className="fa-rotate-180 parent-icon"/>
+                  [{ this.i18n('parent.link.label') }]
+                  <Basic.Icon
+                    value="refresh"
+                    showLoading
+                    rendered={ uiState.showLoading === true }
+                    style={{ marginLeft: 5 }}/>
+                </Basic.Button>
+              }
+              { this._renderNodes(root) }
+            </div>
+          }
+        </div>
       </div>
     );
   }
 }
 
-AdvancedTree.propTypes = {
+Tree.propTypes = {
   ...Basic.AbstractContextComponent.propTypes,
   /**
-  * EntityManager for fetching entities in tree
+   * Key prefix in redux (loading / store data).
+   */
+  uiKey: PropTypes.string.isRequired,
+  /**
+  * EntityManager for fetching entities in tree. Manager's underlying service should support methods:
+  * - getRootSearchParameters() - returns search parameters to find roots
+  * - getTreeSearchParameters() - returns search parameters to find children with 'parent' paremeter filter.
   */
   manager: PropTypes.object.isRequired,
   /**
-  * Inicial root nodes of tree
-  */
-  rootNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+   * "Hard filters"
+   */
+  forceSearchParameters: PropTypes.object,
   /**
-  * Total root count
-  */
-  rootNodesCount: PropTypes.number,
+   * On select node callback. Selected node is given as parameter
+   */
+  onSelect: PropTypes.func,
   /**
-  * Key for save data to redux store
-  */
-  uiKey: PropTypes.string.isRequired,
+   * On double click node callback. Selected node is given as parameter
+   */
+  onDoubleClick: PropTypes.func,
   /**
-  * Define attribute in entity which will be used for show name of node
-  */
-  propertyName: PropTypes.string,
+   * Show detail function.
+   */
+  onDetail: PropTypes.func,
   /**
-  * Define attribute in entity which will be used as node id
-  */
-  propertyId: PropTypes.string,
+   * Traverse to selected folder
+   */
+  traverse: PropTypes.bool,
   /**
-  * Define attribute in entity which will be used as children count
-  */
-  propertyChildrenCount: PropTypes.string,
+   * Tree header
+   */
+  header: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.element
+  ]),
   /**
-  * Define attribute in entity which will be used for search children nodes
-  */
-  propertyParent: PropTypes.string,
+   * If tree roots are empty, then this text will be shown
+   */
+  noData: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
   /**
-  * Define styles in object
-  */
+   * Tree css
+   */
+  className: PropTypes.string,
+  /**
+   * Tree styles
+   */
   style: PropTypes.object,
   /**
-  * Can be use for override loading decorator
-  */
-  loadingDecorator: PropTypes.func,
+   * Tree body css
+   */
+  bodyClassName: PropTypes.string,
   /**
-  * Can be use for override toggle decorator
-  */
-  toggleDecorator: PropTypes.func,
-  /**
-  * Can be use for override header decorator
-  */
-  headerDecorator: PropTypes.func
+   * Tree body styles
+   */
+  bodyStyle: PropTypes.object
 };
 
-AdvancedTree.defaultProps = {
+Tree.defaultProps = {
   ...Basic.AbstractContextComponent.defaultProps,
-  propertyId: 'id',
-  propertyChildrenCount: 'childrenCount',
-  propertyParent: 'parent',
-  propertyName: 'name',
-  rootNodesCount: null
+  traverse: false
 };
 
-function select(state) {
-  const wrappedInstance = this ? this.getWrappedInstance() : null;
-  if (wrappedInstance && wrappedInstance.state.cursors) {
-    const cursors = wrappedInstance.state.cursors.map(cursor => {
-      wrappedInstance._loadNode(cursor, state);
-      // we need new instance ... we create clone
-      return _.merge({}, cursor);
-    });
-    return {
-      cursors
-    };
-  }
-  return {};
+function select(state, component) {
+  const manager = component.manager;
+  const uiKey = component.uiKey;
+  //
+  return {
+    _showLoading: manager.isShowLoading(state, uiKey)
+  };
 }
 
-export default connect(select, null, null, { withRef: true })(AdvancedTree);
+export default connect(select, null, null, { withRef: true })(Tree);

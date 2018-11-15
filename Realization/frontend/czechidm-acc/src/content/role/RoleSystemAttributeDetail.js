@@ -23,6 +23,9 @@ class RoleSystemAttributeDetail extends Advanced.AbstractTableContent {
 
   constructor(props, context) {
     super(props, context);
+    this.state = {
+      strategyType: AttributeMappingStrategyTypeEnum.findKeyBySymbol(AttributeMappingStrategyTypeEnum.MERGE)
+    };
   }
 
   getUiKey() {
@@ -87,6 +90,15 @@ class RoleSystemAttributeDetail extends Advanced.AbstractTableContent {
     } else {
       this.context.store.dispatch(roleSystemAttributeManager.fetchEntity(attributeId));
     }
+  }
+
+  _strategyTypeChange(value) {
+    if (!value) {
+      return;
+    }
+    this.setState({
+      strategyType: value.value
+    });
   }
 
   _getIsNew(nextProps) {
@@ -175,21 +187,22 @@ class RoleSystemAttributeDetail extends Advanced.AbstractTableContent {
 
   render() {
     const { _showLoading, _attribute, _systemMappingId} = this.props;
-    const { mappingId } = this.state;
+    const { mappingId, strategyType } = this.state;
     const isNew = this._getIsNew();
     const attribute = isNew ? this.state.attribute : _attribute;
     const _mappingId = isNew ? mappingId : _systemMappingId;
     const forceSearchParameters = new Domain.SearchParameters().setFilter('systemMappingId', _mappingId ? _mappingId : Domain.SearchParameters.BLANK_UUID);
 
-    if (!roleSystemAttributeManager) {
+    if (!roleSystemAttributeManager || !attribute) {
       return null;
     }
     const _isDisabled = this.refs.disabledDefaultAttribute ? this.refs.disabledDefaultAttribute.getValue() : false;
     const _isEntityAttribute = this.refs.entityAttribute ? this.refs.entityAttribute.getValue() : false;
     const _isExtendedAttribute = this.refs.extendedAttribute ? this.refs.extendedAttribute.getValue() : false;
     const _showNoRepositoryAlert = (!_isExtendedAttribute && !_isEntityAttribute);
-
     const _isRequiredIdmField = (_isEntityAttribute || _isExtendedAttribute) && !_isDisabled;
+    const strategyTypeTemp = strategyType ? strategyType : attribute.strategyType;
+    const isMerge = strategyTypeTemp === AttributeMappingStrategyTypeEnum.findKeyBySymbol(AttributeMappingStrategyTypeEnum.MERGE);
 
     return (
       <div>
@@ -231,6 +244,7 @@ class RoleSystemAttributeDetail extends Advanced.AbstractTableContent {
               <Basic.EnumSelectBox
                 ref="strategyType"
                 enum={AttributeMappingStrategyTypeEnum}
+                onChange={this._strategyTypeChange.bind(this)}
                 label={this.i18n('acc:entity.RoleSystemAttribute.strategyType')}
                 required/>
               <Basic.Checkbox
@@ -301,12 +315,14 @@ class RoleSystemAttributeDetail extends Advanced.AbstractTableContent {
                 forceSearchParameters={
                   scriptManager.getDefaultSearchParameters().setFilter('category', Enums.ScriptCategoryEnum.findKeyBySymbol(Enums.ScriptCategoryEnum.TRANSFORM_TO))}
                 manager={scriptManager} />
-              <Basic.ScriptArea
+              <Advanced.ScriptArea
                 ref="transformScript"
-                readOnly = {_isDisabled}
-                helpBlock={this.i18n('acc:entity.RoleSystemAttribute.transformScript.help')}
-                label={this.i18n('acc:entity.RoleSystemAttribute.transformScript.label')}/>
-
+                showScriptSelection={!isMerge}
+                scriptCategory={[Enums.ScriptCategoryEnum.findKeyBySymbol(Enums.ScriptCategoryEnum.DEFAULT), Enums.ScriptCategoryEnum.findKeyBySymbol(Enums.ScriptCategoryEnum.TRANSFORM_TO)]}
+                headerText={this.i18n('acc:entity.SystemAttributeMapping.transformToResourceScriptSelectBox.label')}
+                helpBlock={this.i18n('acc:entity.SystemAttributeMapping.transformToResourceScript.help')}
+                label={this.i18n('acc:entity.SystemAttributeMapping.transformToResourceScript.label')}
+                scriptManager={scriptManager} />
             </Basic.AbstractForm>
             <Basic.PanelFooter>
               <Basic.Button type="button" level="link"

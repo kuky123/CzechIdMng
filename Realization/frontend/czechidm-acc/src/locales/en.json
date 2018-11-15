@@ -193,6 +193,10 @@
             "label": "Default role",
             "helpBlock": "If the synchronization creates a link between an identity and an account, this role will be assigned to the identity. This assignment will be linked to the main contractual relationship of the identity."
           },
+          "inactiveOwnerBehavior": {
+            "label": "Behavior of the default role for inactive identities",
+            "helpBlock": "How to behave if the identity doesn't have any valid contract for assigning the default role."
+          },
           "startAutoRoleRec": {
             "label": "After end, start the automatic role recalculation",
             "helpBlock": "After successful synchronization will be start recalculation of all automatic role by attribute."
@@ -349,13 +353,30 @@
         "title" : "Attribute in IdM",
         "header" : "Attribute mapping details",
         "alertNoRepository": "Attribute is not mapped to any entity in CzechIdM or extended attribute. Output will be a constant from 'Transformation to system'",
-        "infoPasswordMapping": "If attribute __PASSWORD__ is equal to value NULL, it will be automatically generated from password policy for system.",
+        "infoPasswordMapping": "Beware, is chosen attribute with a password. While first creating an object at the end of the system will be generated one value (according to password policies), which will be sent to all attributes labeled as 'Password attribute'. This value will be sent into script as a GuardedString object. The output of the script must be GuardedString, or null. The corresponding attribute in the system schema must also be a GuardedString or String type. When changing a password, a new password is sent to all of these attributes.",
         "save": {
           "success": "Attribute [{{name}}] of IdM successfully saved"
         },
         "create": {
           "success": "IdM attribute [{{name}}] successfully created",
           "header": "New IdM attribute"
+        },
+        "tabs": {
+          "basic": {
+            "label": "Basic settings"
+          },
+          "controlledValues": {
+            "cache": {
+              "header": "Currently controlled values",
+              "helpBlock": "A list of values that are currently managed in the IdM for this attribute (defined on roles).",
+              "evicted": "The list of <strong> values is not valid </strong> (the attribute may have been modified) and will be recalculated when first using the provisioning!"
+            },
+            "historic": {
+              "header": "Values controlled in the past",
+              "helpBlock": "A list of past values for this attribute is managed in IdM. These values are still used in the merger evaluation. If you are certain that a specific value is no longer to be evaluated as managed, then you can delete it here."
+            },
+            "label": "Controlled values (merge)"
+          }
         }
       },
       "roles": {
@@ -557,7 +578,7 @@
             "title": "Cancel operations from provisioning queue of filtered records"
           },
           "header": "Cancel operations from provisioning queue",
-          "message": "Do you want to cance operations from provisioning queue of filtered records? All operations for filtered entities will be canceled.",
+          "message": "Do you want to cancel operations from provisioning queue of filtered records? All operations for filtered entities will be canceled.",
           "accepted": "Long running task, which will cancel operations from provisioning queue, was started."
         },
         "deleteAll": {
@@ -822,6 +843,10 @@
       "sendOnPasswordChange": {
         "label": "Include on password change",
         "help": "Send this attribute into provisioning, when password is changed."
+      },
+      "passwordAttribute": {
+        "label": "Attribute with password",
+        "help": "Attribute will contain value of password. The attribute can't be override by role mapping. Into transformation will be add password in object GuardedString. Script must return null, or GuardedString."
       }
     },
     "RoleSystemAttribute": {
@@ -907,8 +932,8 @@
           "CREATE_ENTITY": "Created entities",
           "UPDATE_ENTITY": "Updated entities",
           "DELETE_ENTITY": "Deleted entities",
-          "LINK_AND_UPDATE_ENTITY": "Created accounts and updated entities",
-          "LINK_AND_UPDATE_ACCOUNT": "Created and updated accounts",
+          "LINK_AND_UPDATE_ENTITY": "Created links and updated entities",
+          "LINK_AND_UPDATE_ACCOUNT": "Created links and updated accounts",
           "UNLINK_AND_REMOVE_ROLE": "Deleted links with role",
           "LINK": "Created links",
           "UNLINK": "Deleted links",
@@ -925,8 +950,8 @@
           "CREATE_ENTITY": "Created entities",
           "UPDATE_ENTITY": "Updated entities",
           "DELETE_ENTITY": "Deleted entities",
-          "LINK_AND_UPDATE_ENTITY": "Created accounts and updated entities",
-          "LINK_AND_UPDATE_ACCOUNT": "Created and updated accounts",
+          "LINK_AND_UPDATE_ENTITY": "Created links and updated entities",
+          "LINK_AND_UPDATE_ACCOUNT": "Created links and updated accounts",
           "UNLINK_AND_REMOVE_ROLE": "Deleted links with roles",
           "LINK": "Created links",
           "UNLINK": "Deleted links",
@@ -943,8 +968,8 @@
           "CREATE_ENTITY": "Created entities",
           "UPDATE_ENTITY": "Updated entities",
           "DELETE_ENTITY": "Deleted entities",
-          "LINK_AND_UPDATE_ENTITY": "Created accounts and updated entities",
-          "LINK_AND_UPDATE_ACCOUNT": "Created and updated accounts",
+          "LINK_AND_UPDATE_ENTITY": "Created links and updated entities",
+          "LINK_AND_UPDATE_ACCOUNT": "Created links and updated accounts",
           "UNLINK_AND_REMOVE_ROLE": "Deleted links with roles",
           "LINK": "Created links",
           "UNLINK": "Deleted links",
@@ -961,8 +986,8 @@
           "CREATE_ENTITY": "Created entities",
           "UPDATE_ENTITY": "Updated entities",
           "DELETE_ENTITY": "Deleted entities",
-          "LINK_AND_UPDATE_ENTITY": "Created accounts and updated entities",
-          "LINK_AND_UPDATE_ACCOUNT": "Created and updated accounts",
+          "LINK_AND_UPDATE_ENTITY": "Created links and updated entities",
+          "LINK_AND_UPDATE_ACCOUNT": "Created links and updated accounts",
           "UNLINK_AND_REMOVE_ROLE": "Deleted links with roles",
           "LINK": "Created links",
           "UNLINK": "Deleted links",
@@ -979,8 +1004,8 @@
           "CREATE_ENTITY": "Unsuccessfully created entities",
           "UPDATE_ENTITY": "Unsuccessfully updated entities",
           "DELETE_ENTITY": "Unsuccessfully Deleted entities",
-          "LINK_AND_UPDATE_ENTITY": "Unsuccessfully created accounts and updated entities",
-          "LINK_AND_UPDATE_ACCOUNT": "Unsuccessfully created and updated accounts",
+          "LINK_AND_UPDATE_ENTITY": "Unsuccessfully created links and updated entities",
+          "LINK_AND_UPDATE_ACCOUNT": "Unsuccessfully created links and updated accounts",
           "LINK": "Unsuccessfully created links",
           "UNLINK": "Unsuccessfully removed links",
           "UNLINK_AND_REMOVE_ROLE": "Unsuccessfully deleted links with role",
@@ -1064,6 +1089,11 @@
         "identity": "Identity"
       },
       "name": "Recipient"
+    },
+    "AttributeControlledValue": {
+      "value": "Value",
+      "created": "Created",
+      "creator": "Creator"
     }
   },
   "enums" : {
@@ -1107,6 +1137,11 @@
       "LINK_AND_UPDATE_ENTITY": "Create link and update entity",
       "LINK_AND_UPDATE_ACCOUNT": "Create link and update account",
       "IGNORE": "Ignore"
+    },
+    "SynchronizationInactiveOwnerBehaviorTypeEnum": {
+      "DO_NOT_LINK": "DO_NOT_LINK - Don't link the account and end its processing, if there is no valid contract for the default role",
+      "LINK_PROTECTED": "LINK_PROTECTED - Link the account as \"In protection\", if there is no valid contract for the default role",
+      "LINK": "LINK - Link the account even if the default role can't be assigned to any contract"
     },
     "IcFilterOperationTypeEnum": {
       "EQUAL_TO": "Equals",
@@ -1170,6 +1205,7 @@
     },
     "RoleAttributeEnum": {
       "NAME": "Name (String)",
+      "CODE": "Code (String)",
       "ROLE_TYPE": "Type of role (String - RoleType)",
       "APPROVE_REMOVE": "Approve remove (Boolean)",
       "PRIORITY": "Priority (Integer)",
@@ -1491,8 +1527,8 @@
       "message": "Confidential attribute [{{property}}] is not type of GuardedString, but it's [{{class}}]!"
     },
     "SYNCHRONIZATION_CORRELATION_TO_MANY_RESULTS": {
-      "title": "Synchronization - too many entities was found for correlation attribute",
-      "message": "Too many entities was found for correlation attribute [{{correlationAttribute}}] for value [{{value}}]!"
+      "title": "Synchronization - too many entities were found for correlation attribute",
+      "message": "Too many entities were found for correlation attribute [{{correlationAttribute}}] for value [{{value}}]!"
     },
     "SYNCHRONIZATION_TOKEN_ATTRIBUTE_NOT_FOUND": {
       "title": "Synchronization - for synchronization by custom attribute is compulsory attribute Token!",
@@ -1524,7 +1560,7 @@
     },
     "SYNCHRONIZATION_TO_MANY_ACC_ACCOUNT": {
       "title": "Synchronization - more than one records of 'AccAccount' found",
-      "message": "Found more that one records of 'AccAccount' for the same UID [{{uid}}]!"
+      "message": "Found more than one record of 'AccAccount' for the same UID [{{uid}}]!"
     },
     "SYSTEM_MAPPING_DELETE_FAILED_USED_IN_SYNC": {
       "title": "System mapping [{{mapping}}] cannot be removed",
@@ -1659,8 +1695,20 @@
       "message": "IDM attribute [{{attr}}] can not be null."
     },
     "SYNCHRONIZATION_MAPPED_ATTR_MUST_EXIST": {
-      "title": "Mapped attribute not exists",
-      "message": "Mapped attribute for IdM field [{{property}}] must exists in system mapping."
+      "title": "Mapped attribute doesn't exist",
+      "message": "Mapped attribute for IdM field [{{property}}] must exist in system mapping."
+    },
+    "SYNCHRONIZATION_INACTIVE_OWNER_BEHAVIOR_MUST_BE_SET": {
+      "title": "Behavior of the default role for inactive identities must be set",
+      "message": "To use default role in synchronization, the property 'Behavior of the default role for inactive identities' must be set in the specific settings of synchronization."
+    },
+    "SYNCHRONIZATION_PROVISIONING_MUST_EXIST": {
+      "title": "Provisioning attribute mapping doesn't exist",
+      "message": "To use the specific setting [{{property}}], please create a new attribute mapping of the type 'Provisioning' and enable its Account protection."
+    },
+    "SYNCHRONIZATION_PROTECTION_MUST_BE_ENABLED": {
+      "title": "Account protection is not enabled",
+      "message": "To use the specific setting [{{property}}], please enable Account protection in the provisioning mapping [{{mapping}}]."
     },
     "SYNCHRONIZATION_TREE_ROOT_FILTER_VALUE_WRONG_TYPE": {
       "title": "Wrong filter value",
@@ -1741,6 +1789,14 @@
     "SYSTEM_DELETE_BULK_ACTION_NUMBER_OF_PROVISIONINGS": {
       "message": "System <strong>{{system}}</strong> contains  <strong class=\"highlight\">{{count}}</strong> unresolved provisioning operations",
       "title": ""
+    },
+    "SYSTEM_MAPPING_PASSWORD_OVERRIDE": {
+      "message": "Password attribute can't be overridden in role mapping.",
+      "title": "Attribute mapping can be saved"
+    },
+    "PROVISIONING_PASSWORD_TRANSFORMATION_FAILED": {
+      "message": "Password transformation for uid {{uid}} doesn't return GuardedString or null. Mapped attribute name {{mappedAttribute}}.",
+      "title": "Password transformation failed"
     }
   },
   "processor": {

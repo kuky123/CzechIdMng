@@ -1,18 +1,19 @@
 import React, { PropTypes } from 'react';
 import _ from 'lodash';
+import classNames from 'classnames';
 //
-import { RoleManager, RoleCatalogueManager, SecurityManager } from '../../../redux';
 import * as Basic from '../../basic';
+import * as Utils from '../../../utils';
+import { RoleManager, RoleCatalogueManager, SecurityManager } from '../../../redux';
+//
 import EntitySelectBox from '../EntitySelectBox/EntitySelectBox';
 import Table from '../Table/Table';
 import Column from '../Table/Column';
 import Tree from '../Tree/Tree';
-import * as Utils from '../../../utils';
 import SearchParameters from '../../../domain/SearchParameters';
 
-const TABLE_UIKEY = 'role-table-select';
-
-const ROOTS_ROLE_CATALOGUE_UIKEY = 'roots-role-catalogue';
+const manager = new RoleManager();
+const roleCatalogueManager = new RoleCatalogueManager();
 
 /**
 * Component for select roles by role catalogue
@@ -20,97 +21,70 @@ const ROOTS_ROLE_CATALOGUE_UIKEY = 'roots-role-catalogue';
 * @author Ondrej Kopr
 * @author Radek Tomiška
 */
-class RoleSelect extends Basic.AbstractFormComponent {
+export default class RoleSelect extends Basic.AbstractFormComponent {
 
   constructor(props, context) {
     super(props, context);
     //
-    this.roleManager = new RoleManager();
-    this.roleCatalogueManager = new RoleCatalogueManager();
-    //
     this.state = {
-      selectedRows: [],
+      ...this.state,
+      selectedRows: [], // contains ids
       roleCatalogue: null,
-      showLoading: true,
       showRoleCatalogue: false
     };
   }
 
-  componentDidMount() {
-    this._loadCatalogue();
-    //
-    this.cleanFilter();
+  getComponentKey() {
+    return 'component.advanced.Tree';
   }
 
-  componentWillReceiveProps() {
+  getUiKey() {
+    return this.props.uiKey;
   }
 
-  _loadCatalogue() {
-    if (!SecurityManager.hasAuthority('ROLECATALOGUE_AUTOCOMPLETE')) {
-      this.setState({
-        showLoading: false
-      });
-      return;
-    }
-    //
-    // find roots
-    const searchParametersRoots = this.roleCatalogueManager.getRootSearchParameters();
-    //
-    this.context.store.dispatch(this.roleCatalogueManager.fetchEntities(searchParametersRoots, ROOTS_ROLE_CATALOGUE_UIKEY, (loadedRoots, error) => {
-      if (error) {
-        this.setState({
-          showLoading: false
-        });
-      }
-      if (loadedRoots) {
-        const uiState = Utils.Ui.getUiState(this.context.store.getState(), ROOTS_ROLE_CATALOGUE_UIKEY);
-        const rootNodes = loadedRoots._embedded[this.roleCatalogueManager.getCollectionType()];
-        //
-        this.setState({
-          rootNodes,
-          rootNodesCount: uiState.total,
-          showLoading: false
-        });
-      }
-    }));
+  getManager() {
+    return this.props.manager;
+  }
+
+  getRoleCatalogueManager() {
+    return this.props.roleCatalogueManager;
   }
 
   getValue() {
-    const { selectedRows } = this.state;
-    return selectedRows;
+    return this.refs.role.getValue();
   }
 
   setValue(value) {
-    if (value) {
-      const selectedRows = [];
-      selectedRows.push(value.id);
-      this.setState({
-        selectedRows
-      });
-      this.refs.role.setValue(value);
+    const { rendered } = this.props;
+    if ( !rendered) {
+      return;
     }
+    //
+    this.refs.role.setValue(value);
   }
 
-  /**
-  * Method clean filter from role table
-  */
-  cleanFilter(event) {
-    if (event) {
-      event.preventDefault();
-    }
-    this.setState({
-      roleCatalogue: null
+  setState(json, cb) {
+    super.setState(json, () => {
+      // FIXME: abstract form component everride standard state to show validations => we need to propage this state into component
+      if (json && json.showValidationError !== undefined) {
+        this.refs.role.setState({ showValidationError: json.showValidationError}, cb);
+      } else if (cb) {
+        cb();
+      }
     });
   }
 
-  validate() {
-    const {
-      readOnly
-    } = this.props;
-    if (readOnly) {
+  isValid() {
+    return this.refs.role.isValid();
+  }
+
+  validate(showValidationError, cb) {
+    const { readOnly, rendered } = this.props;
+    //
+    if (readOnly || !rendered) {
       return true;
     }
-    return this.refs.role.validate();
+    return this.refs.role.validate(showValidationError, cb);
   }
 
   /**
@@ -118,6 +92,130 @@ class RoleSelect extends Basic.AbstractFormComponent {
    */
   focus() {
     this.refs.role.focus();
+  }
+
+  /**
+   * Show modal with tree
+   *
+   * @param  {event} event
+   */
+  showRoleCatalogue(event) {
+    if (event) {
+      event.preventDefault();
+    }
+    // set values to table
+    const value = this.getValue();
+    let selectedRows = [];
+    if (value) {
+      selectedRows = _.concat(selectedRows, value); // works for single and multi value
+    }
+    //
+    this.setState({
+      showRoleCatalogue: true,
+      selectedRows
+    });
+  }
+
+  /**
+   * Hide modal with tree
+   *
+   * @param  {event} event
+   */
+  hideRoleCatalogue(event) {
+    if (event) {
+      event.preventDefault();
+    }
+    this.setState({
+      roleCatalogue: null, // TODO: test
+      showRoleCatalogue: false
+    });
+  }
+
+  /**
+   * Select box field label
+   *
+   * @return  {string}
+   */
+  getLabel() {
+    const { label } = this.props;
+    if (label !== undefined) {
+      return label;
+    }
+    return this.i18n('entity.Role._type');
+  }
+
+  /**
+   * Select box field placeholder
+   *
+   * @return  {string}
+   */
+  getPlaceholder() {
+    const { placeholder } = this.props;
+    if (placeholder !== undefined) {
+      return placeholder;
+    }
+    return null;
+  }
+
+  /**
+   * Select box field help block
+   *
+   * @return  {string}
+   */
+  getHelpBlock() {
+    const { helpBlock } = this.props;
+    if (helpBlock !== undefined) {
+      return helpBlock;
+    }
+    return null;
+  }
+
+  /**
+   * Role (modal) header
+   *
+   * @return  {string}
+   */
+  getHeader() {
+    const { header } = this.props;
+    //
+    if (header) {
+      return header;
+    }
+    return this.i18n('header');
+  }
+
+  /**
+   * Move selected roles from modal to form
+   *
+   * @param  {event} event
+   */
+  onSelect(event) {
+    if (event) {
+      event.preventDefault();
+    }
+    const { multiSelect } = this.props;
+    const { selectedRows } = this.state;
+    let value;
+    //
+    if (selectedRows.length === 0) {
+      value = null;
+    } else if (multiSelect) {
+      value = selectedRows;
+    } else {
+      value = selectedRows[0];
+    }
+    //
+    let result = true;
+    if (this.props.onChange) {
+      result = this.props.onChange(value);
+    }
+    // if onChange listener returns false, then we can end
+    if (result === false) {
+      return;
+    }
+    //
+    this.refs.role.setValue(value);
+    this.hideRoleCatalogue();
   }
 
   _addRole(index, value, event) {
@@ -133,14 +231,12 @@ class RoleSelect extends Basic.AbstractFormComponent {
       this.setState({
         selectedRows
       });
-      this.refs.role.setValue(selectedRows);
     } else {
       selectedRows = [];
       selectedRows.push(value.id);
       this.setState({
         selectedRows
       });
-      this.refs.role.setValue(value);
     }
   }
 
@@ -155,50 +251,21 @@ class RoleSelect extends Basic.AbstractFormComponent {
     this.setState({
       selectedRows
     });
-    //
-    this.refs.role.setValue(selectedRows);
   }
 
   /**
   * Method filtering by roleCatalogue. Filtr si applied to role table
   */
-  _filterByRoleCatalogue(roleCatalogue, event) {
+  _filterByRoleCatalogue(roleCatalogueId, event) {
     if (event) {
       event.preventDefault();
       // Stop propagation is important for prohibition of node tree expand.
       // After click on link node, we want only filtering ... not node expand.
       event.stopPropagation();
     }
-    if (!roleCatalogue) {
-      return;
-    }
-    //
     this.setState({
-      roleCatalogue: roleCatalogue.id
+      roleCatalogue: roleCatalogueId
     });
-  }
-
-  /**
-  * Decorator and filter method for tree
-  */
-  _roleCatalogueDecorator(props) {
-    const style = props.style;
-    const icon = props.node.isLeaf ? 'file-text' : 'folder';
-    return (
-      <div style={style.base}>
-        <div style={style.title}>
-          <Basic.Button level="link" title={props.node.name} onClick={this._filterByRoleCatalogue.bind(this, props.node)} style={{padding: '0px 0px 0px 0px'}}>
-            <Basic.Icon type="fa" icon={icon} style={{ marginRight: '5px' }}/>
-            { Utils.Ui.substringByWord(props.node.name, 25)}
-            {
-              !props.node.childrenCount
-              ||
-              <small style={{ color: '#aaa' }}>{' '}({props.node.childrenCount})</small>
-            }
-          </Basic.Button>
-        </div>
-      </div>
-    );
   }
 
   _onRowClick(event, rowIndex, data) {
@@ -217,77 +284,7 @@ class RoleSelect extends Basic.AbstractFormComponent {
     }
   }
 
-  _addAll(event) {
-    if (event) {
-      event.preventDefault();
-    }
-    // get data from filter
-    const filterData = this.refs.filterForm.getData();
-    //
-    const searchParameters = new SearchParameters(SearchParameters.NAME_QUICK)
-    // TODO: null in setSize not working
-    .setSize(250).setPage(null)
-    .setFilter('roleCatalogue', filterData.roleCatalogue)
-    .setFilter('text', filterData.text);
-    this.context.store.dispatch(this.roleManager.fetchEntities(searchParameters, null, (entities) => {
-      if (entities) {
-        const selectedRows = [];
-        const roles = entities._embedded[this.roleManager.getCollectionType()];
-        for (const index in roles) {
-          if (roles.hasOwnProperty(index)) {
-            selectedRows.push(roles[index].id);
-          }
-        }
-        this.refs.role.setValue(selectedRows);
-        //
-        this.setState({
-          selectedRows,
-          showLoading: false
-        });
-      }
-    }));
-  }
-
-  _removeAll(event) {
-    if (event) {
-      event.preventDefault();
-    }
-    //
-    this.setState({
-      selectedRows: []
-    });
-    this.refs.role.setValue([]);
-  }
-
-  hideRoleCatalogueTable() {
-    this.setState({
-      showRoleCatalogue: false
-    });
-  }
-
-  showRoleCatalogueTable() {
-    this.setState({
-      showRoleCatalogue: true
-    });
-  }
-
-  _showOrHideRoleCatalogueTable(event) {
-    if (event) {
-      event.preventDefault();
-    }
-    const { showRoleCatalogue } = this.state;
-    const { onCatalogueShow } = this.props;
-    //
-    this.setState({
-      showRoleCatalogue: !showRoleCatalogue
-    });
-    //
-    if (onCatalogueShow) {
-      onCatalogueShow(!showRoleCatalogue);
-    }
-  }
-
-  _selectChange(value, event) {
+  _onChange(value, event) {
     if (event) {
       event.preventDefault();
     }
@@ -300,9 +297,38 @@ class RoleSelect extends Basic.AbstractFormComponent {
         }
       }
     }
+    //
+    let result = true;
+    if (this.props.onChange) {
+      result = this.props.onChange(selectedRows);
+    }
+    // if onChange listener returns false, then we can end
+    if (result === false) {
+      return;
+    }
+    //
     this.setState({
       selectedRows
     });
+  }
+
+  _renderShowTreeIcon() {
+    const { readOnly } = this.props;
+    //
+    return (
+      <div>
+        <Basic.LabelWrapper label={ this.getLabel() ? (<span style={{ visibility: 'hidden' }}>T</span>) : null }>
+          <Basic.Button
+            level="default"
+            icon="fa:folder-open"
+            style={{ marginLeft: 5 }}
+            onClick={ this.showRoleCatalogue.bind(this) }
+            title={this.i18n('content.roles.select.showRoleCatalogue')}
+            titlePlacement="bottom"
+            disabled={ readOnly }/>
+        </Basic.LabelWrapper>
+      </div>
+    );
   }
 
   render() {
@@ -311,199 +337,170 @@ class RoleSelect extends Basic.AbstractFormComponent {
       multiSelect,
       readOnly,
       showActionButtons,
-      showBulkAction,
-      selectRowClass
+      selectRowClass,
+      hidden,
+      required,
+      value,
+      rendered
     } = this.props;
     //
     const {
-      rootNodes,
-      rootNodesCount,
       selectedRows,
-      showLoading,
       roleCatalogue,
       showRoleCatalogue
     } = this.state;
     //
-    const showTree = rootNodes && rootNodes.length !== 0;
+    if (!rendered) {
+      return null;
+    }
+    //
+    const showTree = SecurityManager.hasAuthority('ROLECATALOGUE_AUTOCOMPLETE');
+    //
+    const forceSearchParameters = this.getManager()
+      .getDefaultSearchParameters()
+      .setName(SearchParameters.NAME_AUTOCOMPLETE)
+      .setFilter('roleCatalogue', roleCatalogue);
     //
     // TODO: add onRowClick={this._onRowClick.bind(this)}
     return (
-      <div>
-        <Basic.Row className={ showRoleCatalogue ? 'hidden' : null }>
-          <Basic.Col lg={ showTree ? 9 : 12 }>
+      <span className={ classNames({ hidden }) }>
+        <div style={{ display: 'flex' }}>
+          <div style={{ flex: 1 }}>
             <EntitySelectBox
               ref="role"
-              manager={this.roleManager}
-              label={this.i18n('entity.IdentityRole.role')}
-              multiSelect={multiSelect}
-              onChange={this._selectChange.bind(this)}
-              readOnly={readOnly}
+              manager={ this.getManager() }
+              label={ this.getLabel() }
+              placeholder={ this.getPlaceholder() }
+              helpBlock={ this.getHelpBlock() }
+              multiSelect={ multiSelect }
+              onChange={ this._onChange.bind(this) }
+              readOnly={ readOnly }
               entityType="role"
-              required/>
-          </Basic.Col>
-          <Basic.Col lg={ 3 } rendered={ showTree === true }>
-            <Basic.Button
-              style={{marginTop: '25px', width: '100%', display: 'block' }}
-              level="primary"
-              title={this.i18n('content.roles.select.showRoleCatalogue')}
-              titlePlacement="bottom"
-              disabled={readOnly}
-              onClick={this._showOrHideRoleCatalogueTable.bind(this)}>
-              {' '}
-              {this.i18n('content.roles.select.showRoleCatalogue')}
-            </Basic.Button>
-          </Basic.Col>
-        </Basic.Row>
+              required={ required }
+              value={ value }/>
+          </div>
+          { this._renderShowTreeIcon() }
+        </div>
 
-        <Basic.Panel className="no-border last">
-          <Basic.Row rendered={ showRoleCatalogue }>
-            <Basic.Col lg={ 3 } style={{ paddingRight: 0, paddingLeft: 0, marginLeft: 15, marginRight: -15 }} rendered={ showTree === true }>
-              <div className="basic-toolbar" style={{ padding: '3px 15px 5px 0px', minHeight: 'auto' }}>
-                <div className="pull-left">
-                  <h3 style={{ margin: 0 }}>
-                    { this.i18n('content.roles.select.chooseFolder') }
-                  </h3>
-                </div>
-                <div className="pull-right">
-                  <Basic.Button
-                    level="primary"
-                    title={this.i18n('content.tree.nodes.reloadTree')}
-                    titlePlacement="bottom"
-                    className="btn-xs"
-                    onClick={this.cleanFilter.bind(this)}
-                    rendered={ false }>
-                    <Basic.Icon value="fa:refresh"/>
-                  </Basic.Button>
-                </div>
-                <div className="clearfix"></div>
-              </div>
-              <div style={{ paddingTop: 5 }}>
-                {
-                  !showTree
-                  ||
-                  <div>
-                    <Basic.Button
-                        level="link"
-                        className="btn-xs"
-                        onClick={ this.cleanFilter.bind(this) }
-                        disabled={ roleCatalogue === null }>
-                      { this.i18n('content.roles.button.allRoles') }
-                    </Basic.Button>
-                    <Tree
-                      showLoading={showLoading}
-                      rootNodes={rootNodes}
-                      rootNodesCount={ rootNodesCount }
-                      uiKey="roleCatalogueTree"
-                      headerDecorator={this._roleCatalogueDecorator.bind(this)}
-                      manager={this.roleCatalogueManager}/>
-                  </div>
-                }
-              </div>
-            </Basic.Col>
-            <Basic.Col lg={ showTree ? 9 : 12 }>
-              <Table
-                showLoading={showLoading}
-                ref="table"
-                condensed
-                className={ showTree ? '' : 'marginable' }
-                style={ showTree ? { borderLeft: '1px solid #ddd' } : {} }
-                forceSearchParameters={
-                  this.roleManager.getDefaultSearchParameters()
-                    .setName(SearchParameters.NAME_AUTOCOMPLETE)
-                    .setFilter('roleCatalogue', roleCatalogue)
-                }
-                showToolbar={false}
-                uiKey={TABLE_UIKEY}
-                manager={this.roleManager}
-                showPageSize={false}
-                rowClass={({rowIndex, data}) => {
-                  return _.includes(selectedRows, data[rowIndex].id) ? selectRowClass : '';
-                }}
-                buttons={
-                  [
-                    !showBulkAction
-                    ||
-                    <div>
-                      <Basic.Button type="submit" className="btn-xs"
-                        readOnly={readOnly}
-                        hidden={!multiSelect}
-                        onClick={this._addAll.bind(this)}>
-                        <Basic.Icon type="fa" icon="plus"/>
-                        {' '}
-                        {this.i18n('button.addAll')}
-                      </Basic.Button>
-                      <Basic.Button type="submit" className="btn-xs"
-                        readOnly={readOnly}
-                        hidden={!multiSelect}
-                        onClick={this._removeAll.bind(this)}>
-                        <Basic.Icon type="fa" icon="minus"/>
-                        {' '}
-                        {this.i18n('button.removeAll')}
-                      </Basic.Button>
-                    </div>
-                  ]
-                }>
-                <Column
-                  property=""
-                  header=""
-                  width="5px"
-                  rendered={showActionButtons}
-                  cell={
-                    ({ rowIndex, data }) => {
-                      const isSelected = _.includes(selectedRows, data[rowIndex].id);
-                      if (data[rowIndex].disabled) {
+        <Basic.Modal
+          show={ showRoleCatalogue }
+          onHide={ this.hideRoleCatalogue.bind(this) }
+          bsSize="large"
+          backdrop="static"
+          keyboard>
+          <Basic.Modal.Header text={ this.getHeader() } closeButton/>
+          <Basic.Modal.Body style={{ padding: 0 }}>
+            <Basic.Row>
+              <Basic.Col
+                lg={ 3 }
+                style={{ paddingRight: 0 }}
+                rendered={ showTree === true }>
+                <Tree
+                  ref="roleCatalogueTree"
+                  uiKey={ `${this.getUiKey()}-tree` }
+                  manager={ this.getRoleCatalogueManager() }
+                  onSelect={ this._filterByRoleCatalogue.bind(this) }
+                  header={ this.i18n('content.roles.select.chooseFolder') }
+                  rendered={ showTree }/>
+              </Basic.Col>
+              <Basic.Col
+                lg={ showTree ? 9 : 12 }
+                style={{ paddingLeft: 0 }}>
+                <Table
+                  ref="table"
+                  condensed
+                  className={ showTree ? '' : 'marginable' }
+                  style={ showTree ? { borderLeft: '1px solid #ddd' } : {} }
+                  forceSearchParameters={ forceSearchParameters }
+                  showToolbar={false}
+                  uiKey={ `${this.getUiKey()}-table` }
+                  manager={ this.getManager() }
+                  showPageSize={false}
+                  rowClass={({rowIndex, data}) => {
+                    return _.includes(selectedRows, data[rowIndex].id) ? selectRowClass : Utils.Ui.getDisabledRowClass(data[rowIndex]);
+                  }}>
+                  <Column
+                    property=""
+                    header=""
+                    width="5px"
+                    rendered={showActionButtons}
+                    cell={
+                      ({ rowIndex, data }) => {
+                        const isSelected = _.includes(selectedRows, data[rowIndex].id);
+                        if (data[rowIndex].disabled) {
+                          return (
+                            null
+                          );
+                        }
                         return (
-                          null
+                          <span>
+                            {
+                              !isSelected
+                              ?
+                              <input
+                                readOnly={readOnly}
+                                type="checkbox"
+                                checked={false}
+                                onMouseDown={this._addRole.bind(this, rowIndex, data[rowIndex])}/>
+                              :
+                              <input
+                                readOnly={readOnly}
+                                type="checkbox"
+                                checked
+                                onMouseDown={this._removeRole.bind(this, rowIndex, data[rowIndex])}/>
+                            }
+                          </span>
                         );
                       }
-                      return (
-                        <span>
-                          {
-                            !isSelected
-                            ?
-                            <input
-                              readOnly={readOnly}
-                              type="checkbox"
-                              checked={false}
-                              onMouseDown={this._addRole.bind(this, rowIndex, data[rowIndex])}/>
-                            :
-                            <input
-                              readOnly={readOnly}
-                              type="checkbox"
-                              checked
-                              onMouseDown={this._removeRole.bind(this, rowIndex, data[rowIndex])}/>
-                          }
-                        </span>
-                      );
-                    }
-                  }/>
+                    }/>
                   <Column property="code" sort={false} face="text" rendered={_.includes(columns, 'code')}/>
                   <Column property="name" sort={false} face="text" rendered={_.includes(columns, 'name')}/>
                 </Table>
               </Basic.Col>
             </Basic.Row>
-          </Basic.Panel>
-        </div>
-      );
+          </Basic.Modal.Body>
+          <Basic.Modal.Footer>
+            <Basic.Button
+              level="link"
+              onClick={ this.hideRoleCatalogue.bind(this) }>
+              { this.i18n('button.cancel') }
+            </Basic.Button>
+
+            <Basic.Button
+              level="success"
+              showLoadingIcon
+              onClick={ this.onSelect.bind(this) }>
+              { this.i18n('button.select') }
+            </Basic.Button>
+          </Basic.Modal.Footer>
+        </Basic.Modal>
+      </span>
+    );
   }
 }
 
 RoleSelect.propTypes = {
+  ...Basic.AbstractFormComponent.propTypes,
+  uiKey: PropTypes.string,
+  /**
+   * RoleManager instance - manager controls fetching data etc. Default maganer is constructed if no manager is given.
+   */
+  manager: PropTypes.object,
+  /**
+   * RoleCatalogueManager instance - manager controls fetching catalogue. Default maganer is constructed if no manager is given.
+   */
+  roleCatalogueManager: PropTypes.object,
   columns: PropTypes.arrayOf(PropTypes.string),
-  multiSelect: PropTypes.bool,
   showActionButtons: PropTypes.bool,
-  showBulkAction: PropTypes.bool,
-  selectRowClass: PropTypes.string,
-  onCatalogueShow: PropTypes.func
+  selectRowClass: PropTypes.string
 };
 RoleSelect.defaultProps = {
+  ...Basic.AbstractFormComponent.defaultProps,
+  uiKey: 'role-table-select',
+  manager,
+  roleCatalogueManager,
   columns: ['name'],
-  multiSelect: true,
+  multiSelect: false,
   showActionButtons: true,
-  showBulkAction: false,
-  selectRowClass: 'success',
-  onCatalogueShow: null
+  selectRowClass: 'success'
 };
-
-
-export default RoleSelect;

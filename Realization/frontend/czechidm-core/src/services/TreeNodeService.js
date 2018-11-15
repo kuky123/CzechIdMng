@@ -4,6 +4,12 @@ import TreeTypeService from './TreeTypeService';
 import RestApiService from './RestApiService';
 import * as Utils from '../utils';
 
+/**
+ * Tree nodes  - structure items.
+ *
+ * @author Ondřej Kopr
+ * @author Radek Tomiška
+ */
 class TreeNodeService extends FormableEntityService {
 
   constructor() {
@@ -18,6 +24,9 @@ class TreeNodeService extends FormableEntityService {
   getNiceLabel(entity) {
     if (!entity) {
       return '';
+    }
+    if (entity.name === entity.code) {
+      return entity.name;
     }
     return `${entity.name} (${entity.code})`;
   }
@@ -43,14 +52,14 @@ class TreeNodeService extends FormableEntityService {
    * Returns search parameters by parent ID, used in tree
    */
   getTreeSearchParameters() {
-    return this.getDefaultSearchParameters().setName(TreeNodeService.TREE_SEARCH).setSize(20);
+    return this.getDefaultSearchParameters().setName(TreeNodeService.TREE_SEARCH).setSize(50);
   }
 
   /**
    * Returns search parameters for search roots
    */
   getRootSearchParameters() {
-    return this.getDefaultSearchParameters().setName(TreeNodeService.ROOT_SEARCH).setSize(20);
+    return this.getDefaultSearchParameters().setName(TreeNodeService.ROOT_SEARCH).setSize(50);
   }
 
   /**

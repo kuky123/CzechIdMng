@@ -50,6 +50,12 @@ public class CustomFormTypes extends FormTypes {
 			case ConfigurationFormType.TYPE_NAME: {
 				return new ConfigurationFormType(values);
 			}
+			case SelectBoxFormType.TYPE_NAME: {
+				return new SelectBoxFormType(values);
+			}
+			case TaskHistoryFormType.TYPE_NAME: {
+				return new TaskHistoryFormType(values);
+			}
 			default: {
 				// delegate construction of all other types
 				return super.parseFormPropertyType(formProperty);

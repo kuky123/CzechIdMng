@@ -193,6 +193,10 @@
             "label": "Výchozí role",
             "helpBlock": "Při vytváření vztahu mezi identitou a účtem, bude identitě přiřazena tato role. Tato role bude navázána na hlavní smluvní vztah identity."
           },
+          "inactiveOwnerBehavior": {
+            "label": "Chování výchozí role pro neaktivní identity",
+            "helpBlock": "Jak se zachovat, pokud se při přidělování výchozí role zjistí, že identita nemá žádný validní smluvní vztah."
+          },
           "startAutoRoleRec": {
             "label": "Po dokončení spustit přepočet automatických rolí",
             "helpBlock": "Po úspěšném dokončení synchronizace bude spuštěn přepočet všech automatických rolí podle atributu."
@@ -349,13 +353,30 @@
         "title" : "Atribut v IdM",
         "header" : "Detail mapování atributu ",
         "alertNoRepository": "Atribut není mapován na žádné IdM úložiště (entitu ani rozšířený atribut). Výstupem bude konstanta, z 'Transformace do systému'",
-        "infoPasswordMapping": "V případě že atribut __PASSWORD__ je roven hodnotě NULL bude automaticky vygenerován z politiky hesel pro tento systém.",
+        "infoPasswordMapping": "Pozor, je vybrán atribut s heslem. Při vytvoření objektu na koncovém systému bude vygenerována jedna hodnota (podle politik hesel), která bude poslána do všech atributů označených jako 'Atribut s heslem'. tato hodnota bude poslána jako objekt typu GuardedString. Výstupem skriptu musí být opět GuardedString, nebo null. Odpovídající atribut ve schématu systému musí být také typu GuardedString, nebo String. Při změně hesla je do všech těchto atributů zasáláno nové heslo.",
         "save": {
           "success": "Atribut [{{name}}] IdM byl úspěšně uložen"
         },
         "create": {
           "success": "Atribut [{{name}}] IdM byl úspěšně vytvořen",
           "header": "Nový atribut IdM"
+        },
+        "tabs": {
+          "basic": {
+            "label": "Základní nastavení"
+          },
+          "controlledValues": {
+            "cache": {
+              "header": "Aktuálně kontrolované hodnoty",
+              "helpBlock": "<strong>Seznam hodnot</strong>, které jsou pro tento atribut aktuálně spravované v IdM (jsou definované na rolích).",
+              "evicted": "Seznam hodnot <strong>není platný</strong>, atribut byl pravděpodobně upraven a bude přepočítám při prvním použití provisioningu!"
+            },
+            "historic": {
+              "header": "V minulosti spravované hodnoty",
+              "helpBlock": "<strong>Seznam hodnot, které byly v minulosti pro tento atribut spravované v IdM</strong>. Tyto hodnoty jsou stále využívány při vyhodnocování sloučování. Pokud jste si jistí, že konkrétní hodnota již nemá být vyhodnocována jako spravovaná, pak jí zde můžete odstraňit."
+            },
+            "label": "Kontrolované hodnoty (slučování)"
+          }
         }
       },
       "roles": {
@@ -829,6 +850,10 @@
       "sendOnPasswordChange": {
         "label": "Zahrnout při změně hesla",
         "help": "Odesílat attribut při změně hesla do provisioningu."
+      },
+      "passwordAttribute": {
+        "label": "Atribut s heslem",
+        "help": "Atribut bude obsahovat hodnotu hesla. Tento atribut není možné přetížit v mapování u rolí. Do transformace bude poslána hodnota hesla v objektu GuardedString. Skript musí vracet null, nebo tento objekt."
       }
     },
     "RoleSystemAttribute": {
@@ -914,8 +939,8 @@
           "CREATE_ENTITY": "Vytvořeno entit",
           "UPDATE_ENTITY": "Aktualizováno entit",
           "DELETE_ENTITY": "Smazáno entit",
-          "LINK_AND_UPDATE_ENTITY": "Vytvořeno účtů a aktualizováno entit",
-          "LINK_AND_UPDATE_ACCOUNT": "Vytvořeno a upraveno účtů",
+          "LINK_AND_UPDATE_ENTITY": "Vytvořeno vazeb a aktualizováno entit",
+          "LINK_AND_UPDATE_ACCOUNT": "Vytvořeno vazeb a upraveno účtů",
           "UNLINK_AND_REMOVE_ROLE": "Odstraněno vazeb a navázaných rolí",
           "LINK": "Vytvořeno vazeb",
           "UNLINK": "Odstraněno vazeb",
@@ -932,8 +957,8 @@
           "CREATE_ENTITY": "Vytvořeno entit",
           "UPDATE_ENTITY": "Aktualizováno entit",
           "DELETE_ENTITY": "Smazáno entit",
-          "LINK_AND_UPDATE_ENTITY": "Vytvořeno účtů a aktualizováno entit",
-          "LINK_AND_UPDATE_ACCOUNT": "Vytvořeno a upraveno účtů",
+          "LINK_AND_UPDATE_ENTITY": "Vytvořeno vazeb a aktualizováno entit",
+          "LINK_AND_UPDATE_ACCOUNT": "Vytvořeno vazeb a upraveno účtů",
           "UNLINK_AND_REMOVE_ROLE": "Odstraněno vazeb a navázaných rolí",
           "LINK": "Vytvořeno vazeb",
           "UNLINK": "Odstraněno vazeb",
@@ -950,8 +975,8 @@
           "CREATE_ENTITY": "Vytvořeno entit",
           "UPDATE_ENTITY": "Aktualizováno entit",
           "DELETE_ENTITY": "Smazáno entit",
-          "LINK_AND_UPDATE_ENTITY": "Vytvořeno účtů a aktualizováno entit",
-          "LINK_AND_UPDATE_ACCOUNT": "Vytvořeno a upraveno účtů",
+          "LINK_AND_UPDATE_ENTITY": "Vytvořeno vazeb a aktualizováno entit",
+          "LINK_AND_UPDATE_ACCOUNT": "Vytvořeno vazeb a upraveno účtů",
           "UNLINK_AND_REMOVE_ROLE": "Odstraněno vazeb a navázaných rolí",
           "LINK": "Vytvořeno vazeb",
           "UNLINK": "Odstraněno vazeb",
@@ -968,7 +993,7 @@
           "CREATE_ENTITY": "Vytvořeno entit",
           "UPDATE_ENTITY": "Aktualizováno entit",
           "DELETE_ENTITY": "Smazáno entit",
-          "LINK_AND_UPDATE_ENTITY": "Vytvořeno účtů a aktualizováno entit",
+          "LINK_AND_UPDATE_ENTITY": "Vytvořeno vazeb a aktualizováno entit",
           "LINK_AND_UPDATE_ACCOUNT": "Vytvořeno a upraveno účtů",
           "UNLINK_AND_REMOVE_ROLE": "Odstraněno vazeb a navázaných rolí",
           "LINK": "Vytvořeno vazeb",
@@ -986,8 +1011,8 @@
           "CREATE_ENTITY": "Neúspěšně vytvořeno entit",
           "UPDATE_ENTITY": "Neúspěšně aktualizováno entit",
           "DELETE_ENTITY": "Neúspěšně smazáno entit",
-          "LINK_AND_UPDATE_ENTITY": "Neúspěšně vytvořeno účtů a aktualizováno entit",
-          "LINK_AND_UPDATE_ACCOUNT": "Neúspěšně vytvořeno a aktualizováno účtů",
+          "LINK_AND_UPDATE_ENTITY": "Neúspěšně vytvořeno vazeb a aktualizováno entit",
+          "LINK_AND_UPDATE_ACCOUNT": "Neúspěšně vytvořeno vazeb a aktualizováno účtů",
           "LINK": "Neúspěšně vytvořeno vazeb",
           "UNLINK": "Neúspěšně odstraněno vazeb",
           "UNLINK_AND_REMOVE_ROLE": "Neúspěšně odstraněno vazeb a navázaných rolí",
@@ -1071,6 +1096,11 @@
         "identity": "Identita"
       },
       "name": "Příjemce"
+    },
+    "AttributeControlledValue": {
+      "value": "Hodnota",
+      "created": "Vytvořeno",
+      "creator": "Vytvořil"
     }
   },
   "enums" : {
@@ -1114,6 +1144,11 @@
       "LINK_AND_UPDATE_ENTITY": "Vytvořit vazbu a aktualizovat entitu",
       "LINK_AND_UPDATE_ACCOUNT": "Vytvořit vazbu a aktualizovat účet",
       "IGNORE": "Ignorovat"
+    },
+    "SynchronizationInactiveOwnerBehaviorTypeEnum": {
+      "DO_NOT_LINK": "DO_NOT_LINK - Nepřilinkovat účet a ukončit jeho zpracování, pokud neexistuje validní úvazek pro přidělení výchozí role",
+      "LINK_PROTECTED": "LINK_PROTECTED - Přilinkovat účet do chráněného režimu, pokud neexistuje validní úvazek pro přidělení výchozí role",
+      "LINK": "LINK - Přilinkovat účet, i když výchozí roli nelze přidělit na žádný úvazek"
     },
     "IcFilterOperationTypeEnum": {
       "EQUAL_TO": "Ekvivalentní",
@@ -1177,6 +1212,7 @@
     },
     "RoleAttributeEnum": {
       "NAME": "Název (String)",
+      "CODE": "Kód (String)",
       "ROLE_TYPE": "Typ role (RoleType - String)",
       "APPROVE_REMOVE": "Schvalovat odebrání (Boolean)",
       "PRIORITY": "Priorita (Integer)",
@@ -1495,8 +1531,8 @@
       "message": "Synchronizace [{{name}}] nemůže být spuštěna, protože system [{{system}}] není povolený!"
     },
     "CONFIDENTIAL_VALUE_IS_NOT_GUARDED_STRING": {
-      "title": "Tajný atributu není GuardedString",
-      "message": "Tajný atributu [{{property}}] není GuardedString, ale je typu [{{class}}]!"
+      "title": "Tajný atribut není GuardedString",
+      "message": "Tajný atribut [{{property}}] není GuardedString, ale je typu [{{class}}]!"
     },
     "SYNCHRONIZATION_CORRELATION_TO_MANY_RESULTS": {
       "title": "Synchronizace - bylo nalezeno příliš mnoho entit dle korelačního atributu",
@@ -1519,8 +1555,8 @@
       "message": "Synchronizace [{{name}}] není spuštěná."
     },
     "SYNCHRONIZATION_TO_MANY_SYSTEM_ENTITY": {
-      "title": "Synchronizace - nalezeno více jak jeden záznam 'System entity'",
-      "message": "Bylo nalezeno více jak jeden záznam 'System entity' pro stejný UID [{{uid}}]!"
+      "title": "Synchronizace - nalezeno více než jeden záznam 'System entity'",
+      "message": "Bylo nalezeno více než jeden záznam 'System entity' pro stejný UID [{{uid}}]!"
     },
     "SYNCHRONIZATION_FILTER_VALUE_WRONG_TYPE": {
       "title": "Synchronizace - filtr pro synchronizaci musí být typu 'IcFilter'",
@@ -1531,8 +1567,8 @@
       "message": "Během synchronizace položky s UID [{{uid}}], nastala neočekávaná chyba!"
     },
     "SYNCHRONIZATION_TO_MANY_ACC_ACCOUNT": {
-      "title": "Synchronizace - nalezeno více jak jeden záznam 'AccAccount'",
-      "message": "Bylo nalezeno více jak jeden záznam 'AccAccount' pro stejný UID [{{uid}}]!"
+      "title": "Synchronizace - nalezeno více než jeden záznam 'AccAccount'",
+      "message": "Bylo nalezeno více než jeden záznam 'AccAccount' pro stejný UID [{{uid}}]!"
     },
     "SYSTEM_MAPPING_DELETE_FAILED_USED_IN_SYNC": {
       "title": "Mapování systému [{{mapping}}] nemůže být smazáno",
@@ -1670,6 +1706,18 @@
       "title": "Mapovaný atribut neexistuje",
       "message": "Mapovaný atribut pro IdM pole [{{property}}] musí existovat v mapování systému."
     },
+    "SYNCHRONIZATION_INACTIVE_OWNER_BEHAVIOR_MUST_BE_SET": {
+      "title": "Není nastaveno Chování výchozí role pro neaktivní identity",
+      "message": "Pro použití výchozí role v synchronizaci prosím nastavte 'Chování výchozí role pro neaktivní identity' ve specifické konfiguraci synchronizace."
+    },
+    "SYNCHRONIZATION_PROVISIONING_MUST_EXIST": {
+      "title": "Mapování atributů pro provisioning neexistuje",
+      "message": "Pro použití specifické konfigurace [{{property}}] prosím vytvořte mapování atributů typu 'Provisioning' a povolte v něm Ochranu účtů."
+    },
+    "SYNCHRONIZATION_PROTECTION_MUST_BE_ENABLED": {
+      "title": "Ochrana účtů není povolena",
+      "message": "Pro použití specifické konfigurace [{{property}}] prosím povolte Ochranu účtů v mapování atributů pro provisioning."
+    },
     "SYNCHRONIZATION_TREE_ROOT_FILTER_VALUE_WRONG_TYPE": {
       "title": "Špatná hodnota filtru",
       "message": "Hodnota filtru pro kořen stromu je null, ale musí být typu Boolean."
@@ -1683,8 +1731,8 @@
       "message": "Účet pro rodičovský prvek [{{node}}] nebyl nalezen."
     },
     "PROVISIONING_TREE_TOO_MANY_PARENT_ACCOUNTS": {
-      "title": "Příliš mnoho účtů pro rodičovských prvek",
-      "message": "Bylo nalezeno příliš mnoho účtů pro rodičovských prvek [{{node}}]. Očekává se pouze jeden účet pro stejný systém."
+      "title": "Příliš mnoho účtů pro rodičovský prvek",
+      "message": "Bylo nalezeno příliš mnoho účtů pro rodičovský prvek [{{node}}]. Očekává se pouze jeden účet pro stejný systém."
     },
     "SYNCHRONIZATION_ATTRIBUTE_NOT_FOUND": {
       "title": "Atribut nenalezen",
@@ -1749,6 +1797,14 @@
     "SYSTEM_DELETE_BULK_ACTION_NUMBER_OF_PROVISIONINGS": {
       "message": "Systém <strong>{{system}}</strong> obsahuje  <strong class=\"highlight\">{{count}}</strong> nevyřešených provisioning operací.",
       "title": ""
+    },
+    "SYSTEM_MAPPING_PASSWORD_OVERRIDE": {
+      "message": "Atributy s heslem nemohou být přetíženy v mapování u rolí.",
+      "title": "Mapování nemůže být uloženo"
+    },
+    "PROVISIONING_PASSWORD_TRANSFORMATION_FAILED": {
+      "message": "Transformace hesla pro uid {{uid}} nevrací GuardedString nebo null. Název mapovaného atributu {{mappedAttribute}}.",
+      "title": "Transformace hesla selhala"
     }
   },
   "processor": {

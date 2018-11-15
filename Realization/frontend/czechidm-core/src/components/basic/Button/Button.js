@@ -39,6 +39,7 @@ class Button extends AbstractComponent {
       titleDelayShow,
       style,
       onClick,
+      onDoubleClick,
       icon
     } = this.props;
     //
@@ -62,11 +63,12 @@ class Button extends AbstractComponent {
         <span>
           <button
             ref="button"
-            type={type ? type : 'button'}
-            disabled={disabled || showLoading}
-            className={classNames}
-            style={style}
-            onClick={onClick}>
+            type={ type ? type : 'button' }
+            disabled={ disabled || showLoading }
+            className={ classNames }
+            style={ style }
+            onClick={ onClick }
+            onDoubleClick={ onDoubleClick }>
             {
               showLoading
               ?
@@ -126,7 +128,15 @@ Button.propTypes = {
   /**
    * Button icon
    */
-  icon: PropTypes.string
+  icon: PropTypes.string,
+  /**
+   * On click node callback
+   */
+  onClick: PropTypes.func,
+  /**
+   * On double click node callback
+   */
+  onDoubleClick: PropTypes.func
 };
 Button.defaultProps = {
   ...AbstractComponent.defaultProps,

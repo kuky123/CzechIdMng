@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.activiti.engine.FormService;
 import org.activiti.engine.TaskService;
@@ -31,12 +32,15 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
 import eu.bcvsolutions.idm.core.api.domain.CoreResultCode;
 import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto;
+import eu.bcvsolutions.idm.core.api.exception.CoreException;
 import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
 import eu.bcvsolutions.idm.core.api.rest.domain.ResourcesWrapper;
 import eu.bcvsolutions.idm.core.api.service.LookupService;
@@ -47,10 +51,12 @@ import eu.bcvsolutions.idm.core.security.api.domain.IdmBasePermission;
 import eu.bcvsolutions.idm.core.security.api.service.SecurityService;
 import eu.bcvsolutions.idm.core.workflow.domain.formtype.AbstractComponentFormType;
 import eu.bcvsolutions.idm.core.workflow.domain.formtype.DecisionFormType;
+import eu.bcvsolutions.idm.core.workflow.domain.formtype.TaskHistoryFormType;
 import eu.bcvsolutions.idm.core.workflow.model.dto.DecisionFormTypeDto;
 import eu.bcvsolutions.idm.core.workflow.model.dto.FormDataDto;
 import eu.bcvsolutions.idm.core.workflow.model.dto.IdentityLinkDto;
 import eu.bcvsolutions.idm.core.workflow.model.dto.WorkflowFilterDto;
+import eu.bcvsolutions.idm.core.workflow.model.dto.WorkflowHistoricTaskInstanceDto;
 import eu.bcvsolutions.idm.core.workflow.model.dto.WorkflowProcessDefinitionDto;
 import eu.bcvsolutions.idm.core.workflow.model.dto.WorkflowTaskInstanceDto;
 import eu.bcvsolutions.idm.core.workflow.service.WorkflowHistoricTaskInstanceService;
@@ -82,6 +88,8 @@ public class DefaultWorkflowTaskInstanceService extends
 	private WorkflowTaskDefinitionService workflowTaskDefinitionService;
 	@Autowired
 	private WorkflowProcessDefinitionService workflowProcessDefinitionService;
+	@Autowired
+	private WorkflowHistoricTaskInstanceService historicTaskInstanceService;
 
 	@Override
 	public Page<WorkflowTaskInstanceDto> find(WorkflowFilterDto filter, Pageable pageable,
@@ -142,6 +150,10 @@ public class DefaultWorkflowTaskInstanceService extends
 		taskService.setAssignee(taskId, loggedUser);
 		taskService.setVariables(taskId, variables);
 		taskService.setVariableLocal(taskId, WorkflowHistoricTaskInstanceService.TASK_COMPLETE_DECISION, decision);
+		if (formData.containsKey(WorkflowHistoricTaskInstanceService.TASK_COMPLETE_MESSAGE)) {
+			taskService.setVariableLocal(taskId, WorkflowHistoricTaskInstanceService.TASK_COMPLETE_MESSAGE,
+					formData.get(WorkflowHistoricTaskInstanceService.TASK_COMPLETE_MESSAGE));
+		}
 		Map<String, String> properties = new HashMap<String, String>();
 		properties.put(WorkflowTaskInstanceService.WORKFLOW_DECISION, decision);
 		if (formData != null) {
@@ -286,6 +298,23 @@ public class DefaultWorkflowTaskInstanceService extends
 				decisionDto.setId(property.getId());
 				dto.getDecisions().add(decisionDto);
 			}
+		} else if (formType instanceof TaskHistoryFormType) {
+			WorkflowFilterDto filterDto = new WorkflowFilterDto();
+			filterDto.setProcessInstanceId(dto.getProcessInstanceId());
+			List<WorkflowHistoricTaskInstanceDto> tasks = historicTaskInstanceService.find(filterDto, new PageRequest(0, 50)).getContent();
+
+			List<WorkflowHistoricTaskInstanceDto> history = tasks.stream()
+					.filter(workflowHistoricTaskInstanceDto -> workflowHistoricTaskInstanceDto.getEndTime() != null)
+					.sorted((o1, o2) -> {
+						if (o1.getEndTime().before(o2.getEndTime())) {
+							return -1;
+						} else if (o1.getEndTime().after(o2.getEndTime())) {
+							return 1;
+						}
+						return 0;
+					})
+					.collect(Collectors.toList());
+			dto.getFormData().add(historyToResource(property, history));
 		} else if (formType instanceof AbstractFormType) {
 			// To rest will be add only component form type marked as "exportable to rest".
 			if (formType instanceof AbstractComponentFormType
@@ -308,6 +337,24 @@ public class DefaultWorkflowTaskInstanceService extends
 				dto.getVariables().put(entry.getKey(), value == null ? null : value.toString());
 			}
 		}
+	}
+
+	private FormDataDto historyToResource(FormProperty property, List<WorkflowHistoricTaskInstanceDto> history) {
+		FormDataDto dto = new FormDataDto();
+		dto.setId(property.getId());
+		dto.setName(property.getName());
+		String value = "";
+		try {
+			value = new ObjectMapper().writeValueAsString(history);
+		} catch (JsonProcessingException e) {
+			throw new CoreException(e);
+		}
+		dto.setValue(value);
+		dto.setType(property.getType().getName());
+		dto.setReadable(property.isReadable());
+		dto.setRequired(property.isRequired());
+		dto.setWritable(property.isWritable());
+		return dto;
 	}
 
 	private FormDataDto toResource(FormProperty property, Map<String, String> additionalInformations) {

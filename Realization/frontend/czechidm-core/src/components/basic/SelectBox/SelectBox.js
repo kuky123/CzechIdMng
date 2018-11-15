@@ -431,6 +431,7 @@ class SelectBox extends AbstractFormComponent {
       showAsterix = true;
     }
     if (error) {
+      // FIXME: entity can be deleted (e.g. eav values doesn't have referential integrity)
       return (
         <FlashMessage message={ this.flashMessagesManager.convertFromError(error) } className="no-margin" />
       );

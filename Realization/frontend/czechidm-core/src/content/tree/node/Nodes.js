@@ -6,20 +6,14 @@ import NodeTable from './NodeTable';
 import uuid from 'uuid';
 
 // Table uiKey
-const uiKey = 'nodes_uikey';
+const uiKey = 'tree-node-content';
 
 /**
 * Nodes list
+*
+* @author Radek Tomiška
 */
 class Nodes extends Basic.AbstractContent {
-
-  getContentKey() {
-    return 'content.tree.nodes';
-  }
-
-  getNavigationKey() {
-    return 'tree-nodes';
-  }
 
   constructor(props, context) {
     super(props, context);
@@ -60,6 +54,14 @@ class Nodes extends Basic.AbstractContent {
     }
   }
 
+  getContentKey() {
+    return 'content.tree.nodes';
+  }
+
+  getNavigationKey() {
+    return 'tree-nodes';
+  }
+
   getManager() {
     return this.treeNodeManager;
   }
@@ -73,42 +75,46 @@ class Nodes extends Basic.AbstractContent {
     return (query) ? query.type : null;
   }
 
-  newType(event) {
+  onCreateType(event) {
     if (event) {
       event.preventDefault();
     }
+    //
     const uuidId = uuid.v1();
     this.context.router.push(`/tree/types/${uuidId}?new=1`);
   }
 
   render() {
     const { showLoading, type, isNoType } = this.state;
+    //
     return (
       <div>
-        <Basic.Confirm ref="confirm-delete" level="danger"/>
-
-        {this.renderPageHeader()}
-
+        { this.renderPageHeader() }
         {
           showLoading
           ?
           <Basic.Loading isStatic showLoading/>
           :
           <span>
-            {
-              !isNoType
-              ?
-              <NodeTable treeNodeManager={this.getManager()} type={type} activeTab={2}/>
-              :
-              <div className="alert alert-info">
-                { this.i18n('content.tree.typeNotFound') }
-                {
-                  !SecurityManager.hasAuthority('TREE_TYPE_CREATE')
-                  ||
-                  <a href="#" className="alert-link" onClick={this.newType.bind(this)}>{this.i18n('content.tree.newType')}</a>
-                }
-              </div>
-            }
+            <NodeTable uiKey={ uiKey } treeNodeManager={ this.getManager() } type={ type } activeTab={ 2 } rendered={ !isNoType }/>
+            <Basic.Alert
+              level="info"
+              rendered={ isNoType }
+              buttons={[
+                <Basic.Button
+                  level="primary"
+                  text={ this.i18n('content.tree.newType.label') }
+                  rendered={ SecurityManager.hasAuthority('TREE_TYPE_CREATE') }
+                  onClick={ this.onCreateType.bind(this) }/>
+              ]}>
+              { this.i18n('content.tree.typeNotFound') }
+              {' '}
+              {
+                !SecurityManager.hasAuthority('TREE_TYPE_CREATE')
+                ||
+                <a href="#" className="alert-link" onClick={ this.onCreateType.bind(this) }>{ this.i18n('content.tree.newType.title') }</a>
+              }
+            </Basic.Alert>
           </span>
         }
       </div>

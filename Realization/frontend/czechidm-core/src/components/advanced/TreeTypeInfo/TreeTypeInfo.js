@@ -55,7 +55,7 @@ export class TreeTypeInfo extends AbstractEntityInfo {
    * @param  {object} entity
    */
   getEntityIcon() {
-    return 'tree-deciduous';
+    return 'fa:folder-open';
   }
 
   /**

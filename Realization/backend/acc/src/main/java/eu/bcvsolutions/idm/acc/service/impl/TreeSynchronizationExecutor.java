@@ -270,6 +270,12 @@ public class TreeSynchronizationExecutor extends AbstractSynchronizationExecutor
 		String uid = context.getUid();
 		SysSyncLogDto log = context.getLog();
 		SysSyncItemLogDto logItem = context.getLogItem();
+
+		if (context.isSkipEntityUpdate()) {
+			addToItemLog(logItem, MessageFormat.format("Update of entity for account with uid {0} is skipped", uid));
+			return;
+		}
+
 		List<SysSyncActionLogDto> actionLogs = context.getActionLogs();
 		List<SysSystemAttributeMappingDto> mappedAttributes = context.getMappedAttributes();
 		AccAccountDto account = context.getAccount();

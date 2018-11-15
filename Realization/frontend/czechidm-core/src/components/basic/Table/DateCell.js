@@ -11,7 +11,7 @@ import DefaultCell from './DefaultCell';
  * @param property column key
  * @param props other optional properties
  *
- * @uthor Radek Tomiška
+ * @author Radek Tomiška
  */
 const DateCell = ({rowIndex, data, property, format, ...props}) => {
   const propertyValue = DefaultCell.getPropertyValue(data[rowIndex], property);

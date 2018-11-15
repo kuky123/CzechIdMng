@@ -24,15 +24,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import eu.bcvsolutions.idm.acc.TestHelper;
+import eu.bcvsolutions.idm.acc.config.domain.ProvisioningConfiguration;
 import eu.bcvsolutions.idm.acc.domain.OperationResultType;
 import eu.bcvsolutions.idm.acc.domain.ReconciliationMissingAccountActionType;
 import eu.bcvsolutions.idm.acc.domain.SynchronizationActionType;
 import eu.bcvsolutions.idm.acc.domain.SynchronizationLinkedActionType;
 import eu.bcvsolutions.idm.acc.domain.SynchronizationMissingEntityActionType;
+import eu.bcvsolutions.idm.acc.domain.SynchronizationInactiveOwnerBehaviorType;
 import eu.bcvsolutions.idm.acc.domain.SynchronizationUnlinkedActionType;
 import eu.bcvsolutions.idm.acc.domain.SystemEntityType;
 import eu.bcvsolutions.idm.acc.domain.SystemOperationType;
 import eu.bcvsolutions.idm.acc.dto.AbstractSysSyncConfigDto;
+import eu.bcvsolutions.idm.acc.dto.AccAccountDto;
 import eu.bcvsolutions.idm.acc.dto.AccIdentityAccountDto;
 import eu.bcvsolutions.idm.acc.dto.SysSchemaAttributeDto;
 import eu.bcvsolutions.idm.acc.dto.SysSchemaObjectClassDto;
@@ -42,7 +45,9 @@ import eu.bcvsolutions.idm.acc.dto.SysSyncItemLogDto;
 import eu.bcvsolutions.idm.acc.dto.SysSyncLogDto;
 import eu.bcvsolutions.idm.acc.dto.SysSystemAttributeMappingDto;
 import eu.bcvsolutions.idm.acc.dto.SysSystemDto;
+import eu.bcvsolutions.idm.acc.dto.SysSystemEntityDto;
 import eu.bcvsolutions.idm.acc.dto.SysSystemMappingDto;
+import eu.bcvsolutions.idm.acc.dto.filter.AccAccountFilter;
 import eu.bcvsolutions.idm.acc.dto.filter.AccIdentityAccountFilter;
 import eu.bcvsolutions.idm.acc.dto.filter.SysSchemaAttributeFilter;
 import eu.bcvsolutions.idm.acc.dto.filter.SysSyncActionLogFilter;
@@ -54,6 +59,7 @@ import eu.bcvsolutions.idm.acc.dto.filter.SysSystemMappingFilter;
 import eu.bcvsolutions.idm.acc.entity.TestResource;
 import eu.bcvsolutions.idm.acc.exception.ProvisioningException;
 import eu.bcvsolutions.idm.acc.scheduler.task.impl.SynchronizationSchedulableTaskExecutor;
+import eu.bcvsolutions.idm.acc.service.api.AccAccountService;
 import eu.bcvsolutions.idm.acc.service.api.AccIdentityAccountService;
 import eu.bcvsolutions.idm.acc.service.api.SynchronizationService;
 import eu.bcvsolutions.idm.acc.service.api.SysSchemaAttributeService;
@@ -62,6 +68,7 @@ import eu.bcvsolutions.idm.acc.service.api.SysSyncConfigService;
 import eu.bcvsolutions.idm.acc.service.api.SysSyncItemLogService;
 import eu.bcvsolutions.idm.acc.service.api.SysSyncLogService;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemAttributeMappingService;
+import eu.bcvsolutions.idm.acc.service.api.SysSystemEntityService;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemMappingService;
 import eu.bcvsolutions.idm.acc.service.api.SysSystemService;
 import eu.bcvsolutions.idm.acc.service.impl.DefaultSynchronizationServiceTest;
@@ -80,6 +87,7 @@ import eu.bcvsolutions.idm.core.api.dto.IdmRoleDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmScriptAuthorityDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmScriptDto;
 import eu.bcvsolutions.idm.core.api.dto.filter.IdmIdentityFilter;
+import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
 import eu.bcvsolutions.idm.core.api.service.ConfigurationService;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityContractService;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityRoleService;
@@ -123,6 +131,8 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 	@Autowired
 	private SysSystemAttributeMappingService schemaAttributeMappingService;
 	@Autowired
+	private SysSystemEntityService systemEntityService;
+	@Autowired
 	private SysSchemaAttributeService schemaAttributeService;
 	@Autowired
 	private SysSyncConfigService syncConfigService;
@@ -132,6 +142,8 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 	private SysSyncItemLogService syncItemLogService;
 	@Autowired
 	private SysSyncActionLogService syncActionLogService;
+	@Autowired
+	private AccAccountService accAccountService;
 	@Autowired
 	private EntityManager entityManager;
 	@Autowired
@@ -165,8 +177,11 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 
 	@After
 	public void logout() {
-		if (identityService.getByUsername(IDENTITY_ONE) != null) {
-			identityService.delete(identityService.getByUsername(IDENTITY_ONE));
+		IdmIdentityDto identity = identityService.getByUsername(IDENTITY_ONE);
+		if (identity != null) {
+			identityService.delete(identity);
+			// clean up account in protection. There should be max. 1 after every test.
+			deleteProtectedAccount(IDENTITY_ONE);
 		}
 	}
 
@@ -179,6 +194,7 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 
 		// Set default role to sync configuration
 		config.setDefaultRole(defaultRole.getId());
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK);
 		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
 
 		IdmIdentityFilter identityFilter = new IdmIdentityFilter();
@@ -216,6 +232,7 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
 		// Set default role to sync configuration
 		config.setDefaultRole(defaultRole.getId());
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK);
 		config.setCreateDefaultContract(true);
 		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
 		//
@@ -267,6 +284,7 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 			SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
 			// Set default role to sync configuration
 			config.setDefaultRole(defaultRole.getId());
+			config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK);
 			config.setCreateDefaultContract(true);
 			config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
 			
@@ -352,6 +370,7 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 
 		// Set default role to sync configuration
 		config.setDefaultRole(defaultRole.getId());
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK);
 		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
 
 		IdmIdentityDto identityOne = helper.createIdentity(IDENTITY_ONE);
@@ -384,6 +403,7 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 
 		// Set default role to sync configuration
 		config.setDefaultRole(defaultRole.getId());
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK);
 		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
 
 		IdmIdentityDto identityOne = helper.createIdentity(IDENTITY_ONE);
@@ -418,6 +438,7 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 
 		// Set default role to sync configuration
 		config.setDefaultRole(defaultRole.getId());
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK);
 		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
 
 		IdmIdentityDto identityOne = helper.createIdentity(IDENTITY_ONE);
@@ -481,6 +502,7 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 
 		// Set default role to sync configuration
 		config.setDefaultRole(defaultRole.getId());
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK);
 		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
 
 		this.getBean().deleteAllResourceData();
@@ -574,6 +596,7 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 
 		// Set default role to sync configuration
 		config.setDefaultRole(defaultRole.getId());
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK);
 		config.setStartAutoRoleRec(true); // we want start recalculation after synchronization
 		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
 
@@ -657,6 +680,7 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 
 		// Set default role to sync configuration
 		config.setDefaultRole(defaultRole.getId());
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK);
 		config.setStartAutoRoleRec(false); // we want start recalculation after synchronization
 		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
 
@@ -1183,6 +1207,962 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 		// Set default
 		configurationService.setBooleanValue(IdentityConfiguration.PROPERTY_IDENTITY_CREATE_DEFAULT_CONTRACT, Boolean.TRUE);
 	}
+	
+	//-------------------------------------- Inactive owner behavior tests --------------------------------------------------------
+
+	// check settings - default role is set, inactive owner behavior not set => synchronization didn't start
+	// check settings - link protected, account protection is not set => synchronization didn't start
+
+	// new identity, no default contract, don't link => identity is not created
+	// new identity, no default contract, link protected => created identity, account in protection
+	// new identity, default contract, don't link => created identity, account is assigned by role
+	// new identity, default contract, link protected => created identity, account is assigned by role
+	// unlinked, valid contract, behavior don't link => role is assigned, account is assigned by role
+	// unlinked, valid contract, link protected => role is assigned, account is assigned by role
+	// unlinked, invalid contract, don't link => role is not assigned, account is not linked, identity is not updated
+	// unlinked, invalid contract, link protected => role is not assigned, account is in protection
+	// unlinked, invalid contract, link protected, account protection is 30 days => role is not assigned, account is in protection to "contract end + 31 days"
+	// unlinked, future contract, link protected, account protection is 30 days => role is not assigned, account is in protection to "now + 31 days"
+	// unlinked, multiple invalid contracts, link protected, account protection is 30 days => account is in protection to "last contract end + 31 days"
+	// unlinked, no contract, don't link => role is not assigned, account is not linked
+	// unlinked, no contract, link protected => role is not assigned, account is in protection
+	// unlinked, no contract, link protected, account protection is 30 days => role is not assigned, account is in protection to "now + 31 days"
+	
+	// check settings - default role is set, inactive owner behavior not set => synchronization didn't start
+	@Test(expected = ResultCodeException.class)
+	public void testDefaultRoleWithoutInactiveOwnerBehaviorSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		config.setInactiveOwnerBehavior(null);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// create default mapping for provisioning
+		helper.createMapping(system);
+		helper.createRoleSystem(defaultRole, system);
+
+		helper.startSynchronization(config);
+	}
+
+	// check settings - link protected, account protection is not set => synchronization didn't start
+	@Test(expected = ResultCodeException.class)
+	public void testDefaultRoleLinkProtectedWithoutProtectionSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK_PROTECTED);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+		// create default mapping for provisioning
+		helper.createMapping(system);
+		helper.createRoleSystem(defaultRole, system);
+
+		helper.startSynchronization(config);
+	}
+
+	// new identity, no default contract, don't link => identity is not created
+	@Test
+	public void testCreateIdentityWithoutDefaultContractDontLinkSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Don't link without owner
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.DO_NOT_LINK);
+		// Don't create default contract
+		config.setCreateDefaultContract(false);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// create default mapping for provisioning
+		helper.createMapping(system);
+		helper.createRoleSystem(defaultRole, system);
+
+		IdmIdentityFilter identityFilter = new IdmIdentityFilter();
+		identityFilter.setUsername(IDENTITY_ONE);
+		List<IdmIdentityDto> identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(0, identities.size());
+
+		helper.startSynchronization(config);
+
+		// Identity didn't have contract to link the account -> it wasn't created at all and was ignored
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.MISSING_ENTITY, 1, OperationResultType.IGNORE);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(0, identities.size());
+		
+		// check that AccAccount doesn't exist
+		checkAccAccount(0, false, null);
+		
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// new identity, no default contract, link protected => created identity, account in protection
+	@Test
+	public void testCreateIdentityWithoutDefaultContractLinkProtectedSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Link accounts to protection
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK_PROTECTED);
+		// Don't create default contract
+		config.setCreateDefaultContract(false);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+		// create mapping for provisioning with protection enabled
+		createMappingWithProtection(system);
+		helper.createRoleSystem(defaultRole, system);
+
+		IdmIdentityFilter identityFilter = new IdmIdentityFilter();
+		identityFilter.setUsername(IDENTITY_ONE);
+		List<IdmIdentityDto> identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(0, identities.size());
+
+		helper.startSynchronization(config);
+
+		// Has to be success - identity didn't have contract, but we expected this and used Link protected
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.CREATE_ENTITY, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(1, identities.size());
+		IdmIdentityDto identity = identities.get(0);
+		// default role is not assigned
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identities.get(0).getId());
+		Assert.assertEquals(0, roles.size());
+
+		// account is in protection
+		checkAccAccount(1, true, null);
+
+		// identity account is in protection and not assigned by any role
+		checkIdentityAccount(identity, 1, null);
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// new identity, default contract, don't link => created identity, account is assigned by role
+	@Test
+	public void testCreateIdentityWithDefaultContractDontLinkSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Don't link without owner
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.DO_NOT_LINK);
+		// Create default contract
+		config.setCreateDefaultContract(true);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+		// create default mapping for provisioning
+		helper.createMapping(system);
+		helper.createRoleSystem(defaultRole, system);
+
+		IdmIdentityFilter identityFilter = new IdmIdentityFilter();
+		identityFilter.setUsername(IDENTITY_ONE);
+		List<IdmIdentityDto> identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(0, identities.size());
+
+		helper.startSynchronization(config);
+
+		// Has to be success - identity has contract
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.CREATE_ENTITY, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(1, identities.size());
+		IdmIdentityDto identity = identities.get(0);
+		// default role is assigned
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(1, roles.size());
+		IdmIdentityRoleDto assignedRole = roles.get(0);
+		Assert.assertEquals(defaultRole.getId(), assignedRole.getRole());
+
+		// account is linked without protection
+		checkAccAccount(1, false, null);
+
+		// account is assigned by the role
+		checkIdentityAccount(identity, 1, assignedRole.getId());
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// new identity, default contract, link protected => created identity, account is assigned by role
+	@Test
+	public void testCreateIdentityWithDefaultContractLinkProtectedSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Link protected
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK_PROTECTED);
+		// Create default contract
+		config.setCreateDefaultContract(true);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+		// create mapping for provisioning with protection enabled
+		createMappingWithProtection(system);
+		helper.createRoleSystem(defaultRole, system);
+
+		IdmIdentityFilter identityFilter = new IdmIdentityFilter();
+		identityFilter.setUsername(IDENTITY_ONE);
+		List<IdmIdentityDto> identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(0, identities.size());
+
+		helper.startSynchronization(config);
+
+		// Has to be success - identity has contract
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.CREATE_ENTITY, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(1, identities.size());
+		IdmIdentityDto identity = identities.get(0);
+		// default role is assigned
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(1, roles.size());
+		IdmIdentityRoleDto assignedRole = roles.get(0);
+		Assert.assertEquals(defaultRole.getId(), assignedRole.getRole());
+
+		// account is linked without protection
+		checkAccAccount(1, false, null);
+
+		// account is assigned by the role
+		checkIdentityAccount(identity, 1, assignedRole.getId());
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// unlinked, valid contract, behavior don't link => role is assigned, account is assigned by role
+	@Test
+	public void testLinkIdentityValidContractDontLinkSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		config.setUnlinkedAction(SynchronizationUnlinkedActionType.LINK_AND_UPDATE_ENTITY);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Don't link without owner
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.DO_NOT_LINK);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// create default mapping for provisioning
+		helper.createMapping(system);
+		helper.createRoleSystem(defaultRole, system);
+
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		String lastNameBefore = identity.getLastName();
+		Assert.assertNotEquals(IDENTITY_ONE, lastNameBefore);
+		IdmIdentityContractDto primeValidContract = contractService.getPrimeValidContract(identity.getId());
+		Assert.assertNotNull(primeValidContract);
+
+		helper.startSynchronization(config);
+
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.LINK_AND_UPDATE_ENTITY, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(1, roles.size());
+		IdmIdentityRoleDto assignedRole = roles.get(0);
+		Assert.assertEquals(defaultRole.getId(), assignedRole.getRole());
+		Assert.assertEquals(primeValidContract.getId(), assignedRole.getIdentityContract());
+		
+		// account is linked without protection
+		checkAccAccount(1, false, null);
+
+		// account is assigned by the role
+		checkIdentityAccount(identity, 1, assignedRole.getId());
+
+		// check that identity was updated
+		IdmIdentityFilter identityFilter = new IdmIdentityFilter();
+		identityFilter.setUsername(IDENTITY_ONE);
+		List<IdmIdentityDto> identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(1, identities.size());
+		Assert.assertEquals(IDENTITY_ONE, identities.get(0).getLastName());
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// unlinked, valid contract, link protected => role is assigned, account is assigned by role
+	@Test
+	public void testLinkIdentityValidContractLinkProtectedSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Link protected
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK_PROTECTED);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// create mapping for provisioning with protection enabled
+		createMappingWithProtection(system);
+		helper.createRoleSystem(defaultRole, system);
+
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		IdmIdentityContractDto primeValidContract = contractService.getPrimeValidContract(identity.getId());
+		Assert.assertNotNull(primeValidContract);
+
+		helper.startSynchronization(config);
+
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.LINK, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(1, roles.size());
+		IdmIdentityRoleDto assignedRole = roles.get(0);
+		Assert.assertEquals(defaultRole.getId(), assignedRole.getRole());
+		Assert.assertEquals(primeValidContract.getId(), assignedRole.getIdentityContract());
+
+		// account is linked without protection
+		checkAccAccount(1, false, null);
+
+		// account is assigned by the role
+		checkIdentityAccount(identity, 1, assignedRole.getId());
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// unlinked, invalid contract, don't link => role is not assigned, account is not linked, identity is not updated
+	@Test
+	public void testLinkIdentityInvalidContractDontLinkSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		config.setUnlinkedAction(SynchronizationUnlinkedActionType.LINK_AND_UPDATE_ENTITY);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Don't link without owner
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.DO_NOT_LINK);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// set invalid contract
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		String lastNameBefore = identity.getLastName();
+		Assert.assertNotEquals(IDENTITY_ONE, lastNameBefore);
+		IdmIdentityContractDto primeContract = contractService.getPrimeContract(identity.getId());
+		Assert.assertNotNull(primeContract);
+		primeContract.setValidTill(LocalDate.now().minusDays(10));
+		primeContract = contractService.save(primeContract);
+
+		helper.startSynchronization(config);
+
+		// has to be ignored, because no valid contract was found, so account wasn't linked
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.UNLINKED, 1, OperationResultType.IGNORE);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// role is not assigned
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(0, roles.size());
+
+		// check that AccAccount doesn't exist
+		checkAccAccount(0, false, null);
+
+		// account is not linked
+		checkIdentityAccount(identity, 0, null);
+
+		// check that identity wasn't updated
+		IdmIdentityFilter identityFilter = new IdmIdentityFilter();
+		identityFilter.setUsername(IDENTITY_ONE);
+		List<IdmIdentityDto> identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(1, identities.size());
+		Assert.assertEquals(lastNameBefore, identities.get(0).getLastName());
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// unlinked, invalid contract, link protected => role is not assigned, account is in protection infinitely
+	@Test
+	public void testLinkIdentityInvalidContractLinkProtectedSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Link protected
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK_PROTECTED);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// create mapping for provisioning with protection enabled infinitely
+		createMappingWithProtection(system, null);
+		helper.createRoleSystem(defaultRole, system);
+
+		// set invalid contract
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		IdmIdentityContractDto primeContract = contractService.getPrimeContract(identity.getId());
+		Assert.assertNotNull(primeContract);
+		primeContract.setValidTill(LocalDate.now().minusDays(10));
+		primeContract = contractService.save(primeContract);
+
+		helper.startSynchronization(config);
+
+		// has to be success, account was linked and we expected that contract can be invalid
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.LINK, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// role is not assigned
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(0, roles.size());
+
+		// account is linked in protection infinitely
+		checkAccAccount(1, true, null);
+
+		// account is in protection and not assigned by any role
+		checkIdentityAccount(identity, 1, null);
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// unlinked, invalid contract, link protected, account protection is 30 days => role is not assigned, account is in protection to "contract end + 31 days"
+	@Test
+	public void testLinkIdentityInvalidContractLinkProtectedFiniteProtectionSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Link protected
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK_PROTECTED);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// create mapping for provisioning with protection enabled
+		createMappingWithProtection(system, 30);
+		helper.createRoleSystem(defaultRole, system);
+
+		// set invalid contract
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		IdmIdentityContractDto primeContract = contractService.getPrimeContract(identity.getId());
+		Assert.assertNotNull(primeContract);
+		LocalDate validTill = LocalDate.now().minusDays(10);
+		primeContract.setValidTill(validTill);
+		primeContract = contractService.save(primeContract);
+
+		helper.startSynchronization(config);
+
+		// has to be success, account was linked and we expected that contract can be invalid
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.LINK, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// role is not assigned
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(0, roles.size());
+
+		// account is linked in protection
+		DateTime protectionEnd = validTill.plusDays(31).toDateTimeAtStartOfDay();
+		checkAccAccount(1, true, protectionEnd);
+
+		// account is in protection and not assigned by any role
+		checkIdentityAccount(identity, 1, null);
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// unlinked, future contract, link protected, account protection is 30 days => role is not assigned, account is in protection to "now + 31 days"
+	@Test
+	public void testLinkIdentityFutureContractLinkProtectedFiniteProtectionSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Link protected
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK_PROTECTED);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// create mapping for provisioning with protection enabled
+		createMappingWithProtection(system, 30);
+		helper.createRoleSystem(defaultRole, system);
+
+		// set future contract
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		IdmIdentityContractDto primeContract = contractService.getPrimeContract(identity.getId());
+		Assert.assertNotNull(primeContract);
+		primeContract.setValidTill(LocalDate.now().plusDays(100));
+		primeContract.setValidFrom(LocalDate.now().plusDays(10));
+		primeContract = contractService.save(primeContract);
+
+		helper.startSynchronization(config);
+
+		// has to be success, account was linked and we expected that contract can be invalid
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.LINK, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// role is not assigned
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(0, roles.size());
+
+		// account is linked in protection
+		// end of protection = now + protection interval + 1 day
+		DateTime protectionEnd = LocalDate.now().plusDays(31).toDateTimeAtStartOfDay();
+		checkAccAccount(1, true, protectionEnd);
+
+		// account is in protection and not assigned by any role
+		checkIdentityAccount(identity, 1, null);
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// unlinked, multiple invalid contracts, link protected, account protection is 30 days => account is in protection to "last contract end + 31 days"
+	@Test
+	public void testLinkIdentityMultipleInvalidContractsLinkProtectedFiniteProtectionSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Link protected
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK_PROTECTED);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// create mapping for provisioning with protection enabled
+		createMappingWithProtection(system, 30);
+		helper.createRoleSystem(defaultRole, system);
+
+		// ends of contracts
+		LocalDate validTillOlder = LocalDate.now().minusDays(100);
+		LocalDate validTillNewer = LocalDate.now().minusDays(50);
+
+		// set invalid contract
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		IdmIdentityContractDto primeContract = contractService.getPrimeContract(identity.getId());
+		Assert.assertNotNull(primeContract);
+		primeContract.setValidTill(validTillOlder);
+		primeContract = contractService.save(primeContract);
+
+		// create second invalid contract, which is newer than the first
+		helper.createIdentityContact(identity, null, null, validTillNewer);
+
+		helper.startSynchronization(config);
+
+		// has to be success, account was linked and we expected that contract can be invalid
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.LINK, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// role is not assigned
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(0, roles.size());
+
+		// account is linked in protection
+		// end of protection = validTillNewer + protection interval + 1 day
+		DateTime protectionEnd = validTillNewer.plusDays(31).toDateTimeAtStartOfDay();
+		checkAccAccount(1, true, protectionEnd);
+
+		// account is in protection and not assigned by any role
+		checkIdentityAccount(identity, 1, null);
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// unlinked, no contract, don't link => role is not assigned, account is not linked
+	@Test
+	public void testLinkIdentityWithoutContractDontLinkSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Don't link without owner
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.DO_NOT_LINK);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// create identity without contract
+		configurationService.setBooleanValue(IdentityConfiguration.PROPERTY_IDENTITY_CREATE_DEFAULT_CONTRACT, Boolean.FALSE);
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		// Set default
+		configurationService.setBooleanValue(IdentityConfiguration.PROPERTY_IDENTITY_CREATE_DEFAULT_CONTRACT, Boolean.TRUE);
+		IdmIdentityContractDto primeContract = contractService.getPrimeContract(identity.getId());
+		Assert.assertNull(primeContract);
+
+		helper.startSynchronization(config);
+
+		// has to be ignored, because no contract was found, so account wasn't linked
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.UNLINKED, 1, OperationResultType.IGNORE);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// role is not assigned
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(0, roles.size());
+
+		// check that AccAccount doesn't exist
+		checkAccAccount(0, false, null);
+
+		checkIdentityAccount(identity, 0, null);
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// unlinked, no contract, link protected => role is not assigned, account is in protection infinitely
+	@Test
+	public void testLinkIdentityWithoutContractLinkProtectedSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Link protected
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK_PROTECTED);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// create mapping for provisioning with protection enabled infinitely
+		createMappingWithProtection(system, null);
+		helper.createRoleSystem(defaultRole, system);
+
+		// create identity without contract
+		configurationService.setBooleanValue(IdentityConfiguration.PROPERTY_IDENTITY_CREATE_DEFAULT_CONTRACT, Boolean.FALSE);
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		// Set default
+		configurationService.setBooleanValue(IdentityConfiguration.PROPERTY_IDENTITY_CREATE_DEFAULT_CONTRACT, Boolean.TRUE);
+		IdmIdentityContractDto primeContract = contractService.getPrimeContract(identity.getId());
+		Assert.assertNull(primeContract);
+
+		helper.startSynchronization(config);
+
+		// has to be success, account was linked and we expected that contract can be invalid
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.LINK, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// role is not assigned
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(0, roles.size());
+
+		// account is linked in protection infinitely
+		checkAccAccount(1, true, null);
+
+		// account is in protection and not assigned by any role
+		checkIdentityAccount(identity, 1, null);
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// unlinked, no contract, link protected, account protection is 30 days => role is not assigned, account is in protection to "now + 31 days"
+	@Test
+	public void testLinkIdentityWithoutContractLinkProtectedFiniteProtectionSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+		IdmRoleDto defaultRole = helper.createRole();
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		// Set default role to sync configuration
+		config.setDefaultRole(defaultRole.getId());
+		// Link protected
+		config.setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType.LINK_PROTECTED);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// create mapping for provisioning with protection enabled
+		createMappingWithProtection(system, 30);
+		helper.createRoleSystem(defaultRole, system);
+
+		// create identity without contract
+		configurationService.setBooleanValue(IdentityConfiguration.PROPERTY_IDENTITY_CREATE_DEFAULT_CONTRACT, Boolean.FALSE);
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		// Set default
+		configurationService.setBooleanValue(IdentityConfiguration.PROPERTY_IDENTITY_CREATE_DEFAULT_CONTRACT, Boolean.TRUE);
+		IdmIdentityContractDto primeContract = contractService.getPrimeContract(identity.getId());
+		Assert.assertNull(primeContract);
+
+		helper.startSynchronization(config);
+
+		// has to be success, account was linked and we expected that contract can be invalid
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.LINK, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// role is not assigned
+		List<IdmIdentityRoleDto> roles = identityRoleService.findAllByIdentity(identity.getId());
+		Assert.assertEquals(0, roles.size());
+
+		// account is linked in protection
+		// end of protection = now + protection interval + 1 day
+		DateTime protectionEnd = LocalDate.now().plusDays(31).toDateTimeAtStartOfDay();
+		checkAccAccount(1, true, protectionEnd);
+
+		// account is in protection and not assigned by any role
+		checkIdentityAccount(identity, 1, null);
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	//-------------------------------------- Inactive owner behavior tests end--------------------------------------------------------
+
+	//-------------------------------------- System entity wish tests --------------------------------------------------------
+	// new identity, system entity has "wish" => removed "wish"
+	// unlinked, system entity has "wish" => removed "wish"
+	// linked, system entity has "wish", action Ignore => no change
+	// linked, system entity has "wish", action Update entity, automapping is allowed => removed "wish" 
+	// linked, system entity has "wish", action Update entity, automapping is not allowed => no change + warning
+
+	// new identity, system entity has "wish" => removed "wish"
+	@Test
+	public void testCreateIdentityRemoveWishSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+
+		// Create system entity with "wish"
+		createSystemEntityWish(system);
+
+		IdmIdentityFilter identityFilter = new IdmIdentityFilter();
+		identityFilter.setUsername(IDENTITY_ONE);
+		List<IdmIdentityDto> identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(0, identities.size());
+
+		helper.startSynchronization(config);
+
+		// Has to be success
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.CREATE_ENTITY, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// Identity was created
+		identities = identityService.find(identityFilter, null).getContent();
+		Assert.assertEquals(1, identities.size());
+
+		// System entity is no longer "wish"
+		SysSystemEntityDto systemEntity = systemEntityService.getBySystemAndEntityTypeAndUid(system, SystemEntityType.IDENTITY, IDENTITY_ONE);
+		Assert.assertFalse(systemEntity.isWish());
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// unlinked, system entity has "wish" => removed "wish"
+	@Test
+	public void testLinkIdentityRemoveWishSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+
+		// Create system entity with "wish"
+		createSystemEntityWish(system);
+
+		helper.createIdentity(IDENTITY_ONE);
+
+		helper.startSynchronization(config);
+
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.LINK, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// System entity is no longer "wish"
+		SysSystemEntityDto systemEntity = systemEntityService.getBySystemAndEntityTypeAndUid(system, SystemEntityType.IDENTITY, IDENTITY_ONE);
+		Assert.assertFalse(systemEntity.isWish());
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// linked, system entity has "wish", action Ignore => no change
+	@Test
+	public void testLinkedIdentityIgnoredDontRemoveWishSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		config.setLinkedAction(SynchronizationLinkedActionType.IGNORE);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// Create system entity with "wish"
+		createSystemEntityWish(system);
+
+		// Create identity with account
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		helper.createIdentityAccount(system, identity);
+
+		helper.startSynchronization(config);
+
+		// has to be ignored
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.LINKED, 1, OperationResultType.IGNORE);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// System entity has "wish"
+		SysSystemEntityDto systemEntity = systemEntityService.getBySystemAndEntityTypeAndUid(system, SystemEntityType.IDENTITY, IDENTITY_ONE);
+		Assert.assertTrue(systemEntity.isWish());
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+	}
+
+	// linked, system entity has "wish", action Update entity, automapping is allowed => removed "wish" 
+	@Test
+	public void testUpdateIdentityRemoveWishSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+
+		// Allow automapping
+		configurationService.setBooleanValue(ProvisioningConfiguration.PROPERTY_ALLOW_AUTO_MAPPING_ON_EXISTING_ACCOUNT, Boolean.TRUE);
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		config.setLinkedAction(SynchronizationLinkedActionType.UPDATE_ENTITY);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// Create system entity with "wish"
+		createSystemEntityWish(system);
+
+		// Create identity with account
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		helper.createIdentityAccount(system, identity);
+
+		helper.startSynchronization(config);
+
+		// has to be success
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.UPDATE_ENTITY, 1, OperationResultType.SUCCESS);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// System entity has no longer "wish"
+		SysSystemEntityDto systemEntity = systemEntityService.getBySystemAndEntityTypeAndUid(system, SystemEntityType.IDENTITY, IDENTITY_ONE);
+		Assert.assertFalse(systemEntity.isWish());
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+
+		// Return default
+		configurationService.setBooleanValue(ProvisioningConfiguration.PROPERTY_ALLOW_AUTO_MAPPING_ON_EXISTING_ACCOUNT,
+				ProvisioningConfiguration.DEFAULT_ALLOW_AUTO_MAPPING_ON_EXISTING_ACCOUNT);
+	}
+
+	// linked, system entity has "wish", action Update entity, automapping is not allowed => no change + warning
+	@Test
+	public void testUpdateIdentityNoAutomappingDontRemoveWishSync() {
+		SysSystemDto system = initData();
+		Assert.assertNotNull(system);
+
+		// Disallow automapping
+		configurationService.setBooleanValue(ProvisioningConfiguration.PROPERTY_ALLOW_AUTO_MAPPING_ON_EXISTING_ACCOUNT, Boolean.FALSE);
+
+		SysSyncIdentityConfigDto config = doCreateSyncConfig(system);
+		config.setLinkedAction(SynchronizationLinkedActionType.UPDATE_ENTITY);
+		config = (SysSyncIdentityConfigDto) syncConfigService.save(config);
+
+		// Create system entity with "wish"
+		createSystemEntityWish(system);
+
+		// Create identity with account
+		IdmIdentityDto identity = helper.createIdentity(IDENTITY_ONE);
+		helper.createIdentityAccount(system, identity);
+
+		helper.startSynchronization(config);
+
+		// has to be warning - automapping is not allowed
+		SysSyncLogDto log = checkSyncLog(config, SynchronizationActionType.UPDATE_ENTITY, 1, OperationResultType.WARNING);
+
+		Assert.assertFalse(log.isRunning());
+		Assert.assertFalse(log.isContainsError());
+
+		// System entity has "wish"
+		SysSystemEntityDto systemEntity = systemEntityService.getBySystemAndEntityTypeAndUid(system, SystemEntityType.IDENTITY, IDENTITY_ONE);
+		Assert.assertTrue(systemEntity.isWish());
+
+		// Delete log
+		syncLogService.delete(log);
+		syncConfigService.delete(config);
+
+		// Return default
+		configurationService.setBooleanValue(ProvisioningConfiguration.PROPERTY_ALLOW_AUTO_MAPPING_ON_EXISTING_ACCOUNT,
+				ProvisioningConfiguration.DEFAULT_ALLOW_AUTO_MAPPING_ON_EXISTING_ACCOUNT);
+	}
+
+	//-------------------------------------- System entity wish tests end--------------------------------------------------------
 
 	private Task createSyncTask(UUID syncConfId) {
 		Task task = new Task();
@@ -1360,6 +2340,50 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 		});
 	}
 
+	private SysSystemMappingDto createMappingWithProtection(SysSystemDto system) {
+		return createMappingWithProtection(system, null);
+	}
+
+	private SysSystemMappingDto createMappingWithProtection(SysSystemDto system, Integer protectionInterval) {
+		SysSystemMappingDto systemMapping = helper.createMapping(system);
+		systemMapping.setProtectionEnabled(true);
+		systemMapping.setProtectionInterval(protectionInterval);
+		systemMappingService.save(systemMapping);
+		return systemMapping;
+	}
+
+	private void createSystemEntityWish(SysSystemDto system) {
+		SysSystemEntityDto systemEntity = new SysSystemEntityDto();
+		systemEntity.setUid(IDENTITY_ONE);
+		systemEntity.setEntityType(SystemEntityType.IDENTITY);
+		systemEntity.setWish(true);
+		systemEntity.setSystem(system.getId());
+		systemEntity = systemEntityService.save(systemEntity);
+	}
+
+	private void checkIdentityAccount(IdmIdentityDto identity, int numberOfAccounts, UUID identityRole) {
+		AccIdentityAccountFilter identityAccountFilter = new AccIdentityAccountFilter();
+		identityAccountFilter.setIdentityId(identity.getId());
+		List<AccIdentityAccountDto> identityAccounts = identityAccountService.find(identityAccountFilter, null).getContent();
+		Assert.assertEquals(numberOfAccounts, identityAccounts.size());
+		if (numberOfAccounts == 0) {
+			return;
+		}
+		Assert.assertEquals(identityRole, identityAccounts.get(0).getIdentityRole());
+	}
+
+	private void checkAccAccount(int numberOfAccounts, boolean inProtection, DateTime endOfProtection) {
+		AccAccountFilter accountFilter = new AccAccountFilter();
+		accountFilter.setUid(IDENTITY_ONE);
+		List<AccAccountDto> accAccounts = accAccountService.find(accountFilter, null).getContent();
+		Assert.assertEquals(numberOfAccounts, accAccounts.size());
+		if (numberOfAccounts == 0) {
+			return;
+		}
+		Assert.assertEquals(inProtection, accAccounts.get(0).isInProtection());
+		Assert.assertEquals(endOfProtection, accAccounts.get(0).getEndOfProtection());
+	}
+
 	@Transactional
 	public void deleteAllResourceData() {
 		// Delete all
@@ -1367,6 +2391,24 @@ public class IdentitySyncTest extends AbstractIntegrationTest {
 		q.executeUpdate();
 	}
 
+	private void deleteProtectedAccount(String accountUid) {
+		AccAccountFilter accountFilter = new AccAccountFilter();
+		accountFilter.setUid(accountUid);
+		List<AccAccountDto> accAccounts = accAccountService.find(accountFilter, null).getContent();
+		if (accAccounts.size() == 0) {
+			return;
+		}
+		Assert.assertEquals(1, accAccounts.size());
+		AccAccountDto account = accAccounts.get(0);
+		account.setInProtection(true); // or disable protection on the provisioning mapping
+		account.setEndOfProtection(DateTime.now().minusMonths(1));
+		account = accAccountService.save(account);
+		accAccountService.delete(account);
+
+		accAccounts = accAccountService.find(accountFilter, null).getContent();
+		Assert.assertEquals(0, accAccounts.size());
+	}
+	
 	private IdentitySyncTest getBean() {
 		return applicationContext.getBean(this.getClass());
 	}

@@ -1,8 +1,8 @@
 import React from 'react';
 //
-import { Basic, Managers } from 'czechidm-core';
+import { Basic, Advanced } from 'czechidm-core';
 
-const roleManager = new Managers.RoleManager();
+import SynchronizationInactiveOwnerBehaviorTypeEnum from '../../domain/SynchronizationInactiveOwnerBehaviorTypeEnum';
 
 /**
  * Identity's specific sync configuration
@@ -13,6 +13,9 @@ class SyncIdentityConfig extends Basic.AbstractContent {
 
   constructor(props, context) {
     super(props, context);
+    this.state = {
+      defaultRoleId: this.props.synchronizationConfig.defaultRole
+    };
   }
 
   getContentKey() {
@@ -31,8 +34,16 @@ class SyncIdentityConfig extends Basic.AbstractContent {
     }
   }
 
+  _defaultRoleChange(defaultRole) {
+    const defaultRoleId = defaultRole;
+    this.setState({
+      defaultRoleId
+    });
+  }
+
   render() {
     const { synchronizationConfig, showLoading, isNew } = this.props;
+    const { defaultRoleId } = this.state;
     // Set default values when create new sync configuration
     if (isNew) {
       synchronizationConfig.createDefaultContract = false;
@@ -41,11 +52,19 @@ class SyncIdentityConfig extends Basic.AbstractContent {
     //
     return (
       <Basic.AbstractForm ref="formSpecific" data={synchronizationConfig} showLoading={showLoading} className="panel-body">
-        <Basic.SelectBox
+        <Advanced.RoleSelect
           ref="defaultRole"
-          manager={roleManager}
+          onChange={this._defaultRoleChange.bind(this)}
           label={this.i18n('identityConfigDetail.defaultRole.label')}
           helpBlock={this.i18n('identityConfigDetail.defaultRole.helpBlock')}/>
+        <Basic.EnumSelectBox
+          ref="inactiveOwnerBehavior"
+          useSymbol={ false }
+          enum={SynchronizationInactiveOwnerBehaviorTypeEnum}
+          hidden={defaultRoleId === null}
+          required={defaultRoleId !== null}
+          label={this.i18n('identityConfigDetail.inactiveOwnerBehavior.label')}
+          helpBlock={this.i18n('identityConfigDetail.inactiveOwnerBehavior.helpBlock')}/>
         <Basic.Checkbox
           ref="startAutoRoleRec"
           label={this.i18n('identityConfigDetail.startAutoRoleRec.label')}

@@ -21,7 +21,7 @@ public interface AccRoleAccountService extends
 	/**
 	 * Delete role account
 	 * @param entity
-	 * @param deleteAccount  If is true, then will be deleted (call provisioning) account on target system.
+	 * @param deleteAccount If true, then the account on the target system will be deleted (call provisioning). 
 	 */
 	void delete(AccRoleAccountDto entity, boolean deleteAccount, BasePermission... permission);
 	

@@ -70,4 +70,7 @@ public interface AttributeMapping extends BaseDto {
 
 	void setCached(boolean cached);
 
+	void setPasswordAttribute(boolean passwordAttribute);
+
+	boolean isPasswordAttribute();
 }

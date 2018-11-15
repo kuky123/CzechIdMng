@@ -95,7 +95,7 @@ public class RoleAccountManagementBulkAction extends AbstractBulkAction<IdmRoleD
 
 		OperationResult operationResult = new OperationResult(OperationState.EXECUTED);
 		operationResult.setCause(MessageFormat.format(
-				"For role [{0}] was processed/notified [{1}] identity roles. With this UUIDs:\n {2}", dto.getCode(),
+				"For the role [{0}], [{1}] of identity roles were processed/notified. UUIDs:\n {2}", dto.getCode(),
 				allIdentityRoles.size(), message.toString()));
 		return operationResult;
 	}

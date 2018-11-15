@@ -1,5 +1,8 @@
 package eu.bcvsolutions.idm.acc.provisioning;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.List;
 
 import org.joda.time.LocalDate;
@@ -27,6 +30,7 @@ import eu.bcvsolutions.idm.acc.dto.SysSystemDto;
 import eu.bcvsolutions.idm.acc.dto.SysSystemMappingDto;
 import eu.bcvsolutions.idm.acc.dto.filter.AccAccountFilter;
 import eu.bcvsolutions.idm.acc.dto.filter.AccIdentityAccountFilter;
+import eu.bcvsolutions.idm.acc.dto.filter.SysRoleSystemFilter;
 import eu.bcvsolutions.idm.acc.dto.filter.SysSystemEntityFilter;
 import eu.bcvsolutions.idm.acc.entity.AccIdentityAccount_;
 import eu.bcvsolutions.idm.acc.entity.TestResource;
@@ -43,6 +47,7 @@ import eu.bcvsolutions.idm.core.api.dto.IdmIdentityRoleDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmRoleDto;
 import eu.bcvsolutions.idm.core.api.dto.PasswordChangeDto;
 import eu.bcvsolutions.idm.core.api.dto.filter.IdmIdentityRoleFilter;
+import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityContractService;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityRoleService;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityService;
@@ -72,7 +77,6 @@ public class IdentityAccountManagementTest extends AbstractIntegrationTest {
 	private static final String ROLE_OVERLOADING_FIRST_NAME = "role_overloading_first_name";
 	private static final String ROLE_OVERLOADING_Y_ACCOUNT = "role_overloading_y_account";
 	private static final String IDENTITY_PASSWORD_TWO = "password_two";
-	private static final String IDENTITY_PASSWORD_THREE = "password_three";
 	private static final String SYSTEM_NAME = "IdentityAccountManagementTest";
 	
 	@Autowired
@@ -305,7 +309,7 @@ public class IdentityAccountManagementTest extends AbstractIntegrationTest {
 				systemEntityService.find(filter, null).getContent().size());
 	}
 	
-	@Test
+	@Test(expected = ResultCodeException.class)
 	public void overloadedAttributeChangePassword() {
 		IdmIdentityDto identity = identityService.getByUsername(IDENTITY_USERNAME);
 		AccIdentityAccountFilter filter = new AccIdentityAccountFilter();
@@ -331,20 +335,31 @@ public class IdentityAccountManagementTest extends AbstractIntegrationTest {
 		// Add overloaded password attribute
 		IdmRoleDto rolePassword = roleService.getByCode(ROLE_OVERLOADING_PASSWORD);
 
-		IdmIdentityRoleDto irdto = new IdmIdentityRoleDto();
-		irdto.setIdentityContract(identityContractService.findAllByIdentity(identity.getId()).get(0).getId());
-		irdto.setRole(rolePassword.getId());
-		// This evokes IdentityRole SAVE event. On this event will be start
-		// account management and provisioning
-		identityRoleService.save(irdto);
+		SysSystemDto systemDto = systemService.getByCode(SYSTEM_NAME);
+		assertNotNull(systemDto);
 		
-		
-		// Do change of password for selected accounts
-		passwordChange.setNewPassword(new GuardedString(IDENTITY_PASSWORD_THREE));
-		identityService.passwordChange(identity, passwordChange);
-		// Check correct overloaded password two
-		resourceAccount = helper.findResource("x" + IDENTITY_USERNAME);
-		Assert.assertEquals("Check overloaded password (added x) on target system", "x"+IDENTITY_PASSWORD_THREE, resourceAccount.getPassword());
+		SysRoleSystemFilter roleSystemFilter = new SysRoleSystemFilter();
+		roleSystemFilter.setRoleId(rolePassword.getId());
+		roleSystemFilter.setSystemId(systemDto.getId());
+		List<SysRoleSystemDto> roleSystems = roleSystemService.find(roleSystemFilter, null).getContent();
+		assertEquals(1, roleSystems.size());
+		SysRoleSystemDto roleSystemDto = roleSystems.get(0);
+		SysSystemMappingDto systemMapping = helper.getDefaultMapping(systemDto);
+		SysSystemAttributeMappingDto attributeHandlingPassword = schemaAttributeHandlingService
+				.findBySystemMappingAndName(systemMapping.getId(), TestHelper.ATTRIBUTE_MAPPING_PASSWORD);
+
+		// Attribute for overloading last name attribute
+		SysRoleSystemAttributeDto attributePassword = new SysRoleSystemAttributeDto();
+		attributePassword.setEntityAttribute(true);
+		attributePassword.setIdmPropertyName("password");
+		attributePassword.setConfidentialAttribute(true);
+		attributePassword.setName("Overloaded password - add x");
+		attributePassword.setRoleSystem(roleSystemDto.getId());
+		attributePassword.setSystemAttributeMapping(attributeHandlingPassword.getId());
+		attributePassword.setTransformScript("return new "+GuardedString.class.getName()+"(\"x\"+attributeValue.asString());");
+
+		// Since 9.3.0 is not possible override password in role mapping exception will be thrown
+		attributePassword = roleSystemAttributeService.save(attributePassword);
 	}
 
 
@@ -469,7 +484,7 @@ public class IdentityAccountManagementTest extends AbstractIntegrationTest {
 		// role_overloading_last_name and role_overloading_y_account) and
 		// identity accounts
 		List<AccIdentityAccountDto> identityAccounts = identityAccountService.find(iaccFilter, null).getContent();
-		Assert.assertEquals("Idenitity accounts have to exists (four items) after account management was started!", 4,
+		Assert.assertEquals("Idenitity accounts have to exists (three items - override by password from version 9.3.0 is not possiblem ) after account management was started!", 3,
 				identityAccounts.size());
 
 		IdmIdentityRoleFilter irfilter = new IdmIdentityRoleFilter();
@@ -498,8 +513,6 @@ public class IdentityAccountManagementTest extends AbstractIntegrationTest {
 		SysSystemMappingDto systemMapping = helper.getDefaultMapping(system);
 		SysSystemAttributeMappingDto attributeHandlingLastName = schemaAttributeHandlingService
 				.findBySystemMappingAndName(systemMapping.getId(), TestHelper.ATTRIBUTE_MAPPING_LASTNAME);
-		SysSystemAttributeMappingDto attributeHandlingPassword = schemaAttributeHandlingService
-				.findBySystemMappingAndName(systemMapping.getId(), TestHelper.ATTRIBUTE_MAPPING_PASSWORD);
 		SysSystemAttributeMappingDto attributeHandlingFirstName = schemaAttributeHandlingService
 				.findBySystemMappingAndName(systemMapping.getId(), TestHelper.ATTRIBUTE_MAPPING_FIRSTNAME);
 		SysSystemAttributeMappingDto attributeHandlingUserName = schemaAttributeHandlingService
@@ -545,6 +558,7 @@ public class IdentityAccountManagementTest extends AbstractIntegrationTest {
 		 * Create role with link on system (overloading password attribute)
 		 */
 		IdmRoleDto roleOverloadingPassword = new IdmRoleDto();
+		// Since 9.3.0 password can't be overridden
 		roleOverloadingPassword.setCode(ROLE_OVERLOADING_PASSWORD);
 		roleOverloadingPassword = roleService.save(roleOverloadingPassword);
 		SysRoleSystemDto roleSystemPassword = new SysRoleSystemDto();
@@ -552,17 +566,6 @@ public class IdentityAccountManagementTest extends AbstractIntegrationTest {
 		roleSystemPassword.setSystem(system.getId());
 		roleSystemPassword.setSystemMapping(systemMapping.getId());
 		roleSystemPassword = roleSystemService.save(roleSystemPassword);
-
-		// Attribute for overloading last name attribute
-		SysRoleSystemAttributeDto attributePassword = new SysRoleSystemAttributeDto();
-		attributePassword.setEntityAttribute(true);
-		attributePassword.setIdmPropertyName("password");
-		attributePassword.setConfidentialAttribute(true);
-		attributePassword.setName("Overloaded password - add x");
-		attributePassword.setRoleSystem(roleSystemPassword.getId());
-		attributePassword.setSystemAttributeMapping(attributeHandlingPassword.getId());
-		attributePassword.setTransformScript("return new "+GuardedString.class.getName()+"(\"x\"+attributeValue.asString());");
-		attributePassword = roleSystemAttributeService.save(attributePassword);
 
 		/*
 		 * Create role with link on system (overloading (disable) first name

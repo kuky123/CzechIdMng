@@ -32,13 +32,13 @@ public interface ProvisioningService {
 	static final String DTO_PROPERTY_NAME = "dto";
 	
 	/**
-	 * Property in provisioning start event. If is value TRUE, then will be cancelled provisioning break during account protection.
-	 * In extra cases, we do provisioning with account in protection. For example we need do first provisioning (for move account to archive) 
+	 * Property in provisioning start event. If the value is TRUE, then provisioning break during account protection will be cancelled.
+	 * In extra cases, we do provisioning with account in protection. For example we need to do the first provisioning (for move account to archive) 
 	 */
 	static final String CANCEL_PROVISIONING_BREAK_IN_PROTECTION = "cancel_provisioning_break_in_account_protection";
 	
 	/**
-	 * Property in event. If is value TRUE, then will be provisioning skipped. Skip must be implemented in every processor for now!
+	 * Property in event. If the value is TRUE, then the provisioning is skipped. Skipping must be implemented in every processor for now!
 	 */
 	static final String SKIP_PROVISIONING = "skip_provisioning";
 
@@ -155,11 +155,11 @@ public interface ProvisioningService {
 
 	
 	/**
-	 * Ensure the account management for given entity. First check if can be
-	 * AccAccount and relation for this entity created. If yes then will be accounts
-	 * and relations on the entity created on systems (SysSystem). Ensure the delete
-	 * of AccAccount too. Provisioning on the target system is not basically
-	 * executed.
+	 * Ensure the account management for given entity. First check if
+	 * AccAccount and relation for this entity can be created. If yes then 
+	 * accounts and relations on the entity will be created on systems (SysSystem).
+	 * Ensure the deletion of AccAccount too. Provisioning on the target system
+	 * is not basicallyexecuted.
 	 * 
 	 * @param dto
 	 * @return true if is provisioning required

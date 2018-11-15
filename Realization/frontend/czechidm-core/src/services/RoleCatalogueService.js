@@ -2,12 +2,6 @@ import AbstractService from './AbstractService';
 import SearchParameters from '../domain/SearchParameters';
 
 /**
- * TODO: Add better constant for max roots count
- * @type {Number}
- */
-const MAX_ROOTS_COUNT = 100000;
-
-/**
  * Role catalogue
  *
  * @author Ondřej Kopr
@@ -18,11 +12,14 @@ class RoleCatalogueService extends AbstractService {
     return '/role-catalogues';
   }
 
-  getNiceLabel(roleCatalogue) {
-    if (!roleCatalogue) {
+  getNiceLabel(entity) {
+    if (!entity) {
       return '';
     }
-    return `${roleCatalogue.name} (${roleCatalogue.code})`;
+    if (entity.name === entity.code) {
+      return entity.name;
+    }
+    return `${entity.name} (${entity.code})`;
   }
 
   supportsPatch() {
@@ -46,14 +43,14 @@ class RoleCatalogueService extends AbstractService {
    * Returns search parameters for search roots
    */
   getRootSearchParameters() {
-    return super.getDefaultSearchParameters().setName(RoleCatalogueService.ROOT_SEARCH).clearSort().setSort('name').setSize(MAX_ROOTS_COUNT);
+    return super.getDefaultSearchParameters().setName(RoleCatalogueService.ROOT_SEARCH).clearSort().setSort('name').setSize(50);
   }
 
   /**
    * Search children by parent id
    */
   getTreeSearchParameters() {
-    return super.getDefaultSearchParameters().setName(RoleCatalogueService.TREE_SEARCH).clearSort().setSort('name');
+    return super.getDefaultSearchParameters().setName(RoleCatalogueService.TREE_SEARCH).clearSort().setSort('name').setSize(50);
   }
 }
 

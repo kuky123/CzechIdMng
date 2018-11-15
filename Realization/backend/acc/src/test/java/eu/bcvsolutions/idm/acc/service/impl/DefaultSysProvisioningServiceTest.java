@@ -1573,6 +1573,7 @@ public class DefaultSysProvisioningServiceTest extends AbstractIntegrationTest {
 				attributeMapping.setSchemaAttribute(schemaAttr.getId());
 				attributeMapping.setName(schemaAttr.getName());
 				attributeMapping.setSystemMapping(entityHandlingResult.getId());
+				attributeMapping.setPasswordAttribute(true); // Since 9.3.0 must be password marked as password attribute
 				attributeMapping = systemAttributeMappingService.save(attributeMapping);
 
 			} else if ("email".equalsIgnoreCase(schemaAttr.getName())) {

@@ -241,7 +241,7 @@ module.exports = {
       'type': 'form-attribute-renderer',
       'persistentType': 'UUID',
       'faceType': 'ROLE-SELECT',
-      'component': require('./src/components/advanced/Form/SelectBoxFormAttributeRenderer'),
+      'component': require('./src/components/advanced/Form/RoleSelectFormAttributeRenderer'),
       'labelKey': 'core:component.advanced.EavForm.faceType.ROLE-SELECT',
       'manager': require('./src/redux').RoleManager
     },
@@ -253,6 +253,24 @@ module.exports = {
       'component': require('./src/components/advanced/Form/SelectBoxFormAttributeRenderer'),
       'labelKey': 'core:component.advanced.EavForm.faceType.FORM-DEFINITION-SELECT',
       'manager': require('./src/redux').FormDefinitionManager
+    },
+    {
+      'id': 'tree-node-select-form-value',
+      'type': 'form-attribute-renderer',
+      'persistentType': 'UUID',
+      'faceType': 'TREE-NODE-SELECT',
+      'component': require('./src/components/advanced/Form/TreeNodeSelectFormAttributeRenderer'),
+      'labelKey': 'core:component.advanced.EavForm.faceType.TREE-NODE-SELECT',
+      'manager': require('./src/redux').TreeNodeManager
+    },
+    {
+      'id': 'role-catalogue-select-form-value',
+      'type': 'form-attribute-renderer',
+      'persistentType': 'UUID',
+      'faceType': 'ROLE-CATALOGUE-SELECT',
+      'component': require('./src/components/advanced/Form/RoleCatalogueSelectFormAttributeRenderer'),
+      'labelKey': 'core:component.advanced.EavForm.faceType.ROLE-CATALOGUE-SELECT',
+      'manager': require('./src/redux').RoleCatalogueManager
     },
     {
       'id': 'boolean-select-form-value',
@@ -289,6 +307,15 @@ module.exports = {
       'manager': require('./src/redux').RoleManager
     },
     {
+      'id': 'tree-type-select-box',
+      'type': 'entity-select-box',
+      'priority': 0,
+      'localizationKey': 'entity.TreeType',
+      'entityType': ['treeType'],
+      'searchInFields': ['code', 'name'],
+      'manager': require('./src/redux').TreeTypeManager
+    },
+    {
       'id': 'tree-node-select-box',
       'type': 'entity-select-box',
       'priority': 0,
@@ -296,6 +323,15 @@ module.exports = {
       'entityType': ['treeNode'],
       'searchInFields': ['code', 'name'],
       'manager': require('./src/redux').TreeNodeManager
+    },
+    {
+      'id': 'role-catalogue-select-box',
+      'type': 'entity-select-box',
+      'priority': 0,
+      'localizationKey': 'entity.RoleCatalogue',
+      'entityType': ['roleCatalogue'],
+      'searchInFields': ['code', 'name'],
+      'manager': require('./src/redux').RoleCatalogueManager
     },
     {
       'id': 'basic-password-change',

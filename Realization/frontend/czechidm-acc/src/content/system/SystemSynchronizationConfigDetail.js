@@ -479,6 +479,7 @@ class SystemSynchronizationConfigDetail extends Advanced.AbstractTableContent {
                     className=""
                     ref="linkedAction"
                     enum={SynchronizationLinkedActionTypeEnum}
+                    useSymbol={ false }
                     label={this.i18n('situationAction')}
                     required/>
                   <Basic.SelectBox
@@ -492,6 +493,7 @@ class SystemSynchronizationConfigDetail extends Advanced.AbstractTableContent {
                   <Basic.EnumSelectBox
                     ref="unlinkedAction"
                     enum={SynchronizationUnlinkedActionTypeEnum}
+                    useSymbol={ false }
                     label={this.i18n('situationAction')}
                     required/>
                   <Basic.SelectBox
@@ -505,6 +507,7 @@ class SystemSynchronizationConfigDetail extends Advanced.AbstractTableContent {
                   <Basic.EnumSelectBox
                     ref="missingEntityAction"
                     enum={SynchronizationMissingEntityActionTypeEnum}
+                    useSymbol={ false }
                     label={this.i18n('situationAction')}
                     required/>
                   <Basic.SelectBox
@@ -518,6 +521,7 @@ class SystemSynchronizationConfigDetail extends Advanced.AbstractTableContent {
                   <Basic.EnumSelectBox
                     ref="missingAccountAction"
                     enum={ReconciliationMissingAccountActionTypeEnum}
+                    useSymbol={ false }
                     label={this.i18n('situationAction')}
                     required/>
                   <Basic.SelectBox
@@ -560,7 +564,7 @@ class SystemSynchronizationConfigDetail extends Advanced.AbstractTableContent {
               </Basic.Panel>
             </form>
           </Basic.Tab>
-          <Basic.Tab rendered={specificConfiguration} eventKey={2} title={this.i18n('tabs.specificConfiguration.label')} className="bordered">
+          <Basic.Tab rendered={specificConfiguration !== null} eventKey={2} title={this.i18n('tabs.specificConfiguration.label')} className="bordered">
             <form onSubmit={this.save.bind(this)}>
               <Basic.Panel className="no-border">
                 {specificConfiguration}
@@ -671,7 +675,7 @@ class SystemSynchronizationConfigDetail extends Advanced.AbstractTableContent {
             </form>
           </Basic.Tab>
           <Basic.Tab eventKey={4} title={this.i18n('tabs.logs.label')}>
-            <Basic.ContentHeader rendered={synchronizationConfig} style={{ marginBottom: 0, paddingLeft: 15 }}>
+            <Basic.ContentHeader rendered={synchronizationConfig !== null} style={{ marginBottom: 0, paddingLeft: 15 }}>
               <Basic.Icon value="transfer"/>
               {' '}
               <span dangerouslySetInnerHTML={{ __html: this.i18n('synchronizationLogsHeader') }}/>

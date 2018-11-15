@@ -35,6 +35,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
+import eu.bcvsolutions.idm.acc.config.domain.ProvisioningConfiguration;
 import eu.bcvsolutions.idm.acc.domain.AccResultCode;
 import eu.bcvsolutions.idm.acc.domain.AccountType;
 import eu.bcvsolutions.idm.acc.domain.AttributeMapping;
@@ -174,6 +175,8 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 	private SysSchemaObjectClassService schemaObjectClassService;
 	@Autowired
 	private SysSchemaAttributeService schemaAttributeService;
+	@Autowired
+	protected ProvisioningConfiguration provisioningConfiguration;
 	@Autowired(required = false)
 	private CacheManager cacheManager;
 	// Instance of LRT
@@ -218,7 +221,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 		log.setStarted(LocalDateTime.now());
 		log.setRunning(true);
 		log.setToken(lastToken != null ? lastToken.toString() : null);
-		log.addToLog(MessageFormat.format("Synchronization was started in {0}.", log.getStarted()));
+		log = syncStarted(log, context);
 
 		// List of all accounts keys (used in reconciliation)
 		Set<String> systemAccountsList = new HashSet<>();
@@ -287,6 +290,16 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 	}
 
 	/**
+	 * Method called after sync started.
+	 * @param log
+	 * @param context
+	 */
+	protected SysSyncLogDto syncStarted(SysSyncLogDto log, SynchronizationContext context) {
+		log.addToLog(MessageFormat.format("Synchronization was started in {0}.", log.getStarted()));
+		return log;
+	}
+
+	/**
 	 * Method called after sync correctly ended.
 	 * 
 	 * @param log
@@ -339,16 +352,27 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 
 				if (account == null) {
 					// Account doesn't exist in IDM
+					systemEntity = removeSystemEntityWishIfPossible(systemEntity, false, context);
+					context.addSystemEntity(systemEntity);
+
 					resolveAccountNotExistSituation(context, systemEntity, icAttributes);
 
 				} else {
 					// Account exist in IdM (LINKED)
-					context.addActionType(config.getLinkedAction().getAction());
+					SynchronizationLinkedActionType linkedAction = config.getLinkedAction();
+					SynchronizationActionType action = linkedAction.getAction();
+					context.addActionType(action);
 					SynchronizationSituationType situation = SynchronizationSituationType.LINKED;
-					if (StringUtils.hasLength(config.getLinkedActionWfKey())) {
-						SynchronizationLinkedActionType linkedAction = config.getLinkedAction();
-						SynchronizationActionType action = linkedAction.getAction();
 
+					// Since removing 'Wish' can affect existing identities and provisioning of their accounts, 
+					// we will not do it if Ignore is set or if anything else than "update" is configured
+					if (linkedAction == SynchronizationLinkedActionType.UPDATE_ENTITY 
+							|| linkedAction == SynchronizationLinkedActionType.UPDATE_ACCOUNT) {
+						systemEntity = removeSystemEntityWishIfPossible(systemEntity, true, context);
+						context.addSystemEntity(systemEntity);
+					}
+
+					if (StringUtils.hasLength(config.getLinkedActionWfKey())) {
 						// We will start specific workflow
 						startWorkflow(config.getLinkedActionWfKey(), situation, action, null, context);
 
@@ -408,7 +432,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 		AbstractSysSyncConfigDto config = context.getConfig();
 		SysSyncItemLogDto logItem = context.getLogItem();
 
-		addToItemLog(logItem, "Account doesn't exist in IDM");
+		addToItemLog(logItem, "Account doesn't exist in IdM");
 
 		DTO entity = findByCorrelationAttribute(systemAttributeMappingService.get(config.getCorrelationAttribute()),
 				icAttributes, context);
@@ -683,7 +707,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 				initSyncActionLog(SynchronizationActionType.CREATE_ACCOUNT, OperationResultType.IGNORE, itemLog, log,
 						actionsLog);
 				itemLog.addToLog(MessageFormat.format(
-						"For entity [{0}] was found AccAccount [{1}]. Export for this entity ends (only entity without AccAccount can be export)!",
+						"For entity [{0}] AccAccount [{1}] was found. Export for this entity ends (only entity without AccAccount can be exported)!",
 						this.getDisplayNameForEntity(entity), accountId));
 				return;
 			}
@@ -963,7 +987,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 		List<SysSystemAttributeMappingDto> mappedAttributes = context.getMappedAttributes();
 		List<IcAttribute> icAttributes = context.getIcObject().getAttributes();
 
-		addToItemLog(logItem, "Account and entity doesn't exist (missing entity).");
+		addToItemLog(logItem, "Account and entity don't exist (missing entity).");
 
 		switch (actionType) {
 		case IGNORE:
@@ -982,10 +1006,16 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 
 			// Create idm account
 			AccAccountDto account = doCreateIdmAccount(attributeUid, system);
+
 			// Find and set SystemEntity (must exist)
 			account.setSystemEntity(this.findSystemEntity(uid, system, entityType).getId());
-			account = accountService.save(account);
 
+			// Apply specific settings - check, if the account and the entity can be created
+			account = this.applySpecificSettingsBeforeLink(account, null, context);
+			if (account == null) {
+				return;
+			}
+			account = accountService.save(account);
 			// Create new entity
 			doCreateEntity(entityType, mappedAttributes, logItem, uid, icAttributes, account, context);
 			initSyncActionLog(SynchronizationActionType.CREATE_ENTITY, OperationResultType.SUCCESS, logItem, log,
@@ -1005,7 +1035,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 		SysSyncItemLogDto logItem = context.getLogItem();
 		List<SysSyncActionLogDto> actionLogs = context.getActionLogs();
 
-		addToItemLog(logItem, "Account doesn't exist, but an entity was found by correlation (entity unlinked).");
+		addToItemLog(logItem, MessageFormat.format("Account does not exist, but an entity [{0}] was found by correlation (entity unlinked).", entityId));
 		addToItemLog(logItem, MessageFormat.format("Unlinked action is {0}", action));
 		DTO entity = findById(entityId);
 
@@ -1167,7 +1197,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 			SysSyncItemLogDto logItem, String uid, List<IcAttribute> icAttributes, AccAccountDto account,
 			SynchronizationContext context) {
 		// We will create new entity
-		addToItemLog(logItem, "Missing entity action is CREATE_ENTITY, we will do create new entity.");
+		addToItemLog(logItem, "Missing entity action is CREATE_ENTITY, we will create new entity.");
 		DTO entity = this.createEntityDto();
 		// Fill entity by mapped attribute
 		entity = fillEntity(mappedAttributes, uid, icAttributes, entity, true, context);
@@ -1226,10 +1256,15 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 	 * @param actionLogs
 	 */
 	protected void doUpdateEntity(SynchronizationContext context) {
-
 		String uid = context.getUid();
 		SysSyncLogDto log = context.getLog();
 		SysSyncItemLogDto logItem = context.getLogItem();
+
+		if (context.isSkipEntityUpdate()) {
+			addToItemLog(logItem, MessageFormat.format("Update of entity for account with uid {0} is skipped", uid));
+			return;
+		}
+
 		List<SysSyncActionLogDto> actionLogs = context.getActionLogs();
 		List<SysSystemAttributeMappingDto> mappedAttributes = context.getMappedAttributes();
 		AccAccountDto account = context.getAccount();
@@ -1351,7 +1386,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 			try {
 				Serializable serializableValue = Serializable.class.cast(value);
 				SystemEntityType entityType = context.getEntityType();
-				Assert.notNull(entityType, "Entity type is requierd!");
+				Assert.notNull(entityType, "Entity type is required!");
 
 				List<? extends BaseDto> entities = formService.findOwners(entityType.getExtendedAttributeOwnerType(),
 						attribute.getIdmPropertyName(), serializableValue, null).getContent();
@@ -1493,7 +1528,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 			//
 			// Save to extended attribute
 			if (!formService.isFormable(dto.getClass())) {
-				String message = MessageFormat.format("Entity [{0}] is not instance of fromable entity!", dto.getId());
+				String message = MessageFormat.format("Entity [{0}] is not instance of formable entity!", dto.getId());
 				throw new ProvisioningException(AccResultCode.SYNCHRONIZATION_ERROR_DURING_SYNC_ITEM,
 						ImmutableMap.of("uid", uid, "message", message));
 			}
@@ -1504,7 +1539,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 					.getMappedAttributeByCode(attributeProperty);
 			if (defAttribute == null) {
 				// eav definition could be changed
-				String message = MessageFormat.format("Form attribute defininion [{0}] was not found!",
+				String message = MessageFormat.format("Form attribute definition [{0}] was not found!",
 						attributeProperty);
 				throw new ProvisioningException(AccResultCode.SYNCHRONIZATION_ERROR_DURING_SYNC_ITEM,
 						ImmutableMap.of("uid", uid, "message", message));
@@ -1513,7 +1548,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 				((List<?>) transformedValue).stream().forEach(value -> {
 					if (value != null && !(value instanceof Serializable)) {
 						String message = MessageFormat.format(
-								"Value is not serializable [{0}] for attribute [{1}] and UID [{2}]!", value, attribute,
+								"Value [{0}] is not serializable for the attribute [{1}] and UID [{2}]!", value, attribute,
 								uid);
 						throw new ProvisioningException(AccResultCode.SYNCHRONIZATION_ERROR_DURING_SYNC_ITEM,
 								ImmutableMap.of("uid", uid, "message", message));
@@ -1680,7 +1715,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 			// and must be String
 			String attributeUid = this.generateUID(context);
 			addToItemLog(logItem, MessageFormat.format(
-					"Account was not found. We try to find account for UID (generated from the mapped attribute marks as 'Identifier')",
+					"Account was not found. We try to find account for UID ({0}) (generated from the mapped attribute marked as Identifier)",
 					attributeUid));
 
 			accountFilter.setUid(attributeUid);
@@ -1743,6 +1778,48 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 			throw new ProvisioningException(AccResultCode.SYNCHRONIZATION_TO_MANY_SYSTEM_ENTITY, uid);
 		}
 		return systemEntity;
+	}
+
+	/**
+	 * Removes the flag "wish" from system entity, if the flag is true and removing the flag is possible and safe
+	 * = it won't lead to any unwanted linking:
+	 * A) The system entity wasn't linked to any IdM entity before this synchronization.
+	 *    It's just some relic of previous operations in IdM. The entity on the system exists, so we
+	 *    will correct the information that it is only Wish (because it really exists).
+	 * B) The system entity is linked to IdM entity and automapping existing accounts is allowed.
+	 *    This can happen when identity had been assigned a role, but provisioning hadn't been executed yet
+	 *    for some reason (read-only system, error,...). Since automapping is enabled, we can remove the flag,
+	 *    so following provisioning will be Update and not Create.
+	 *
+	 * @param systemEntity The system entity which will be processed
+	 * @param existingLink If the link (AccAccount) already exists for this system entity
+	 * @param context
+	 * @return Updated system entity
+	 */
+	private SysSystemEntityDto removeSystemEntityWishIfPossible(SysSystemEntityDto systemEntity, boolean existingLink,
+			SynchronizationContext context) {
+
+		if (systemEntity == null || !systemEntity.isWish()) {
+			return systemEntity;
+		}
+
+		SysSyncItemLogDto logItem = context.getLogItem();
+
+		if (existingLink && !provisioningConfiguration.isAllowedAutoMappingOnExistingAccount()) {
+			addToItemLog(logItem, MessageFormat.format(
+					"WARNING: Existing system entity ({0}) has the flag Wish, which means it was neither created by IdM nor linked by synchronization. "
+					+ "But account for this entity already exists and it is linked to IdM entity [{1}]."
+					+ "Auto mapping of existing accounts is not allowed by property [{2}]. "
+					+ "We will not remove the flag Wish, because that would effectively complete the auto mapping.",
+					systemEntity.getUid(), context.getEntityId(), ProvisioningConfiguration.PROPERTY_ALLOW_AUTO_MAPPING_ON_EXISTING_ACCOUNT));
+			initSyncActionLog(context.getActionType(), OperationResultType.WARNING, logItem, context.getLog(), context.getActionLogs());
+			return systemEntity;
+		}
+		addToItemLog(logItem, MessageFormat.format(
+				"Existing system entity ({0}) has the flag Wish, we can safely remove it (the system entity really exists).",
+				systemEntity.getUid()));
+		systemEntity.setWish(false);
+		return systemEntityService.save(systemEntity);
 	}
 
 	/**
@@ -1960,6 +2037,13 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 		SysSyncItemLogDto logItem = context.getLogItem();
 		SysSystemEntityDto systemEntity = context.getSystemEntity();
 
+		String entityIdentification = dto.getId().toString();
+		if (dto instanceof Codeable) {
+			entityIdentification = ((Codeable) dto).getCode();
+		}
+
+		logItem.setDisplayName(entityIdentification);
+
 		// Generate UID value from mapped attribute marked as UID (Unique ID).
 		// UID mapped attribute must exist and returned value must be not null
 		// and must be String
@@ -1972,6 +2056,16 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 			account.setSystemEntity(systemEntity.getId());
 		}
 
+		account = this.applySpecificSettingsBeforeLink(account, dto, context);
+
+		if (account == null) {
+			// Identity account won't be created
+			addToItemLog(logItem,
+					MessageFormat.format("Link between uid {0} and entity {1} will not be created due to specific settings of synchronization. "
+							+ "Processing of this item is finished.", uid, entityIdentification));
+			return;
+		}
+
 		account = accountService.save(account);
 		addToItemLog(logItem,
 				MessageFormat.format("Account with uid {0} and id {1} was created", uid, account.getId()));
@@ -1981,17 +2075,11 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 		entityAccount = (EntityAccountDto) getEntityAccountService().save(entityAccount);
 		context.addAccount(account);
 
-		String entityIdentification = dto.getId().toString();
-		if (dto instanceof Codeable) {
-			entityIdentification = ((Codeable) dto).getCode();
-		}
-
 		// Identity account Created
 		addToItemLog(logItem,
 				MessageFormat.format(
 						"Entity account relation  with id ({0}), between account ({1}) and entity ({2}) was created",
 						entityAccount.getId(), uid, entityIdentification));
-		logItem.setDisplayName(entityIdentification);
 		logItem.setType(entityAccount.getClass().getSimpleName());
 		logItem.setIdentification(entityAccount.getId().toString());
 
@@ -2001,6 +2089,17 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 				callProvisioningForEntity(dto, entityType, logItem);
 			}
 		}
+	}
+
+	/**
+	 * Apply settings that are specific to this type of entity.
+	 * Default implementation does nothing to the account.
+	 * @param account
+	 * @param entity
+	 * @param context
+	 */
+	protected AccAccountDto applySpecificSettingsBeforeLink(AccAccountDto account, DTO entity, SynchronizationContext context) {
+		return account;
 	}
 
 	protected String getDisplayNameForEntity(AbstractDto entity) {
@@ -2210,7 +2309,7 @@ public abstract class AbstractSynchronizationExecutor<DTO extends AbstractDto>
 		// and must be String
 		String attributeUid = this.generateUID(context);
 		if (!account.getUid().equals(attributeUid)) {
-			addToItemLog(logItem, MessageFormat.format("IdM Account UID ({0}) is different ({1}). We will update him.",
+			addToItemLog(logItem, MessageFormat.format("IdM Account UID ({0}) is different ({1}). We will update it.",
 					account.getUid(), attributeUid));
 			account.setUid(attributeUid);
 			account = accountService.save(account);

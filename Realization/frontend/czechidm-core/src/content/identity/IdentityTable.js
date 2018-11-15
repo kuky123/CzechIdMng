@@ -7,7 +7,7 @@ import * as Basic from '../../components/basic';
 import * as Advanced from '../../components/advanced';
 import * as Utils from '../../utils';
 import { SearchParameters } from '../../domain';
-import { DataManager, TreeNodeManager, SecurityManager, ConfigurationManager, RoleManager } from '../../redux';
+import { SecurityManager, ConfigurationManager } from '../../redux';
 import IdentityStateEnum from '../../enums/IdentityStateEnum';
 
 /**
@@ -22,9 +22,6 @@ export class IdentityTable extends Advanced.AbstractTableContent {
     this.state = {
       filterOpened: props.filterOpened
     };
-    this.dataManager = new DataManager();
-    this.treeNodeManager = new TreeNodeManager();
-    this.roleManager = new RoleManager();
   }
 
   componentDidMount() {
@@ -115,9 +112,7 @@ export class IdentityTable extends Advanced.AbstractTableContent {
     //
     let _forceSearchParameters = forceSearchParameters || new SearchParameters();
     let forceTreeNodeSearchParams = new SearchParameters();
-    if (!treeType) {
-      forceTreeNodeSearchParams = forceTreeNodeSearchParams.setFilter('defaultTreeType', true);
-    } else {
+    if (treeType) {
       forceTreeNodeSearchParams = forceTreeNodeSearchParams.setFilter('treeTypeId', treeType.id);
       _forceSearchParameters = _forceSearchParameters.setFilter('treeTypeId', treeType.id);
     }
@@ -147,10 +142,11 @@ export class IdentityTable extends Advanced.AbstractTableContent {
                       help={ Advanced.Filter.getTextHelp() }/>
                   </Basic.Col>
                   <Basic.Col lg={ 3 }>
-                    <Advanced.Filter.SelectBox
+                    <Advanced.Filter.RoleSelect
                       ref="role"
+                      label={ null }
                       placeholder={ this.i18n('filter.role.placeholder') }
-                      manager={ this.roleManager }
+                      header={ this.i18n('filter.role.placeholder') }
                       rendered={ !roleDisabled }/>
                   </Basic.Col>
                   <Basic.Col lg={ 3 } className="text-right">
@@ -159,12 +155,13 @@ export class IdentityTable extends Advanced.AbstractTableContent {
                 </Basic.Row>
                 <Basic.Row>
                   <Basic.Col lg={ 6 }>
-                    <Advanced.Filter.SelectBox
+                    <Advanced.Filter.TreeNodeSelect
                       ref="treeNodeId"
+                      header={ this.i18n('filter.organization.placeholder') }
+                      label={ null }
                       placeholder={ this.i18n('filter.organization.placeholder') }
-                      forceSearchParameters={ forceTreeNodeSearchParams }
-                      manager={ this.treeNodeManager }
-                      rendered={ !treeNodeDisabled }/>
+                      rendered={ !treeNodeDisabled }
+                      forceSearchParameters={ forceTreeNodeSearchParams }/>
                   </Basic.Col>
                   <Basic.Col lg={ 6 }>
                     <Advanced.Filter.BooleanSelectBox

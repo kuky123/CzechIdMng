@@ -42,7 +42,7 @@ import eu.bcvsolutions.idm.core.notification.api.service.EmailNotificationSender
 import eu.bcvsolutions.idm.core.workflow.domain.CustomActivityBehaviorFactory;
 import eu.bcvsolutions.idm.core.workflow.domain.formtype.CustomFormTypes;
 import eu.bcvsolutions.idm.core.workflow.listener.CandidateToUuidEventListener;
-import eu.bcvsolutions.idm.core.workflow.listener.StartSubprocessEventListener;
+import eu.bcvsolutions.idm.core.workflow.listener.StartProcessEventListener;
 import eu.bcvsolutions.idm.core.workflow.listener.TaskSendNotificationEventListener;
 
 /**
@@ -142,8 +142,8 @@ public class WorkflowConfig {
 		}
 		
 		@Bean
-		public StartSubprocessEventListener startSubprocessEventListener() {
-			return new StartSubprocessEventListener();
+		public StartProcessEventListener startSubprocessEventListener() {
+			return new StartProcessEventListener();
 		}
 		
 		@Override

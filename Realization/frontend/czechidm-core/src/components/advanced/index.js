@@ -8,6 +8,7 @@ import TabPanel from './TabPanel/TabPanel';
 import Filter from './Filter/Filter';
 import DateValue from './DateValue/DateValue';
 import Tree from './Tree/Tree';
+import TreeNodeSelect from './TreeNodeSelect/TreeNodeSelect';
 import DetailButton from './Table/DetailButton';
 import ModalProgressBar from './ModalProgressBar/ModalProgressBar';
 import EavForm from './Form/EavForm';
@@ -23,6 +24,7 @@ import AbstractEntityInfo from './EntityInfo/AbstractEntityInfo';
 import UuidInfo from './UuidInfo/UuidInfo';
 import RoleInfo from './RoleInfo/RoleInfo';
 import RoleCatalogueInfo from './RoleCatalogueInfo/RoleCatalogueInfo';
+import RoleCatalogueSelect from './RoleCatalogueSelect/RoleCatalogueSelect';
 import IdentityContractInfo from './IdentityContractInfo/IdentityContractInfo';
 import IdentityRoleInfo from './IdentityRoleInfo/IdentityRoleInfo';
 import WorkflowProcessInfo from './WorkflowProcessInfo/WorkflowProcessInfo';
@@ -62,6 +64,7 @@ const Components = {
   ProgressBar,
   ModalProgressBar,
   Tree,
+  TreeNodeSelect,
   DetailButton,
   EavForm,
   EavContent,
@@ -75,6 +78,7 @@ const Components = {
   UuidInfo,
   RoleInfo,
   RoleCatalogueInfo,
+  RoleCatalogueSelect,
   IdentityContractInfo,
   IdentityRoleInfo,
   WorkflowProcessInfo,

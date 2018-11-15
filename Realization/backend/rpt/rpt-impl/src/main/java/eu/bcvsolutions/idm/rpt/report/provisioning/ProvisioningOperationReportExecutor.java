@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Page;
@@ -153,9 +154,16 @@ public class ProvisioningOperationReportExecutor extends AbstractReportExecutor 
 			for (int i = 0; i < operation.getProvisioningContext().getConnectorObject().getAttributes().size(); i++) {
 				IcAttribute attr = operation.getProvisioningContext().getConnectorObject().getAttributes().get(i);
 				//
+				// Value can be multivalued or single valued
+				String valueAsString = "";
+				if (attr.isMultiValue()) {
+					valueAsString = String.valueOf(StringUtils.join(attr.getValues(), ","));
+				} else {
+					valueAsString = String.valueOf(attr.getValue());
+				}
 				rptOperationDto.getProvisioningValues().put(
 						attr.getName(),
-						attr.getValue() == null ? "" : attr.getValue().toString());
+						valueAsString);
 			}
 		}
 		return rptOperationDto;

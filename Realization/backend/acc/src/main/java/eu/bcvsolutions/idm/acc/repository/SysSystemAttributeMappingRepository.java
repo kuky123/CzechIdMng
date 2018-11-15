@@ -30,6 +30,8 @@ public interface SysSystemAttributeMappingRepository extends AbstractEntityRepos
 	        + " (?#{[0].systemMappingId} is null or e.systemMapping.id = ?#{[0].systemMappingId})"
 	        + " and"
 	        + " (?#{[0].schemaAttributeId} is null or e.schemaAttribute.id = ?#{[0].schemaAttributeId})"
+	        +  "and"
+	        + " (?#{[0].schemaAttributeName} is null or e.schemaAttribute.name = ?#{[0].schemaAttributeName})"
 	        + " and"
 	        + " (?#{[0].systemId} is null or e.systemMapping.objectClass.system.id = ?#{[0].systemId})"
 	        + " and"
@@ -38,6 +40,8 @@ public interface SysSystemAttributeMappingRepository extends AbstractEntityRepos
 			+ " (?#{[0].idmPropertyName} is null or lower(e.idmPropertyName) like ?#{[0].idmPropertyName == null ? '%' : '%'.concat([0].idmPropertyName.toLowerCase()).concat('%')})"
 			+ " and"
 	        + " (?#{[0].sendOnPasswordChange} is null or e.sendOnPasswordChange = ?#{[0].sendOnPasswordChange})"
+	        + " and"
+	        + " (?#{[0].passwordAttribute} is null or e.passwordAttribute = ?#{[0].passwordAttribute})"
 			)
 	Page<SysSystemAttributeMapping> find(SysSystemAttributeMappingFilter filter, Pageable pageable);
 	

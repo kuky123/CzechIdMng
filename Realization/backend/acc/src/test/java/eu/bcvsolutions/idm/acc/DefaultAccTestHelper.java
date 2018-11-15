@@ -267,6 +267,7 @@ public class DefaultAccTestHelper extends eu.bcvsolutions.idm.test.api.DefaultTe
 				attributeMapping.setIdmPropertyName("password");
 				attributeMapping.setSchemaAttribute(schemaAttr.getId());
 				attributeMapping.setName(schemaAttr.getName());
+				attributeMapping.setPasswordAttribute(true);
 				attributeMapping.setSystemMapping(systemMapping.getId());
 				systemAttributeMappingService.save(attributeMapping);
 			} else if (ATTRIBUTE_MAPPING_FIRSTNAME.equalsIgnoreCase(schemaAttr.getName())) {

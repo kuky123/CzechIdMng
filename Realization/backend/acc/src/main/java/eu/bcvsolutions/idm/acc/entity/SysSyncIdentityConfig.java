@@ -3,6 +3,8 @@ package eu.bcvsolutions.idm.acc.entity;
 import javax.persistence.Column;
 import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.ForeignKey;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
@@ -12,6 +14,7 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.envers.Audited;
 
+import eu.bcvsolutions.idm.acc.domain.SynchronizationInactiveOwnerBehaviorType;
 import eu.bcvsolutions.idm.core.model.entity.IdmRole;
 
 /**
@@ -36,6 +39,11 @@ public class SysSyncIdentityConfig extends SysSyncConfig{
 	@org.hibernate.annotations.ForeignKey( name = "none" )
 	private IdmRole defaultRole;
 	
+	@Audited
+	@Enumerated(EnumType.STRING)
+	@Column(name = "inactive_owner_behavior")
+	private SynchronizationInactiveOwnerBehaviorType inactiveOwnerBehavior;
+
 	/*
 	 * Start recalculation after end synchronization for automatic roles by attribute
 	 */
@@ -74,5 +82,13 @@ public class SysSyncIdentityConfig extends SysSyncConfig{
 
 	public void setCreateDefaultContract(boolean createDefaultContract) {
 		this.createDefaultContract = createDefaultContract;
+	}
+
+	public SynchronizationInactiveOwnerBehaviorType getInactiveOwnerBehavior() {
+		return inactiveOwnerBehavior;
+	}
+
+	public void setInactiveOwnerBehavior(SynchronizationInactiveOwnerBehaviorType inactiveOwnerBehavior) {
+		this.inactiveOwnerBehavior = inactiveOwnerBehavior;
 	}
 }

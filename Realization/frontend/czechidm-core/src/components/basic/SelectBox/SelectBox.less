@@ -12,11 +12,13 @@
 		border-color: #a94442;
 	}
 }
+
 .has-feedback{
 	.Select-arrow{
 		margin-left: -27px;
 	}
 }
+
 .has-feedback{
   .is-loading{
 	   .Select-arrow{
@@ -24,9 +26,11 @@
 	 }
   }
 }
+
 .Select-menu-outer{
    z-index: 10;
 }
+
 .has-error {
 		.is-focused{
 				.Select-control{
@@ -35,4 +39,41 @@
 						box-shadow: 0px 0px 5px 0px rgba(193, 66, 66, 0.7);
 		}
 	}
+}
+
+.small {
+
+  input {
+    padding: 2px 10px;
+    font-size: 0.9em;
+    height: 24px;
+    line-height: 20px;
+  }
+
+  .Select-input {
+    height: 22px;
+    vertical-align: top;
+    font-size: 0.9em;
+    line-height: 14px;
+
+    > input {
+      padding: 2px 0 12px;
+    }
+  }
+
+  .Select-control {
+    height: 22px;
+    border-color: @idm-border-color;
+  }
+
+  .Select-value, .Select-placeholder {
+    line-height: 24x;
+    color: @idm-text-color;
+  }
+
+  .Select--single > .Select-control .Select-value, .Select-placeholder {
+    line-height: 22px;
+    color: @idm-text-color;
+  }
+
 }

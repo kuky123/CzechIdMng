@@ -95,7 +95,10 @@ class ScriptArea extends Basic.ScriptArea {
   }
 
   getOptionsButton() {
-    const { showMaximalizationBtn } = this.props;
+    const { showMaximalizationBtn, showScriptSelection } = this.props;
+    if (showScriptSelection === false) {
+      return super.getOptionsButton();
+    }
     return (
       <div className="pull-right script-area-btn-max">
         { this._getAddButton() }
@@ -106,8 +109,14 @@ class ScriptArea extends Basic.ScriptArea {
   }
 
   render() {
-    const { scriptCategory, scriptManager, headerText } = this.props;
+    const { scriptCategory, scriptManager, headerText, rendered, showScriptSelection } = this.props;
     const { showModal, script } = this.state;
+    if (rendered === false) {
+      return <div/>;
+    }
+    if (showScriptSelection === false) {
+      return this._getComponent();
+    }
     return (
       <div>
         { this._getComponent() }
@@ -167,17 +176,19 @@ class ScriptArea extends Basic.ScriptArea {
 }
 
 ScriptArea.propTypes = {
-  scriptCategory: PropTypes.object,
+  scriptCategory: PropTypes.array,
   scriptManager: PropTypes.object,
   headerText: PropTypes.string.isRequired,
   mode: PropTypes.string,
-  height: PropTypes.string
+  height: PropTypes.string,
+  showScriptSelection: PropTypes.bool
 };
 
 ScriptArea.defaultProps = {
   scriptCategory: null,
   height: '10em',
-  mode: 'groovy'
+  mode: 'groovy',
+  showScriptSelection: true
 };
 
 

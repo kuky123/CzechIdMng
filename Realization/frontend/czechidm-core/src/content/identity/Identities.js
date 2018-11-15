@@ -32,7 +32,7 @@ class Identities extends Basic.AbstractContent {
         <Basic.Panel>
           <IdentityTable
             uiKey="identity-table"
-            identityManager={this.identityManager}
+            identityManager={ this.identityManager }
             filterOpened
             showRowSelection />
         </Basic.Panel>

@@ -47,6 +47,10 @@ import eu.bcvsolutions.idm.ic.impl.IcSyncDeltaTypeEnum;
  *            Relations between item log and full log and action.
  * @param generatedUid
  *            Identification of item on the IdM system. I generated from the main mapped attribute (AccAccount.uid)
+ * @param skipEntityUpdate
+ *            Whether entity update should be skipped for some specific reasons, even if it is configured.
+ * @param protectionInterval
+ *            Protection interval which is set on the system provisioning mapping for this type of entity
  *
  */
 public class SynchronizationContext implements Serializable {
@@ -70,6 +74,8 @@ public class SynchronizationContext implements Serializable {
 	private IcConnectorConfiguration connectorConfig;
 	private SysSystemEntityDto systemEntity;
 	private SynchronizationActionType actionType;
+	private boolean skipEntityUpdate = false;
+	private Integer protectionInterval;
 
 	public String getUid() {
 		return uid;
@@ -233,6 +239,24 @@ public class SynchronizationContext implements Serializable {
 		return this;
 	}
 
+	public boolean isSkipEntityUpdate() {
+		return skipEntityUpdate;
+	}
+
+	public SynchronizationContext addSkipEntityUpdate(boolean skipEntityUpdate) {
+		this.skipEntityUpdate = skipEntityUpdate;
+		return this;
+	}
+
+	public Integer getProtectionInterval() {
+		return protectionInterval;
+	}
+
+	public SynchronizationContext addProtectionInterval(Integer protectionInterval) {
+		this.protectionInterval = protectionInterval;
+		return this;
+	}
+
 	public static SynchronizationContext cloneContext(SynchronizationContext context){
 		SynchronizationContext newContext = new SynchronizationContext();
 		newContext.addAccount(context.getAccount())
@@ -252,7 +276,9 @@ public class SynchronizationContext implements Serializable {
 		.addSystemEntity(context.getSystemEntity())
 		.addUid(context.getUid())
 		.addGeneratedUid(context.getGeneratedUid())
-		.addActionType(context.getActionType());
+		.addActionType(context.getActionType())
+		.addSkipEntityUpdate(context.isSkipEntityUpdate())
+		.addProtectionInterval(context.getProtectionInterval());
 		
 		return newContext;
 	}

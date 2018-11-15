@@ -7,6 +7,7 @@ import org.activiti.engine.runtime.ProcessInstance;
 import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.entity.OperationResult;
 import eu.bcvsolutions.idm.core.api.rest.domain.ResourcesWrapper;
+import eu.bcvsolutions.idm.core.api.script.ScriptEnabled;
 import eu.bcvsolutions.idm.core.api.service.ReadWriteDtoService;
 import eu.bcvsolutions.idm.core.workflow.model.dto.WorkflowFilterDto;
 import eu.bcvsolutions.idm.core.workflow.model.dto.WorkflowProcessInstanceDto;

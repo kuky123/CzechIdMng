@@ -181,6 +181,7 @@ class HistoricProcessInstanceDetail extends Basic.AbstractContent {
             <Advanced.Column property="createTime" sort face="datetime"/>
             <Advanced.Column property="endTime" sort face="datetime"/>
             <Advanced.Column property="completeTaskDecision" sort={false} face="text"/>
+            <Advanced.Column property="completeTaskMessage" sort={false} face="text"/>
             <Advanced.Column property="deleteReason" sort={false} face="text"/>
           </Advanced.Table>
         </Basic.Panel>

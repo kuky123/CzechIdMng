@@ -132,6 +132,7 @@ export default class EavAttributeForm extends Basic.AbstractContextComponent {
             return (
               <FormValueComponent
                 ref={ attribute.code }
+                uiKey={ `form-attribute-${attribute.code}` }
                 attribute={ attribute }
                 values={ value }
                 readOnly={ readOnly }

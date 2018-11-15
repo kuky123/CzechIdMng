@@ -1,5 +1,11 @@
 package eu.bcvsolutions.idm.acc.event.processor.provisioning;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 import org.springframework.util.Assert;
 
 import com.google.common.collect.ImmutableMap;
@@ -7,6 +13,7 @@ import com.google.common.collect.ImmutableMap;
 import eu.bcvsolutions.idm.acc.AccModuleDescriptor;
 import eu.bcvsolutions.idm.acc.domain.AccResultCode;
 import eu.bcvsolutions.idm.acc.domain.ProvisioningEventType;
+import eu.bcvsolutions.idm.acc.dto.ProvisioningAttributeDto;
 import eu.bcvsolutions.idm.acc.dto.SysProvisioningOperationDto;
 import eu.bcvsolutions.idm.acc.dto.SysSystemDto;
 import eu.bcvsolutions.idm.acc.dto.SysSystemEntityDto;
@@ -20,10 +27,13 @@ import eu.bcvsolutions.idm.core.api.event.DefaultEventResult;
 import eu.bcvsolutions.idm.core.api.event.EntityEvent;
 import eu.bcvsolutions.idm.core.api.event.EventResult;
 import eu.bcvsolutions.idm.core.security.api.domain.Enabled;
+import eu.bcvsolutions.idm.core.security.api.domain.GuardedString;
+import eu.bcvsolutions.idm.ic.api.IcAttribute;
 import eu.bcvsolutions.idm.ic.api.IcConnectorConfiguration;
 import eu.bcvsolutions.idm.ic.api.IcConnectorObject;
 import eu.bcvsolutions.idm.ic.api.IcObjectClass;
 import eu.bcvsolutions.idm.ic.api.IcUidAttribute;
+import eu.bcvsolutions.idm.ic.impl.IcAttributeImpl;
 import eu.bcvsolutions.idm.ic.service.api.IcConnectorFacade;
 
 /**
@@ -40,7 +50,7 @@ public abstract class AbstractProvisioningProcessor extends AbstractEntityEventP
 	protected final SysSystemService systemService;
 	private final SysSystemEntityService systemEntityService;
 	protected final SysProvisioningOperationService provisioningOperationService;
-	
+
 	public AbstractProvisioningProcessor(
 			IcConnectorFacade connectorFacade,
 			SysSystemService systemService,
@@ -132,5 +142,60 @@ public abstract class AbstractProvisioningProcessor extends AbstractEntityEventP
 	public int getOrder() {
 		// default order - 0 - its default implementation
 		return CoreEvent.DEFAULT_ORDER;
+	}
+
+	/**
+	 * Transform all ic attributes that is in guarded string into simple string.
+	 * Attribute class type in schema must be also String.
+	 *
+	 * @return 
+	 *
+	 */
+	protected List<IcAttribute> transformGuardedStringToString(SysProvisioningOperationDto provisioningOperation, List<IcAttribute> attributes) {
+		Map<ProvisioningAttributeDto, Object> accountObject = provisioningOperation.getProvisioningContext()
+				.getAccountObject();
+
+		// account object doesn't exist return given attributes
+		if (accountObject == null) {
+			return attributes;
+		}
+		
+		Set<ProvisioningAttributeDto> keySet = accountObject.keySet();
+		List<IcAttribute> finalAttributes = new ArrayList<>(attributes);
+
+		// Iterate over all ic attributes and search all password attributes
+		// with original class type String not guarded string
+		for (IcAttribute attribute : attributes) {
+			Optional<ProvisioningAttributeDto> firstProvisioningAttribute = keySet.stream()
+					.filter( //
+							provisioningAttribute -> provisioningAttribute.getSchemaAttributeName()
+									.equals(attribute.getName())) //
+					.findFirst(); //
+
+			if (firstProvisioningAttribute.isPresent()) {
+				ProvisioningAttributeDto provisioningAttributeDto = firstProvisioningAttribute.get();
+
+				// Some process or etc create provisioning operation directly without set classType we can't transform guarded string back to string 
+				if (provisioningAttributeDto.getClassType() == null) {
+					continue;
+				}
+
+				// If is provisioning attribute password and his schema attribute class type is equals to string transform to string (temporar passwords or etc.)
+				if (provisioningAttributeDto.isPasswordAttribute()
+						&& provisioningAttributeDto.getClassType().equals(String.class.getName())) {
+					Object valueAsObject = attribute.getValue();
+					if (valueAsObject instanceof GuardedString) {
+						GuardedString valueAsGuardedString = (GuardedString) valueAsObject;
+						// replace attribute with attribute as simple string
+						finalAttributes.remove(attribute);
+						IcAttributeImpl attributeImpl = new IcAttributeImpl(attribute.getName(),
+								valueAsGuardedString.asString());
+						finalAttributes.add(attributeImpl);
+					}
+				}
+			}
+			
+		}
+		return finalAttributes;
 	}
 }

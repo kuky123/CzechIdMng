@@ -6,8 +6,7 @@ import _ from 'lodash';
 import * as Basic from '../../../components/basic';
 import * as Advanced from '../../../components/advanced';
 import * as Utils from '../../../utils';
-import { IdentityContractManager, IdentityManager, TreeNodeManager, TreeTypeManager } from '../../../redux';
-import SearchParameters from '../../../domain/SearchParameters';
+import { IdentityContractManager, IdentityManager } from '../../../redux';
 import ContractStateEnum from '../../../enums/ContractStateEnum';
 
 const identityContractManager = new IdentityContractManager();
@@ -22,12 +21,8 @@ class IdentityContractDetail extends Basic.AbstractContent {
   constructor(props, context) {
     super(props, context);
     this.identityManager = new IdentityManager();
-    this.treeNodeManager = new TreeNodeManager();
-    this.treeTypeManager = new TreeTypeManager();
     this.state = {
-      _showLoading: false,
-      treeTypeId: null,
-      forceSearchParameters: new SearchParameters().setFilter('treeTypeId', SearchParameters.BLANK_UUID)
+      _showLoading: false
     };
   }
 
@@ -50,19 +45,17 @@ class IdentityContractDetail extends Basic.AbstractContent {
    * TODO: prevent set state in did mount
    */
   _setSelectedEntity(entity) {
-    const treeTypeId = entity._embedded && entity._embedded.workPosition ? entity._embedded.workPosition.treeType : null;
-    const entityFormData = _.merge({}, entity, {
-      treeTypeId
-    });
+    const treeType = entity._embedded && entity._embedded.workPosition && entity._embedded.workPosition._embedded ? entity._embedded.workPosition._embedded.treeType : null;
+    const entityFormData = _.merge({}, entity);
     //
     this.setState({
-      entityFormData,
-      treeTypeId,
-      forceSearchParameters: this.state.forceSearchParameters.setFilter('treeTypeId', treeTypeId || SearchParameters.BLANK_UUID)
+      entityFormData
     }, () => {
-      // this.refs.form.setData(entityFormData);
-      if (this.refs.treeTypeId) {
-        this.refs.treeTypeId.focus();
+      if (this.refs.workPosition) {
+        if (treeType) {
+          this.refs.workPosition.setTreeType(treeType);
+          this.refs.workPosition.focus();
+        }
       }
     });
   }
@@ -124,25 +117,13 @@ class IdentityContractDetail extends Basic.AbstractContent {
     });
   }
 
-  onChangeTreeType(treeType) {
-    const treeTypeId = treeType ? treeType.id : null;
-    this.setState({
-      treeTypeId,
-      forceSearchParameters: this.state.forceSearchParameters.setFilter('treeTypeId', treeTypeId || SearchParameters.BLANK_UUID)
-    }, () => {
-      this.refs.workPosition.setValue(null);
-      // focus automatically - maybe will be usefull?
-      // this.refs.workPosition.focus();
-    });
-  }
-
   onChangeState(state) {
     this.refs.disabled.setValue(state ? ContractStateEnum.isContractDisabled(state.value) : null);
   }
 
   render() {
     const { uiKey, entity, showLoading, params, _permissions } = this.props;
-    const { _showLoading, forceSearchParameters, treeTypeId, entityFormData } = this.state;
+    const { _showLoading, entityFormData } = this.state;
 
     return (
       <div>
@@ -167,18 +148,12 @@ class IdentityContractDetail extends Basic.AbstractContent {
                   ref="position"
                   label={ this.i18n('entity.IdentityContract.position') }
                   max={ 255 }/>
-                <Basic.SelectBox
-                  ref="treeTypeId" useFirst={Utils.Entity.isNew(entity)}
-                  manager={this.treeTypeManager}
-                  label={this.i18n('entity.IdentityContract.treeType')}
-                  onChange={this.onChangeTreeType.bind(this)}/>
 
-                <Basic.SelectBox
+                <Advanced.TreeNodeSelect
                   ref="workPosition"
-                  manager={this.treeNodeManager}
-                  label={this.i18n('entity.IdentityContract.workPosition')}
-                  forceSearchParameters={forceSearchParameters}
-                  hidden={treeTypeId === null}/>
+                  header={ this.i18n('entity.IdentityContract.workPosition') }
+                  treeNodeLabel={ this.i18n('entity.IdentityContract.workPosition') }
+                  useFirstType />
 
                 <Basic.DateTimePicker
                   mode="date"

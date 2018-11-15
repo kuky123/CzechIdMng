@@ -6,13 +6,12 @@ import * as Basic from '../../components/basic';
 import * as Advanced from '../../components/advanced';
 import * as Utils from '../../utils';
 import RecursionTypeEnum from '../../enums/RecursionTypeEnum';
-import { RoleManager, TreeNodeManager, RoleTreeNodeManager, AutomaticRoleRequestManager, SecurityManager} from '../../redux';
+import { RoleManager, RoleTreeNodeManager, AutomaticRoleRequestManager, SecurityManager} from '../../redux';
 import AutomaticRoleRequestTableComponent, { AutomaticRoleRequestTable } from '../automaticrolerequest/AutomaticRoleRequestTable';
 import SearchParameters from '../../domain/SearchParameters';
 
 const manager = new RoleTreeNodeManager();
 const roleManager = new RoleManager();
-const treeNodeManager = new TreeNodeManager();
 const automaticRoleRequestManager = new AutomaticRoleRequestManager();
 
 /**
@@ -158,10 +157,10 @@ export class RoleTreeNodeTable extends Advanced.AbstractTableContent {
                       help={ Advanced.Filter.getTextHelp() }/>
                   </Basic.Col>
                   <Basic.Col lg={ 4 }>
-                    <Advanced.Filter.SelectBox
+                    <Advanced.Filter.TreeNodeSelect
                       ref="treeNodeId"
-                      placeholder={ this.i18n('filter.treeNodeId.placeholder') }
-                      manager={ treeNodeManager }/>
+                      label={ null }
+                      placeholder={ this.i18n('filter.treeNodeId.placeholder') }/>
                   </Basic.Col>
                   <Basic.Col lg={ 4 } className="text-right">
                     <Advanced.Filter.FilterButtons cancelFilter={ this.cancelFilter.bind(this) }/>
@@ -286,9 +285,8 @@ export class RoleTreeNodeTable extends Advanced.AbstractTableContent {
                   readOnly={!Utils.Entity.isNew(detail.entity) || !_.includes(columns, 'name')}
                   label={this.i18n('entity.AutomaticRole.name.label')}
                   helpBlock={this.i18n('entity.AutomaticRole.name.help')}/>
-                <Basic.SelectBox
+                <Advanced.TreeNodeSelect
                   ref="treeNode"
-                  manager={treeNodeManager}
                   label={this.i18n('entity.RoleTreeNode.treeNode')}
                   readOnly={!Utils.Entity.isNew(detail.entity) || !_.includes(columns, 'treeNode')}
                   required/>

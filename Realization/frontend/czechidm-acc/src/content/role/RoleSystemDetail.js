@@ -112,7 +112,7 @@ class RoleSystemDetail extends Advanced.AbstractTableContent {
       this.context.store.dispatch(roleSystemManager.fetchEntity(roleSystemId));
     } else {
       if (this._isSystemMenu()) {
-        if (this.refs.role.focus()) {
+        if (this.refs.role) {
           this.refs.role.focus();
         }
       } else {
@@ -220,7 +220,7 @@ class RoleSystemDetail extends Advanced.AbstractTableContent {
         <form onSubmit={this.save.bind(this)}>
           <Basic.Panel className="no-border">
             <Basic.AbstractForm ref="form" data={ roleSystem } readOnly={!roleManager.canSave()} showLoading={ _showLoading } style={{ padding: 0 }}>
-              <Basic.SelectBox
+              <Advanced.RoleSelect
                 ref="role"
                 manager={ roleManager }
                 label={this.i18n('acc:entity.RoleSystem.role')}

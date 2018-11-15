@@ -4,13 +4,11 @@ import { connect } from 'react-redux';
 import * as Basic from '../../../components/basic';
 import * as Advanced from '../../../components/advanced';
 import * as Utils from '../../../utils';
-import { ContractPositionManager, TreeTypeManager, TreeNodeManager } from '../../../redux';
+import { ContractPositionManager } from '../../../redux';
 import SearchParameters from '../../../domain/SearchParameters';
 
 const uiKey = 'identity-contract-positions-table';
 const manager = new ContractPositionManager();
-const treeTypeManager = new TreeTypeManager();
-const treeNodeManager = new TreeNodeManager();
 
 /**
  * Identity contract's other positions
@@ -22,9 +20,7 @@ class IdentityContractPositions extends Advanced.AbstractTableContent {
   constructor(props, context) {
     super(props, context);
     this.state = {
-      ...this.state,
-      treeTypeId: null,
-      treeForceSearchParameters: new SearchParameters().setFilter('treeTypeId', SearchParameters.BLANK_UUID)
+      ...this.state
     };
   }
 
@@ -54,16 +50,13 @@ class IdentityContractPositions extends Advanced.AbstractTableContent {
     if (!Utils.Entity.isNew(entity)) {
       this.context.store.dispatch(this.getManager().fetchPermissions(entity.id, `${this.getUiKey()}-detail`));
     }
-
-    const treeTypeId = entity._embedded && entity._embedded.workPosition ? entity._embedded.workPosition.treeType : null;
-    entity.treeTypeId = treeTypeId;
+    const treeType = entity._embedded && entity._embedded.workPosition && entity._embedded.workPosition._embedded ? entity._embedded.workPosition._embedded.treeType : null;
     //
     super.showDetail(entity, () => {
+      if (treeType) {
+        this.refs.workPosition.setTreeType(treeType);
+      }
       this.refs.position.focus();
-      this.setState({
-        treeTypeId,
-        treeForceSearchParameters: this.state.treeForceSearchParameters.setFilter('treeTypeId', treeTypeId || SearchParameters.BLANK_UUID)
-      });
     });
   }
 
@@ -81,22 +74,10 @@ class IdentityContractPositions extends Advanced.AbstractTableContent {
     super.afterSave(entity, error);
   }
 
-  onChangeTreeType(treeType) {
-    const treeTypeId = treeType ? treeType.id : null;
-    this.setState({
-      treeTypeId,
-      treeForceSearchParameters: this.state.treeForceSearchParameters.setFilter('treeTypeId', treeTypeId || SearchParameters.BLANK_UUID)
-    }, () => {
-      this.refs.workPosition.setValue(null);
-      // focus automatically - maybe will be usefull?
-      // this.refs.workPosition.focus();
-    });
-  }
-
   render() {
     const { entityId } = this.props.params;
     const { _showLoading, _permissions } = this.props;
-    const { detail, treeTypeId, treeForceSearchParameters } = this.state;
+    const { detail } = this.state;
     const forceSearchParameters = new SearchParameters().setFilter('identityContractId', entityId);
     //
     return (
@@ -189,19 +170,10 @@ class IdentityContractPositions extends Advanced.AbstractTableContent {
                   label={ this.i18n('entity.IdentityContract.position') }
                   max={ 255 }/>
 
-                <Basic.SelectBox
-                  ref="treeTypeId"
-                  useFirst={ Utils.Entity.isNew(detail.entity) }
-                  manager={ treeTypeManager }
-                  label={ this.i18n('entity.IdentityContract.treeType') }
-                  onChange={ this.onChangeTreeType.bind(this) }/>
-
-                <Basic.SelectBox
+                <Advanced.TreeNodeSelect
                   ref="workPosition"
-                  manager={ treeNodeManager }
-                  label={ this.i18n('entity.IdentityContract.workPosition') }
-                  forceSearchParameters={ treeForceSearchParameters }
-                  hidden={ treeTypeId === null }/>
+                  header={ this.i18n('entity.IdentityContract.workPosition') }
+                  label={ this.i18n('entity.IdentityContract.workPosition') }/>
               </Basic.AbstractForm>
             </Basic.Modal.Body>
 

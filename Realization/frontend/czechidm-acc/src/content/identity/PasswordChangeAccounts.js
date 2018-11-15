@@ -45,6 +45,10 @@ class PasswordChangeAccounts extends Basic.AbstractContent {
     options.push({ value: RESOURCE_IDM, niceLabel: `${IDM_NAME} (${entityId})`});
 
     accounts.forEach(acc => {
+      // Skip account in protection
+      if (acc.inProtection) {
+        return;
+      }
       const niceLabel = acc._embedded.system.name + ' (' + acc.uid + ')';
       options.push({
         value: acc.id,

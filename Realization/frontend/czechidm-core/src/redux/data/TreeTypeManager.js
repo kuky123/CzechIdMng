@@ -35,24 +35,33 @@ export default class TreeTypeManager extends EntityManager {
    *
    * @return {action}
    */
-  fetchDefaultTreeType() {
+  fetchDefaultTreeType(cb = null) {
     const uiKey = TreeTypeManager.UI_KEY_DEFAULT_TREE_TYPE;
     //
-    return (dispatch) => {
-      dispatch(this.dataManager.requestData(uiKey));
-      this.getService().getDefaultTreeType()
-        .then(json => {
-          dispatch(this.receiveEntity(json.id, json, uiKey));
-          dispatch(this.dataManager.receiveData(uiKey, json));
-        })
-        .catch(error => {
-          if (error.statusCode === 404) {
-            dispatch(this.dataManager.receiveData(uiKey, null));
-          } else {
-            // TODO: data uiKey
-            dispatch(this.dataManager.receiveError(null, uiKey, error));
-          }
-        });
+    return (dispatch, getState) => {
+      const defaultTreeType = DataManager.getData(getState(), uiKey);
+      if (defaultTreeType || defaultTreeType === false) {
+        // default tree type is already loaded
+        // TODO: clear redux state, after default tree type is changed
+        if (cb) {
+          cb(defaultTreeType, null);
+        }
+      } else {
+        dispatch(this.dataManager.requestData(uiKey));
+        this.getService().getDefaultTreeType()
+          .then(json => {
+            dispatch(this.receiveEntity(json.id, json, uiKey));
+            dispatch(this.dataManager.receiveData(uiKey, json, cb));
+          })
+          .catch(error => {
+            if (error.statusCode === 404) {
+              dispatch(this.dataManager.receiveData(uiKey, false, cb));
+            } else {
+              // TODO: data uiKey
+              dispatch(this.dataManager.receiveError(null, uiKey, error, cb));
+            }
+          });
+      }
     };
   }
 

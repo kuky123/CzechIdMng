@@ -220,4 +220,15 @@ public class SysRoleSystemAttributeDto extends AbstractDto implements AttributeM
 		this.requestItem = requestItem;
 	}
 
+	@Override
+	public void setPasswordAttribute(boolean passwordAttribute) {
+		// nothing, role can't override this attribute
+	}
+
+	@Override
+	public boolean isPasswordAttribute() {
+		// for role overridden attributes return false
+		return false;
+	}
+
 }

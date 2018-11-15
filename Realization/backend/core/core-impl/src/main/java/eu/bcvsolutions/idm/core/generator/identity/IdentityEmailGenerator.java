@@ -55,7 +55,8 @@ public class IdentityEmailGenerator extends AbstractIdentityValueGenerator {
 		
 		String transformedUsername = null;
 		if (isGenerateFromUsername(valueGenerator)) {
-			transformedUsername = StringUtils.stripAccents(StringUtils.trimToEmpty(dto.getUsername()));
+			transformedUsername = StringUtils.stripAccents(dto.getUsername());
+			transformedUsername = replaceAllWhiteSpaces(valueGenerator, transformedUsername);
 		} else {
 			transformedUsername = super.generateUsername(dto, valueGenerator);
 		}
@@ -77,14 +78,21 @@ public class IdentityEmailGenerator extends AbstractIdentityValueGenerator {
 		//
 		StringBuilder result = new StringBuilder();
 		result.append(transformedUsername);
-		result.append(getTransformedSuffix(emailSuffix));
+		result.append(getTransformedSuffix(valueGenerator, emailSuffix));
 		
 		dto.setEmail(result.toString());
 		//
 		return dto;
 	}
 
-	private String getTransformedSuffix(String emailSuffix) {
+	/**
+	 * Transform suffix, add AT constant and remove/replace white spaces.
+	 *
+	 * @param valueGenerator
+	 * @param emailSuffix
+	 * @return
+	 */
+	private String getTransformedSuffix(IdmGenerateValueDto valueGenerator, String emailSuffix) {
 		StringBuilder result = new StringBuilder();
 		if (StringUtils.contains(emailSuffix, AT_CONSTANT)) {
 			result.append(emailSuffix);
@@ -93,7 +101,7 @@ public class IdentityEmailGenerator extends AbstractIdentityValueGenerator {
 			result.append(AT_CONSTANT);
 			result.append(emailSuffix);
 		}
-		return result.toString();
+		return replaceAllWhiteSpaces(valueGenerator, result.toString());
 	}
 	/**
 	 * Get connection characters

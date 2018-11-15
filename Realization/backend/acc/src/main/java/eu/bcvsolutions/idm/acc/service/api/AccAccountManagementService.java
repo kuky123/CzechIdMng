@@ -30,9 +30,10 @@ public interface AccAccountManagementService {
 	void deleteIdentityAccount(EntityEvent<IdmIdentityRoleDto> event);
 	
 	/**
-	 * Return UID for this dto and roleSystem. First will be find and use
-	 * transform script from roleSystem attribute. If isn't UID attribute for
-	 * roleSystem defined, then will be use default UID attribute handling.
+	 * Return UID for this dto and roleSystem. First, the transform script
+	 * from the roleSystem attribute is found and used. If UID attribute
+	 * for the roleSystem is not defined, then default UID attribute handling
+	 * will be used.
 	 * 
 	 * @param dto
 	 * @param roleSystem

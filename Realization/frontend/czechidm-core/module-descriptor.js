@@ -245,7 +245,7 @@ module.exports = {
         'id': 'organizations',
         'labelKey': 'content.organizations.label',
         'titleKey': 'content.organizations.title',
-        'icon': 'tree-deciduous',
+        'icon': 'fa:folder-open',
         'order': 1020,
         'iconColor': '#419641',
         'path': '/organizations',
@@ -932,7 +932,7 @@ module.exports = {
             'id': 'tree',
             'labelKey': 'content.tree.header',
             'titleKey': 'content.tree.title',
-            'icon': 'tree-deciduous',
+            'icon': 'fa:folder-open',
             'order': 80,
             'iconColor': '#419641',
             'path': '/tree/nodes',
@@ -990,7 +990,7 @@ module.exports = {
                 'labelKey': 'content.tree.types.title',
                 'titleKey': 'content.tree.types.title',
                 'order': 10,
-                'icon': 'tree-deciduous',
+                'icon': 'fa:folder-open',
                 'path': '/tree/types',
                 'access': [ { 'type': 'HAS_ANY_AUTHORITY', 'authorities': ['TREETYPE_READ'] } ]
               }

@@ -28,6 +28,9 @@ export default class RoleAttributeEnum extends Enums.AbstractEnum {
       case this.NAME: {
         return 'name';
       }
+      case this.CODE: {
+        return 'code';
+      }
       case this.ROLE_TYPE: {
         return 'roleType';
       }
@@ -57,6 +60,9 @@ export default class RoleAttributeEnum extends Enums.AbstractEnum {
     switch (field) {
       case 'name': {
         return this.NAME;
+      }
+      case 'code': {
+        return this.CODE;
       }
       case 'roleType': {
         return this.ROLE_TYPE;
@@ -95,6 +101,7 @@ export default class RoleAttributeEnum extends Enums.AbstractEnum {
 }
 
 RoleAttributeEnum.NAME = Symbol('NAME');
+RoleAttributeEnum.CODE = Symbol('CODE');
 RoleAttributeEnum.ROLE_TYPE = Symbol('ROLE_TYPE');
 RoleAttributeEnum.PRIORITY = Symbol('PRIORITY');
 RoleAttributeEnum.APPROVE_REMOVE = Symbol('APPROVE_REMOVE');

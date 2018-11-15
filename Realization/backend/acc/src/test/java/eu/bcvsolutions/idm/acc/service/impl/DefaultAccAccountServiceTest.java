@@ -5,7 +5,6 @@ import javax.persistence.Query;
 import javax.transaction.Transactional;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDateTime;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

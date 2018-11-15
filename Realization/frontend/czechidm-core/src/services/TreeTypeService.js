@@ -20,6 +20,9 @@ class TreeTypeService extends AbstractService {
     if (!entity) {
       return '';
     }
+    if (entity.name === entity.code) {
+      return entity.name;
+    }
     return `${entity.name} (${entity.code})`;
   }
 

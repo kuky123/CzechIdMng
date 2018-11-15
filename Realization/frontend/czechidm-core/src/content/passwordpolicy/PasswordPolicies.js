@@ -8,6 +8,8 @@ const PASSWORD_POLICY_TABLE_UIKEY = 'passwordPoliciesTableUikey';
 
 /**
 * Content with all password policy
+*
+* @author Ondřej Kopr
 */
 class PasswordPolicies extends Basic.AbstractContent {
 
@@ -34,7 +36,7 @@ class PasswordPolicies extends Basic.AbstractContent {
         {this.renderPageHeader()}
 
         <Basic.Panel>
-          <PasswordPolicyTable passwordPolicyManager={this.passwordPolicyManager} uiKey={PASSWORD_POLICY_TABLE_UIKEY}/>
+          <PasswordPolicyTable passwordPolicyManager={ this.passwordPolicyManager } uiKey={ PASSWORD_POLICY_TABLE_UIKEY }/>
         </Basic.Panel>
       </div>
     );

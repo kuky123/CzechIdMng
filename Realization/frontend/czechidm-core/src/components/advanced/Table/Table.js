@@ -1043,9 +1043,13 @@ AdvancedTable.propTypes = {
    */
   showRefreshButton: PropTypes.bool,
   /**
-   * Css
+   * Table css
    */
   className: PropTypes.string,
+  /**
+   * Table styles
+   */
+  style: PropTypes.object,
   //
   // Private properties, which are used internally for async data fetching
   //

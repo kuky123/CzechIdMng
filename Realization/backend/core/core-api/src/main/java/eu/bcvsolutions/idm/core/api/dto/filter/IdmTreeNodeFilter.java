@@ -44,6 +44,7 @@ public class IdmTreeNodeFilter extends DataFilter implements CorrelationFilter, 
 	 */
 	@Deprecated
 	public static final String PARAMETER_PROPERTY = PARAMETER_CORRELATION_PROPERTY;
+	
 	/**
 	 * Value of the attribute defined in property to search for
 	 * 
@@ -51,6 +52,11 @@ public class IdmTreeNodeFilter extends DataFilter implements CorrelationFilter, 
 	 */
 	@Deprecated
 	public static final String PARAMETER_VALUE = PARAMETER_CORRELATION_VALUE;
+	
+	/**
+	 * TODO: Search roots - true / false.
+	 */
+	// public static final String PARAMETER_ROOTS = "roots";
 
     public IdmTreeNodeFilter() {
         this(new LinkedMultiValueMap<>());
@@ -137,4 +143,6 @@ public class IdmTreeNodeFilter extends DataFilter implements CorrelationFilter, 
 	public void setExternalId(String externalId) {
 		data.set(PROPERTY_EXTERNAL_ID, externalId);
 	}
+	
+	
 }

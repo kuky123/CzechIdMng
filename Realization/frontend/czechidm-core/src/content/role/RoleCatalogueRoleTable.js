@@ -4,11 +4,10 @@ import { connect } from 'react-redux';
 import * as Basic from '../../components/basic';
 import * as Advanced from '../../components/advanced';
 import * as Utils from '../../utils';
-import { RoleCatalogueRoleManager, RoleManager, RoleCatalogueManager } from '../../redux';
+import { RoleCatalogueRoleManager, RoleManager } from '../../redux';
 
 let manager = new RoleCatalogueRoleManager();
 let roleManager = new RoleManager();
-const roleCatalogueManager = new RoleCatalogueManager();
 
 /**
 * Table of role catalogues - assigned to given role
@@ -160,11 +159,12 @@ export class RoleCatalogueRoleTable extends Advanced.AbstractTableContent {
                   label={ this.i18n('entity.RoleGuaranteeRole.role.label') }
                   readOnly
                   required/>
-                <Basic.SelectBox
+
+                <Advanced.RoleCatalogueSelect
                   ref="roleCatalogue"
-                  manager={ roleCatalogueManager }
                   label={ this.i18n('entity.RoleCatalogueRole.roleCatalogue.label') }
                   helpBlock={ this.i18n('entity.RoleCatalogueRole.roleCatalogue.help') }
+                  header={ this.i18n('entity.RoleCatalogueRole.roleCatalogue.label') }
                   required/>
               </Basic.AbstractForm>
             </Basic.Modal.Body>

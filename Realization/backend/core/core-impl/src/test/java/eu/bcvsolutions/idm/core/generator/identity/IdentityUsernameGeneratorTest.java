@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -465,6 +466,85 @@ public class IdentityUsernameGeneratorTest extends AbstractGeneratorTest {
 		
 		assertNotNull(generatedDto.getUsername());
 		assertEquals(lastName.toLowerCase() + firstName.toLowerCase(), generatedDto.getUsername());
+	}
+
+	@Test
+	public void testWhiteSpacesNoCharacter() {
+		String firstName = "  first Nam   e";
+		String lastName = "last Na me ";
+
+		ValueGeneratorDto generator = getGenerator();
+
+		this.createGenerator(getDtoType(), getGeneratorType(),
+				this.createConfiguration(generator.getFormDefinition(), ImmutableMap.of(
+						IdentityUsernameGenerator.FIRST_NAME_FIRST, Boolean.FALSE.toString())),
+				1, null);
+
+		IdmIdentityDto identityDto = new IdmIdentityDto();
+		identityDto.setFirstName(firstName.toString());
+		identityDto.setLastName(lastName.toString());
+		
+		IdmIdentityDto generatedDto = identityService.save(identityDto);
+		
+		assertEquals(identityDto.getLastName(), generatedDto.getLastName());
+		assertEquals(identityDto.getFirstName(), generatedDto.getFirstName());
+		
+		assertNotNull(generatedDto.getUsername());
+		assertEquals(StringUtils.trimAllWhitespace(lastName).toLowerCase() + StringUtils.trimAllWhitespace(firstName).toLowerCase(), generatedDto.getUsername());
+	}
+
+	@Test
+	public void testWhiteSpacesWithCharacter() {
+		String firstName = "  first Nam   e";
+		String lastName = "last Na me ";
+		String firtsNameResult = "..first.Nam...e";
+		String lastNameResult = "last.Na.me.";
+
+		ValueGeneratorDto generator = getGenerator();
+
+		this.createGenerator(getDtoType(), getGeneratorType(),
+				this.createConfiguration(generator.getFormDefinition(), ImmutableMap.of(
+						IdentityUsernameGenerator.FIRST_NAME_FIRST, Boolean.FALSE.toString(),
+						IdentityUsernameGenerator.REPLACE_WHITE_SPACES_CHARACTER, ".")),
+				1, null);
+
+		IdmIdentityDto identityDto = new IdmIdentityDto();
+		identityDto.setFirstName(firstName.toString());
+		identityDto.setLastName(lastName.toString());
+		
+		IdmIdentityDto generatedDto = identityService.save(identityDto);
+		
+		assertEquals(identityDto.getLastName(), generatedDto.getLastName());
+		assertEquals(identityDto.getFirstName(), generatedDto.getFirstName());
+		
+		assertNotNull(generatedDto.getUsername());
+		assertEquals(lastNameResult.toLowerCase() + firtsNameResult.toLowerCase(), generatedDto.getUsername());
+	}
+
+	@Test
+	public void testWhiteSpacesWithCharacterSpace() {
+		String firstName = "  first Nam   e";
+		String lastName = "last Na me ";
+
+		ValueGeneratorDto generator = getGenerator();
+
+		this.createGenerator(getDtoType(), getGeneratorType(),
+				this.createConfiguration(generator.getFormDefinition(), ImmutableMap.of(
+						IdentityUsernameGenerator.REPLACE_WHITE_SPACES_CHARACTER, " ",
+						IdentityUsernameGenerator.FIRST_NAME_FIRST, Boolean.TRUE.toString())),
+				1, null);
+
+		IdmIdentityDto identityDto = new IdmIdentityDto();
+		identityDto.setFirstName(firstName.toString());
+		identityDto.setLastName(lastName.toString());
+		
+		IdmIdentityDto generatedDto = identityService.save(identityDto);
+		
+		assertEquals(identityDto.getLastName(), generatedDto.getLastName());
+		assertEquals(identityDto.getFirstName(), generatedDto.getFirstName());
+		
+		assertNotNull(generatedDto.getUsername());
+		assertEquals(firstName.toLowerCase() + lastName.toLowerCase(), generatedDto.getUsername());
 	}
 
 	@Override

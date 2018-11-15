@@ -11,29 +11,22 @@ import IdentityTable from '../../identity/IdentityTable';
 import TypeConfiguration from '../type/TypeConfiguration';
 
 // Root nodes  key for tree
-const rootNodesKey = 'tree-node-table-roots';
 const treeTypeManager = new TreeTypeManager();
 const identityManager = new IdentityManager();
 
 /**
- * TODO: Add better constant for max roots count
- * @type {Number}
- */
-const MAX_ROOTS_COUNT = 100000;
-
-/**
 * Table of tree nodes
+*
+* @author Radek Tomiška
 */
 class NodeTable extends Advanced.AbstractTableContent {
 
   constructor(props, context) {
     super(props, context);
     this.state = {
+      selectedNodeId: null, // selected node
       filterOpened: true,
-      showLoading: true,
       type: props.type,
-      rootNodes: null,
-      rootNodesCount: null,
       activeTab: props.activeTab
     };
   }
@@ -48,21 +41,6 @@ class NodeTable extends Advanced.AbstractTableContent {
 
   componentDidMount() {
     super.componentDidMount();
-    //
-    const { treeNodeManager } = this.props;
-    const { type } = this.state;
-
-    const searchParametersRoots = treeNodeManager.getService().getRootSearchParameters().setFilter('treeTypeId', type.id).setSort('name', true).setSize(MAX_ROOTS_COUNT);
-    this.context.store.dispatch(treeNodeManager.fetchEntities(searchParametersRoots, rootNodesKey, (loadedRoots) => {
-      // get redux state for get total roots count
-      const uiState = Utils.Ui.getUiState(this.context.store.getState(), rootNodesKey);
-      const rootNodes = loadedRoots._embedded[treeNodeManager.getCollectionType()];
-      this.setState({
-        rootNodes,
-        rootNodesCount: uiState.total,
-        showLoading: false
-      });
-    }));
   }
 
   getDefaultSearchParameters() {
@@ -90,16 +68,17 @@ class NodeTable extends Advanced.AbstractTableContent {
       // After click on link node, we want only filtering ... not node expand.
       event.stopPropagation();
     }
-    if (!nodeId) {
-      return;
-    }
     const data = {
       ... this.refs.filterForm.getData(),
       treeNodeId: nodeId
     };
-    this.refs.treeNodeId.setValue(nodeId);
-    this.refs.table.getWrappedInstance().useFilterData(data);
-    this.refs.identityTable.getWrappedInstance().filterByTreeNodeId(nodeId);
+    this.setState({
+      selectedNodeId: nodeId
+    }, () => {
+      this.refs.treeNodeId.setValue(nodeId);
+      this.refs.table.getWrappedInstance().useFilterData(data);
+      this.refs.identityTable.getWrappedInstance().filterByTreeNodeId(nodeId);
+    });
   }
 
   cancelFilter(event) {
@@ -111,7 +90,6 @@ class NodeTable extends Advanced.AbstractTableContent {
 
   onDelete(bulkActionValue, selectedRows) {
     const { treeNodeManager, uiKey } = this.props;
-    const { type } = this.state;
     const selectedEntities = treeNodeManager.getEntitiesByIds(this.context.store.getState(), selectedRows);
     //
     this.refs['confirm-' + bulkActionValue].show(
@@ -125,7 +103,7 @@ class NodeTable extends Advanced.AbstractTableContent {
         if (!error && successEntities) {
           this.context.store.dispatch(treeNodeManager.clearEntities());
           this.refs.table.getWrappedInstance().reload();
-          this._changeTree(type);
+          this.refs.organizationTree.getWrappedInstance().reload();
         }
       }));
     }, () => {
@@ -153,63 +131,22 @@ class NodeTable extends Advanced.AbstractTableContent {
     if (event) {
       event.preventDefault();
     }
-    const { treeNodeManager, showTreeTypeSelect } = this.props;
     //
     if (!entity.id) {
       return;
     }
     //
     this.setState({
-      showLoading: true
+      type: entity
     }, () => {
-      const searchParametersRoot = treeNodeManager.getService().getRootSearchParameters().setFilter('treeTypeId', entity.id);
-      this.context.store.dispatch(treeNodeManager.fetchEntities(searchParametersRoot, rootNodesKey, (loadedRoot) => {
-        if (loadedRoot !== null) {
-          this.setState({
-            rootNodes: loadedRoot._embedded[treeNodeManager.getCollectionType()],
-            type: entity,
-            showLoading: false
-          });
-        } else {
-          this.setState({
-            type: entity,
-            showLoading: false
-          });
-        }
-        this.cancelFilter();
-        this.refs.identityTable.getWrappedInstance().filterByTreeNodeId(null);
-      }));
+      this.cancelFilter();
+      this.refs.identityTable.getWrappedInstance().filterByTreeNodeId(null);
+      //
+      const { showTreeTypeSelect } = this.props;
       if (showTreeTypeSelect) {
         this.context.router.push('/tree/nodes/?type=' + entity.id);
       }
     });
-  }
-
-/**
- * Decorator for organization tree. Add custom icons and allow filtering after click on node
- */
-  _orgTreeHeaderDecorator(props) {
-    const style = props.style;
-    const icon = props.node.isLeaf ? 'group' : 'building';
-    return (
-      <div style={ style.base }>
-        <div style={style.title}>
-          <Basic.Icon type="fa" icon={icon} style={{ marginRight: '5px' }}/>
-          <Basic.Button
-            level="link"
-            title={props.node.name}
-            onClick={this._useFilterByTree.bind(this, props.node.id)}
-            style={{padding: '0px 0px 0px 0px'}}>
-            { props.node.name }
-            {
-              !props.node.childrenCount
-              ||
-              <small style={{ color: '#aaa' }}>{' '}({props.node.childrenCount})</small>
-            }
-          </Basic.Button>
-        </div>
-      </div>
-    );
   }
 
   showTypeDetail(entity, event) {
@@ -225,90 +162,90 @@ class NodeTable extends Advanced.AbstractTableContent {
   }
 
   _onChangeSelectTabs(activeTab) {
-    this.setState({activeTab});
+    this.setState({ activeTab });
+  }
+
+  _renderSelectedNode() {
+    const { selectedNodeId } = this.state;
+    if (!selectedNodeId) {
+      return null;
+    }
+    const selectedNode = this.getManager().getEntity(this.context.store.getState(), selectedNodeId);
+    if (!selectedNode) {
+      return null;
+    }
+    return (
+      <div className="basic-toolbar">
+        <Basic.Alert
+          title={ this.i18n('label.selected') }
+          level="info"
+          style={{ margin: 0, maxWidth: 450 }}>
+          <div style={{ display: 'flex'}}>
+            <div style={{ flex: 1}}>
+              <Basic.ShortText text={ this.getManager().getNiceLabel(selectedNode) } maxLength={ 40 }/>
+            </div>
+            <Basic.Button
+              type="button"
+              level="primary"
+              className="btn-xs"
+              icon="fa:search"
+              onClick={ this.showDetail.bind(this, selectedNode) }>
+              { this.i18n('component.advanced.EntityInfo.link.detail.label') }
+            </Basic.Button>
+          </div>
+        </Basic.Alert>
+      </div>
+    );
   }
 
   render() {
-    const { treeNodeManager, uiKey, showTreeTypeSelect } = this.props;
-    const { filterOpened, rootNodes, showLoading, type, rootNodesCount, activeTab } = this.state;
-    const showTree = !showLoading && rootNodes && rootNodes.length !== 0;
+    const { treeNodeManager, uiKey, showTreeTypeSelect, showLoading, rendered } = this.props;
+    const { filterOpened, type, activeTab } = this.state;
+    const showTree = !showLoading;
+    const forceSearchParameters = new SearchParameters().setFilter('treeTypeId', type.id).setSort('name', true);
+    //
+    if (!rendered) {
+      return null;
+    }
     //
     return (
       <div>
         <TypeConfiguration treeTypeId={type.id}/>
 
         <Basic.Panel>
-          <Basic.Row>
-            <Basic.Col lg={ 3 } style={{ paddingRight: 0, paddingLeft: 0, marginLeft: 15, marginRight: -15 }}>
-              <div className="basic-toolbar">
-                <div className="pull-left">
-                  <h3 style={{ margin: 0 }}>
-                    { showTreeTypeSelect ? this.i18n('content.tree.typePick') : this.i18n('entity.TreeType._type') }
-                  </h3>
-                </div>
-                <div className="pull-right">
-                  <Basic.Button
-                    level="success"
-                    title={ this.i18n('addType') }
-                    titlePlacement="bottom"
-                    className="btn-xs"
-                    style={{ marginRight: 3 }}
-                    onClick={ this.showTypeDetail.bind(this, {}) }
-                    rendered={ false }>
-                    <Basic.Icon value="fa:plus"/>
-                  </Basic.Button>
-                  <Basic.Button
-                    level="primary"
-                    title={this.i18n('reloadTree')}
-                    titlePlacement="bottom"
-                    className="btn-xs"
-                    onClick={this._changeTree.bind(this, type)}>
-                    <Basic.Icon value="fa:refresh"/>
-                  </Basic.Button>
-                </div>
-                <div className="clearfix"></div>
-              </div>
-              <div style={{ paddingLeft: 15, paddingRight: 15, paddingTop: 15 }}>
-                {
-                  (!type || !showTreeTypeSelect)
-                  ||
+          <Basic.Row>{/* FIXME: resposive design - wrong wrapping on mobile */}
+            <Basic.Col lg={ 3 } style={{ paddingRight: 0 }}>
+              <Advanced.Tree
+                ref="organizationTree"
+                uiKey="organization-tree"
+                manager={ treeNodeManager }
+                forceSearchParameters={ forceSearchParameters }
+                onSelect={ this._useFilterByTree.bind(this) }
+                ŕendered={ showTree }
+                traverse
+                header={
+                  !type || !showTreeTypeSelect
+                  ?
+                  null
+                  :
                   <Basic.SelectBox
                     ref="treeTypeId"
                     value={ type }
                     manager={ treeTypeManager }
                     onChange={ this._changeTree.bind(this) }
-                    clearable={ false } />
+                    clearable={ false }
+                    className="small"
+                    style={{ marginBottom: 0 }}/>
                 }
-                {
-                  !showTree
-                  ||
-                  <Advanced.Tree
-                    ref="organizationTree"
-                    rootNodes={ rootNodes }
-                    rootNodesCount={ rootNodesCount }
-                    propertyName="name"
-                    headerDecorator={this._orgTreeHeaderDecorator.bind(this)}
-                    uiKey="orgTree"
-                    manager={treeNodeManager}
-                    />
-                }
-              </div>
+                />
             </Basic.Col>
-            <Basic.Col lg={ 9 }>
+            <Basic.Col lg={ 9 } style={{ paddingLeft: 0 }}>
               <Basic.Confirm ref="confirm-delete" level="danger"/>
 
               <Basic.Tabs activeKey={activeTab} onSelect={this._onChangeSelectTabs.bind(this)} className="tab-embedded" style={{ marginBottom: 0 }}>
-                <Basic.Tab eventKey={1} title={ this.i18n('tab.identities') } style={{ borderBottom: 0, borderRight: 0, borderRadius: 0 }}>
-                  <IdentityTable
-                    ref="identityTable"
-                    uiKey={`${uiKey}-identity`}
-                    identityManager={identityManager}
-                    filterOpened={filterOpened}
-                    treeType={type}
-                    showRowSelection/>
-                </Basic.Tab>
-
                 <Basic.Tab eventKey={2} title={ this.i18n('tab.nodes') } style={{ borderBottom: 0, borderRight: 0, borderRadius: 0 }}>
+
+                  { this._renderSelectedNode() }
 
                   <Advanced.Table
                     ref="table"
@@ -317,7 +254,7 @@ class NodeTable extends Advanced.AbstractTableContent {
                     manager={treeNodeManager}
                     showRowSelection={SecurityManager.hasAuthority('TREENODE_DELETE')}
                     rowClass={({rowIndex, data}) => { return data[rowIndex].disabled ? 'disabled' : ''; }}
-                    showLoading={showLoading}
+                    showLoading={ showLoading }
                     filter={
                       <Advanced.Filter onSubmit={this.useFilter.bind(this)}>
                         <Basic.AbstractForm ref="filterForm">
@@ -334,11 +271,13 @@ class NodeTable extends Advanced.AbstractTableContent {
                           </Basic.Row>
                           <Basic.Row className="last">
                             <Basic.Col lg={ 6 }>
-                              <Advanced.Filter.SelectBox
+                              <Advanced.Filter.TreeNodeSelect
                                 ref="treeNodeId"
-                                placeholder={this.i18n('entity.TreeNode.parentId')}
-                                forceSearchParameters={treeNodeManager.getDefaultSearchParameters().setFilter('treeTypeId', type.id)}
-                                manager={treeNodeManager}/>
+                                header={ this.i18n('entity.TreeNode.parentId') }
+                                placeholder={ this.i18n('entity.TreeNode.parentId') }
+                                label={ null }
+                                useFirstType
+                                forceSearchParameters={ treeNodeManager.getDefaultSearchParameters().setFilter('treeTypeId', type.id) }/>
                             </Basic.Col>
                             <Basic.Col lg={ 6 }>
                               <Advanced.Filter.BooleanSelectBox
@@ -397,6 +336,16 @@ class NodeTable extends Advanced.AbstractTableContent {
                     <Advanced.Column property="parentId" sort rendered={false}/>
                   </Advanced.Table>
                 </Basic.Tab>
+
+                <Basic.Tab eventKey={ 1 } title={ this.i18n('tab.identities') } style={{ borderBottom: 0, borderRight: 0, borderRadius: 0 }}>
+                  <IdentityTable
+                    ref="identityTable"
+                    uiKey={ `${uiKey}-identity` }
+                    identityManager={ identityManager }
+                    filterOpened={ filterOpened }
+                    treeType={ type }
+                    showRowSelection/>
+                </Basic.Tab>
               </Basic.Tabs>
             </Basic.Col>
           </Basic.Row>
@@ -407,6 +356,7 @@ class NodeTable extends Advanced.AbstractTableContent {
 }
 
 NodeTable.propTypes = {
+  ...Advanced.AbstractTableContent.propTypes,
   uiKey: PropTypes.string.isRequired,
   type: PropTypes.object.isRequired,
   treeNodeManager: PropTypes.object.isRequired,
@@ -421,9 +371,10 @@ NodeTable.propTypes = {
 };
 
 NodeTable.defaultProps = {
+  ...Advanced.AbstractTableContent.defaultProps,
   uiKey: 'tree-node-table',
   showTreeTypeSelect: true,
-  activeTab: 1
+  activeTab: 2
 };
 
 function select(state, component) {

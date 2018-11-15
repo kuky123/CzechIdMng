@@ -50,6 +50,7 @@ public class WorkflowHistoricTaskInstanceDto implements BaseDto {
 	private List<String> candicateUsers;
 	private WorkflowTaskDefinitionDto definition;
 	private String processDefinitionKey;
+	private String completeTaskMessage;
 
 	public String getProcessDefinitionId() {
 		return processDefinitionId;
@@ -188,6 +189,14 @@ public class WorkflowHistoricTaskInstanceDto implements BaseDto {
 
 	public void setProcessDefinitionKey(String processDefinitionKey) {
 		this.processDefinitionKey = processDefinitionKey;
+	}
+
+	public String getCompleteTaskMessage() {
+		return completeTaskMessage;
+	}
+
+	public void setCompleteTaskMessage(String completeTaskMessage) {
+		this.completeTaskMessage = completeTaskMessage;
 	}
 
 	@Override

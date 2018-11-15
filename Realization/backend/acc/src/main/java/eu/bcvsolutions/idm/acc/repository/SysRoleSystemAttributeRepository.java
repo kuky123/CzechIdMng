@@ -20,7 +20,11 @@ import eu.bcvsolutions.idm.core.api.repository.AbstractEntityRepository;
 public interface SysRoleSystemAttributeRepository extends AbstractEntityRepository<SysRoleSystemAttribute> {
 
 	@Query(value = "select e from SysRoleSystemAttribute e" + " where"
-			+ " (?#{[0].roleSystemId} is null or e.roleSystem.id = ?#{[0].roleSystemId})")
+			+ " (?#{[0].roleSystemId} is null or e.roleSystem.id = ?#{[0].roleSystemId})"
+			+ " and"
+		    + " (?#{[0].systemMappingId} is null or e.roleSystem.systemMapping.id = ?#{[0].systemMappingId})"
+			+ " and"
+		    + " (?#{[0].schemaAttributeName} is null or e.systemAttributeMapping.schemaAttribute.name = ?#{[0].schemaAttributeName})")
 	Page<SysRoleSystemAttribute> find(SysRoleSystemAttributeFilter filter, Pageable pageable);
 	
 	/**

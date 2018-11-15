@@ -48,7 +48,7 @@ class IdentityContractContent extends Basic.AbstractContent {
           {
             !entity
             ||
-            <IdentityContractDetail entity={entity} showLoading={showLoading} params={params} />
+            <IdentityContractDetail uiKey="identity-contract-detail" entity={entity} showLoading={showLoading} params={params} />
           }
         </div>
       </Basic.Row>

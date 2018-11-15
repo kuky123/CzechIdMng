@@ -30,7 +30,9 @@ class DynamicTaskDetail extends Basic.AbstractContent {
   _toFormDataValues(formDatas) {
     const result = {};
     for (const formData of formDatas) {
-      result[formData.id] = formData.value;
+      if (formData.type !== 'selectBox') {
+        result[formData.id] = formData.value;
+      }
     }
     return result;
   }
@@ -46,11 +48,13 @@ class DynamicTaskDetail extends Basic.AbstractContent {
   }
 
   _validateAndCompleteTask(decision) {
-    if (this.refs.form && !this.refs.form.isFormValid()) {
-      return;
-    }
-    if (this.refs.formData && !this.refs.formData.isFormValid()) {
-      return;
+    if (!decision.skipValidation) {
+      if (this.refs.form && !this.refs.form.isFormValid()) {
+        return;
+      }
+      if (this.refs.formData && !this.refs.formData.isFormValid()) {
+        return;
+      }
     }
     if (decision.showWarning) {
       this.refs.confirm.show(this.i18n(decision.warningMessage ? decision.warningMessage : 'completeTaskConfirmDetail'), this.i18n('completeTaskConfirmTitle'))
@@ -188,6 +192,60 @@ class DynamicTaskDetail extends Basic.AbstractContent {
           );
           break;
         }
+        case 'selectBox': {
+          const data = [];
+          const map = new Map(Object.entries(JSON.parse(formData.value)));
+          map.forEach((label, value) => {
+            data.push({value: value, niceLabel: this.i18n(label)});
+          });
+          formDataComponents.push(
+            <Basic.EnumSelectBox
+              key={formData.id}
+              ref={formData.id}
+              readOnly={!formData.writable || !canExecute}
+              required={formData.required}
+              tooltip={this._getLocalization('tooltip', formData)}
+              placeholder={this._getLocalization('placeholder', formData)}
+              label={this._getLocalization('name', formData)}
+              multiSelect={false}
+              options={data}/>
+          );
+          break;
+        }
+        case 'taskHistory': {
+          const history = JSON.parse(formData.value);
+          formDataComponents.push(
+              <Basic.Panel>
+                <Basic.PanelHeader text={this._getLocalization('name', formData)}/>
+                <Basic.Table
+                    uiKey={formData.id}
+                    data={history}
+                    rendered
+                    noData={this.i18n('component.basic.Table.noData')}
+                    rowClass={({rowIndex, data}) => {
+                      return (data[rowIndex].changed) ? 'warning' : '';
+                    }}>
+                  <Basic.Column property="name" header={this.i18n('wf.formData.history.taskName')}/>
+                  <Basic.Column property="endTime" header={this.i18n('wf.formData.history.completeDate')}
+                    cell={
+                      ({rowIndex, data}) => {
+                        return (<Basic.DateCell format={this.i18n('format.datetime')} rowIndex={rowIndex} data={data} property="endTime"/>);
+                      }
+                    }
+                  />
+                  <Basic.Column property="assignee" header={this.i18n('wf.formData.history.assignee')}
+                  cell={({rowIndex, data}) => {
+                    return (<IdentityInfo
+                      entityIdentifier={ data[rowIndex].assignee }
+                      face="popover" />);
+                  }
+                  }/>
+                  <Basic.Column property="completeTaskMessage" header={this.i18n('wf.formData.history.message')}/>
+                </Basic.Table>
+              </Basic.Panel>
+          );
+          break;
+        }
         default: {
           formDataComponents.push(
             <Basic.TextField
@@ -211,7 +269,6 @@ class DynamicTaskDetail extends Basic.AbstractContent {
     const showLoadingInternal = task ? showLoading : true;
     const formDataValues = this._toFormDataValues(task.formData);
     const taskName = taskManager.localize(task, 'name');
-
     return (
       <div>
         <Helmet title={this.i18n('title')} />

@@ -47,6 +47,7 @@
     "validFrom": "$t(entity.validFrom)",
     "validTill": "$t(entity.validTill)",
     "select": "Select ...",
+    "selected": "Selected record",
     "default": "Default",
     "download": "Download",
     "searchSelect": "Select or type to search ...",
@@ -398,7 +399,33 @@
         }
       },
       "Tree": {
-        "loading": "Loading ..."
+        "header": "Structure",
+        "loading": "Loading ...",
+        "reload": "Tree reload",
+        "showTree": {
+          "link": {
+            "title": "Select from structure"
+          }
+        },
+        "parent": {
+          "link": {
+            "label": "..",
+            "title": "Show parent folder"
+          }
+        },
+        "root": {
+          "link": {
+            "label": "/..",
+            "title": "Select root folder"
+          }
+        },
+        "detail": {
+          "link": {
+            "title": "Show selected record detail"
+          }
+        },
+        "moreRecords": "<span title='Load next records'>Shown <strong>{{counter}}</strong> of <strong>{{total}}</strong> records ...</span>",
+        "noData": "No results found"
       },
       "EavForm": {
         "multiple": {
@@ -449,6 +476,8 @@
           "IDENTITY-SELECT": "Select identity (SelectBox)",
           "ROLE-SELECT": "Select role (SelectBox)",
           "FORM-DEFINITION-SELECT": "Select form definition (SelectBox)",
+          "TREE-NODE-SELECT": "Select tree node (SelectBox)",
+          "ROLE-CATALOGUE-SELECT": "Select folder in role catalogue (SelectBox)",
           "BOOLEAN-SELECT": "$t(enums.PersistentTypeEnum.BOOLEAN) (SelectBox)",
           "ATTACHMENT": "$t(enums.PersistentTypeEnum.ATTACHMENT)"
         },
@@ -1251,8 +1280,11 @@
           "label": "Superior element"
         }
       },
-      "typeNotFound": "Element not found.",
-      "newType": "Please, continue creating a new element.",
+      "typeNotFound": "Structure type not found.",
+      "newType": {
+        "label": "Create new type",
+        "title": "Please, continue creating a new structure type."
+      },
       "typePick": "Select the element",
       "typePickPlaceHolder": "Select the element.",
       "nodes": {
@@ -3289,6 +3321,7 @@
         "false": "Does not have parent"
       },
       "treeType": {
+        "label": "$t(entity.TreeNode.treeType.name)",
         "name": "Structure type"
       },
       "defaultTreeNode": {
@@ -3355,6 +3388,7 @@
       "priority": "Priority",
       "createTime": "Created on",
       "completeTaskDecision": "Result",
+      "completeTaskMessage": "Note from resolver",
       "candicateUsers": "Can solve"
     },
     "Notification": {
@@ -4203,6 +4237,18 @@
         "name" : "$t(entity.validTill) (new)",
         "tooltip": "",
         "placeholder": ""
+      },
+      "history": {
+        "name": "Previous tasks",
+        "taskName": "Name",
+        "completeDate": "Complete date",
+        "assignee": "Task resolver",
+        "message": "Note from resolver"
+      },
+      "taskCompleteMessage": {
+        "name": "Note",
+        "placeholder": "",
+        "tooltip": ""
       }
     }
   },
@@ -4358,6 +4404,10 @@
           "firstnamefirst": {
             "label": "As first value use first name",
             "help": "When generating, the first name of the user will be added first. If you unchecked, the order will be the opposite."
+          },
+          "replacewhitespacescharacter": {
+            "label": "Character/s for filling white spaces",
+            "help": "Character/s will be used to replace white spaces, even outside the username. If you leave blank, all spaces will be removed."
           }
         }
       },
@@ -4388,6 +4438,10 @@
           "firstnamefirst": {
             "label": "As first value use first name",
             "help": "When generating, the first name of the user will be added first. If you unchecked, the order will be the opposite."
+          },
+          "replacewhitespacescharacter": {
+            "label": "Character/s for filling white spaces",
+            "help": "Character/s will be used to replace white spaces, outside the username and email suffix. If you leave blank, all spaces will be removed."
           }
         }
       },

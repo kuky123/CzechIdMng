@@ -1,8 +1,7 @@
 import React from 'react';
 //
-import { Basic, Managers, Domain } from 'czechidm-core';
+import { Basic, Advanced, Managers, Domain } from 'czechidm-core';
 
-const treeNodeManager = new Managers.TreeNodeManager();
 const treeTypeManager = new Managers.TreeTypeManager();
 const identityManager = new Managers.IdentityManager();
 
@@ -18,7 +17,7 @@ class SyncContractConfig extends Basic.AbstractContent {
     this.state = {
       ...this.state,
       defaultTreeType: null,
-      treeNodeSearchParameters: new Domain.SearchParameters().setFilter('treeTypeId', Domain.SearchParameters.BLANK_UUID)
+      treeNodeSearchParameters: new Domain.SearchParameters().setFilter('treeTypeId', props.synchronizationConfig ? props.synchronizationConfig.defaultTreeType : Domain.SearchParameters.BLANK_UUID)
     };
   }
 
@@ -64,13 +63,12 @@ class SyncContractConfig extends Basic.AbstractContent {
           label={this.i18n('contractConfigDetail.defaultTreeType.label')}
           helpBlock={this.i18n('contractConfigDetail.defaultTreeType.helpBlock')}
           onChange={this._onChangeTreeType.bind(this)}/>
-        <Basic.SelectBox
+        <Advanced.TreeNodeSelect
           ref="defaultTreeNode"
-          manager={treeNodeManager}
           label={this.i18n('contractConfigDetail.defaultTreeNode.label')}
           helpBlock={this.i18n('contractConfigDetail.defaultTreeNode.helpBlock')}
-          forceSearchParameters={treeNodeSearchParameters}
-          hidden={!resutlTreeTypeId}/>
+          forceSearchParameters={ treeNodeSearchParameters }
+          hidden={ !resutlTreeTypeId }/>
         <Basic.SelectBox
           ref="defaultLeader"
           manager={identityManager}

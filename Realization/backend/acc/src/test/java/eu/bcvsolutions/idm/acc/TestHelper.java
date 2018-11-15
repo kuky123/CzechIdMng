@@ -31,6 +31,7 @@ public interface TestHelper extends eu.bcvsolutions.idm.test.api.TestHelper {
 	String ATTRIBUTE_MAPPING_FIRSTNAME = "FIRSTNAME";
 	String ATTRIBUTE_MAPPING_LASTNAME = "LASTNAME";
 	String ATTRIBUTE_MAPPING_EMAIL = "EMAIL";
+	String ATTRIBUTE_MAPPING_DESCRIPTION = "DESCRIP"; // Attribute isn't mapped by default
 
 	/**
 	 * Prepares conntector and system for fiven table name. Test database is used.
