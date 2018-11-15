@@ -132,12 +132,18 @@ public enum AccResultCode implements ResultCode {
 	SYSTEM_DELETE_BULK_ACTION_NUMBER_OF_ACCOUNTS(HttpStatus.FOUND, "System [%s] has [%s] accounts."),
 	SYSTEM_DELETE_BULK_ACTION_NUMBER_OF_PROVISIONINGS(HttpStatus.FOUND, "System [%s] has [%s] provisioning operations."),
 	// Import CSV
-	IMPORT_CANT_READ_FILE_PATH(HttpStatus.BAD_REQUEST, "Can read the file in path [%s]."),
+	IMPORT_CANT_READ_FILE_PATH(HttpStatus.BAD_REQUEST, "Can't read the file in path [%s]."),
 	IMPORT_WRONG_LINE_LENGTH(HttpStatus.BAD_REQUEST, "On line [%s] was found some error."),
 	CONNECTOR_INSTANCE_NOT_FOUND(HttpStatus.BAD_REQUEST, "Connector instance for system %s not found!"),
 	CONNECTOR_OBJECT_CLASS_NOT_FOUND(HttpStatus.BAD_REQUEST, "Connector object class for system %s not found!"),
 	SYSTEM_NAME_NOT_FOUND(HttpStatus.BAD_REQUEST, "System with name [%s] was not found."),
-	SYSTEM_SCHEMA_ATTRIBUTES_NOT_FOUND(HttpStatus.BAD_REQUEST, "No attributes for object class name %s on system %s were found");
+	SYSTEM_SCHEMA_ATTRIBUTES_NOT_FOUND(HttpStatus.BAD_REQUEST, "No attributes for object class name %s on system %s were found"),
+	// Export Bulk Action
+	EXPORT_NULL_DIRECTORY_PATH(HttpStatus.BAD_REQUEST, "Given directory [%s] is null!"),
+	EXPORT_CANT_READ_FILE_PATH(HttpStatus.BAD_REQUEST, "Can't read the file in path [%s]."),
+	EXPORT_CANT_CREATE_PATH_INTO_DIRECTORY(HttpStatus.BAD_REQUEST, "Can't create path of the file [%s] into the directory [%s]."),
+	EXPORT_CANT_CREATE_FILE_IN_DIRECTORY(HttpStatus.BAD_REQUEST, "Can't create file [%s] into the directory [%s]."),
+	EXPORT_NAME_IS_NOT_DIRECTORY(HttpStatus.BAD_REQUEST, "Given name [%s] is not a directory.");
 
 	private final HttpStatus status;
 	private final String message;
